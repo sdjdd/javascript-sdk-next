@@ -13,8 +13,8 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "build:types": "tsc types/src/**",
-    "build:runtime": "rm -rf runtime/dist && tsc --build runtime/tsconfig.json"
+    "clear:core": "rm -rf core/dist",
+    "build:core": "npm run clear:core && tsc -p core"
   },
   "keywords": [],
   "devDependencies": {
