@@ -1,4 +1,4 @@
-import { HTTPMethod, AbortSignal as IAbortSignal } from '@leancloud/adapter-types';
+import { HTTPMethod, AbortSignal as IAbortSignal, ProgressEvent } from '@leancloud/adapter-types';
 import { noop } from 'lodash';
 import { mustGetAdapter } from '../adapters';
 import { IQuery } from './query';
@@ -46,6 +46,7 @@ class AbortSignal implements IAbortSignal {
 export class RequestTask<T = IHTTPResponse> extends Promise<T> {
   private _signal: AbortSignal;
   private _slienceAbort?: boolean;
+  private _progressListeners?: ((event: ProgressEvent) => void)[];
 
   static get [Symbol.species]() {
     return Promise;
@@ -72,6 +73,9 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
         doRequest(url, {
           method,
           signal,
+          onprogress: (event) => {
+            this._progressListeners?.forEach((h) => h(event));
+          },
         })
           .then(({ status, headers, data }) => {
             const res: IHTTPResponse = {
@@ -95,6 +99,14 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
     });
 
     this._signal = signal;
+  }
+
+  onProgress(listener: (event: ProgressEvent) => void): void {
+    if (!this._progressListeners) {
+      this._progressListeners = [listener];
+    } else {
+      this._progressListeners.push(listener);
+    }
   }
 
   abort(slience = false): void {
