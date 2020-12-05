@@ -13,14 +13,23 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:types": "tsc types/src/**",
+    "build:runtime": "rm -rf runtime/dist && tsc --build runtime/tsconfig.json"
   },
   "keywords": [],
   "devDependencies": {
+    "@types/lodash": "^4.14.165",
     "@typescript-eslint/eslint-plugin": "^4.8.1",
     "@typescript-eslint/parser": "^4.8.1",
     "eslint": "^7.13.0",
     "prettier": "2.1.2",
     "typescript": "^4.1.2"
+  },
+  "dependencies": {
+    "@leancloud/adapter-types": "^4.0.0",
+    "@leancloud/platform-adapters-node": "^1.4.0",
+    "eventemitter3": "^4.0.7",
+    "lodash": "^4.17.20",
+    "ts-node": "^9.0.0"
   }
 }
