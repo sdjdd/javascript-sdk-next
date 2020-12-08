@@ -1,5 +1,7 @@
+import { trimStart } from 'lodash';
 import { RequestTask } from '../http';
 import { IHTTPRequest } from '../http/request';
+import { NamespacedStorage } from '../local-storage';
 
 export interface IAppConfig {
   appId: string;
@@ -17,6 +19,11 @@ export interface IAPIRequest {
 
 export class App {
   readonly appId: string;
+  readonly authOptions: {
+    sessionToken?: string;
+  } = {};
+  readonly payload: Record<string, any> = {};
+  readonly storage: NamespacedStorage;
 
   private _appKey: string;
   private _serverURL?: string;
@@ -36,22 +43,35 @@ export class App {
     this.appId = appId;
     this._appKey = appKey;
     this._serverURL = serverURL;
+    this.storage = new NamespacedStorage(appId);
   }
 
-  api(req: IAPIRequest): RequestTask<any> {
+  api(req: IAPIRequest): RequestTask<any>;
+  api<T>(req: IAPIRequest, after: (body: any) => T): RequestTask<T>;
+  api(req: IAPIRequest, after?: (body: any) => any): RequestTask<any> {
     return new RequestTask(
       async () => {
         return {
           method: req.method,
-          url: this._serverURL + '/' + req.path,
-          header: req.header,
+          url: this._serverURL + '/' + trimStart(req.path, '/'),
+          header: {
+            ...req.header,
+            'Content-Type': 'application/json',
+            'X-LC-Id': this.appId,
+            'X-LC-Key': this._appKey,
+            'X-LC-Session': this.authOptions.sessionToken,
+          },
           query: req.query,
           body: req.body,
         };
       },
       ({ status, body }) => {
         if (status >= 400) {
-          throw new Error();
+          const { code, error } = body;
+          throw new Error(`${code}: ${error}`);
+        }
+        if (after) {
+          return after(body);
         }
         return body;
       }
