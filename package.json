@@ -14,7 +14,12 @@
   "main": "index.js",
   "scripts": {
     "clear:core": "rm -rf core/dist",
-    "build:core": "npm run clear:core && tsc -p core"
+    "clear:auth": "rm -rf auth/dist",
+    "clear:database": "rm -rf database/dist",
+    "build:core": "npm run clear:core && tsc -p core",
+    "build:auth": "npm run clear:auth && tsc -p auth",
+    "build:database": "npm run clear:database && tsc -p database",
+    "build": "npm run build:core && npm run build:database && npm run build:auth"
   },
   "keywords": [],
   "devDependencies": {

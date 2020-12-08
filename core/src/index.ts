@@ -1,2 +1,3 @@
 export { setAdapters } from './adapters';
-export { RequestTask } from './http';
+export { App } from './app';
+export { use } from './modules';
