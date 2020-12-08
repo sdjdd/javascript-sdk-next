@@ -1,4 +1,4 @@
-import { Auth } from './auth';
+import { Auth, setHooks } from './auth';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -15,6 +15,7 @@ export function onLoad({ modules }): void {
   App.prototype.auth = function () {
     return new Auth(this);
   };
+  setHooks(App);
 }
 
 export default { name, onLoad };

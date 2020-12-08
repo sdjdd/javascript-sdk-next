@@ -3,12 +3,33 @@ import { User } from './user';
 
 const KEY_CURRENT_USER = 'currentUser';
 
+export function setHooks(appClass: typeof App): void {
+  appClass.addHook('beforeInvokeAPI', function (_, options) {
+    if (options.sessionToken) {
+      return;
+    }
+
+    if (this.payload[KEY_CURRENT_USER] === undefined) {
+      const str = this.storage.get(KEY_CURRENT_USER);
+      if (str) {
+        this.payload[KEY_CURRENT_USER] = User.fromJSON(this, JSON.parse(str));
+      } else {
+        this.payload[KEY_CURRENT_USER] = null;
+      }
+    }
+
+    const currentUser: User = this.payload[KEY_CURRENT_USER];
+    if (currentUser) {
+      options.sessionToken = currentUser.sessionToken;
+    }
+  });
+}
+
 export class Auth {
   constructor(public readonly app: App) {}
 
   private _decodeAndSetCurrent = (data: any): User => {
     const user = User.fromJSON(this.app, data);
-    this.app.authOptions.sessionToken = user.sessionToken;
     this.app.payload[KEY_CURRENT_USER] = user;
     return user;
   };
@@ -38,21 +59,23 @@ export class Auth {
         path: '/1.1/login',
         body: { username, password },
       },
-      this._decodeAndSetCurrent
+      {
+        after: this._decodeAndSetCurrent,
+      }
     );
   }
 
   loginWithSessionToken(sessionToken: string) {
-    const sessionTokenBefore = this.app.authOptions.sessionToken;
-    this.app.authOptions.sessionToken = sessionToken;
     const task = this.app.api(
       {
         method: 'GET',
         path: '/1.1/users/me',
       },
-      this._decodeAndSetCurrent
+      {
+        sessionToken,
+        after: this._decodeAndSetCurrent,
+      }
     );
-    task.catch(() => (this.app.authOptions.sessionToken = sessionTokenBefore));
     return task;
   }
 }
