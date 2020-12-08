@@ -54,22 +54,14 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
 
   constructor(
     request: IHTTPRequest | (() => IHTTPRequest | Promise<IHTTPRequest>),
-    options?: {
-      before?: (req: IHTTPRequest) => IHTTPRequest | void;
-      after?: (res: IHTTPResponse) => T;
-    }
+    after?: (res: IHTTPResponse) => T
   ) {
     const doRequest = mustGetAdapter('request');
     const signal = new AbortSignal();
 
     super((resolve, reject) => {
       Promise.resolve(typeof request === 'function' ? request() : request).then((request) => {
-        let req = request;
-        if (options?.before) {
-          req = options.before(req) || req;
-        }
-
-        const { method, url } = req;
+        const { method, url } = request;
         doRequest(url, {
           method,
           signal,
@@ -83,8 +75,8 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
               header: (headers as any) || {},
               body: data,
             };
-            if (options?.after) {
-              resolve(options.after(res));
+            if (after) {
+              resolve(after(res));
             } else {
               resolve(res as any);
             }
