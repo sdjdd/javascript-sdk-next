@@ -1,7 +1,8 @@
 import { HTTPMethod, AbortSignal as IAbortSignal, ProgressEvent } from '@leancloud/adapter-types';
 import { noop } from 'lodash';
 import { mustGetAdapter } from '../adapters';
-import { IQuery } from './query';
+import type { IQuery } from './query';
+import { encodeURL } from './url';
 
 export interface IHTTPRequest {
   method: HTTPMethod;
@@ -61,9 +62,12 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
 
     super((resolve, reject) => {
       Promise.resolve(typeof request === 'function' ? request() : request).then((request) => {
-        const { method, url } = request;
-        doRequest(url, {
+        console.log(request);
+        const { method, url, header, query, body } = request;
+        doRequest(encodeURL(url, query), {
           method,
+          headers: header,
+          data: body,
           signal,
           onprogress: (event) => {
             this._progressListeners?.forEach((h) => h(event));
