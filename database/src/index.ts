@@ -1,8 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+import { Database } from './database';
+
 declare module '../../core' {
   interface App {
-    database(): void;
+    database(): Database;
   }
 }
 
@@ -11,8 +11,10 @@ export const name = 'database';
 export function onLoad({ modules }): void {
   const { App } = modules.core.components;
   App.prototype.database = function () {
-    console.log('app:', this);
+    return new Database(this);
   };
 }
+
+export type { Database } from './database';
 
 export default { name, onLoad };

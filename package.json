@@ -11,7 +11,7 @@
     "email": "support@leancloud.rocks"
   },
   "license": "MIT",
-  "main": "index.js",
+  "main": "sdk/index.js",
   "scripts": {
     "clear:core": "rm -rf core/dist",
     "clear:auth": "rm -rf auth/dist",
