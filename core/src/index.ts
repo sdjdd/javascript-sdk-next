@@ -1,3 +1,16 @@
-export { setAdapters } from './adapters';
-export { App } from './app';
-export { use } from './modules';
+import { LeanCloud } from './leancloud';
+import { App } from './app';
+
+const LC = new LeanCloud();
+
+LC.modules.core = {
+  name: 'core',
+  components: {
+    LeanCloud,
+    App,
+  },
+};
+
+export default LC;
+export { LC };
+export type { App };

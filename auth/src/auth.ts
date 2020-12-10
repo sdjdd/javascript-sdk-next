@@ -5,7 +5,7 @@ const KEY_CURRENT_USER = 'currentUser';
 
 export function setHooks(appClass: typeof App): void {
   appClass.addHook('beforeInvokeAPI', function (_, options) {
-    if (options.sessionToken) {
+    if (options.user) {
       return;
     }
 
@@ -20,7 +20,7 @@ export function setHooks(appClass: typeof App): void {
 
     const currentUser: User = this.payload[KEY_CURRENT_USER];
     if (currentUser) {
-      options.sessionToken = currentUser.sessionToken;
+      options.user = currentUser;
     }
   });
 }
@@ -72,7 +72,7 @@ export class Auth {
         path: '/1.1/users/me',
       },
       {
-        sessionToken,
+        user: { sessionToken },
         after: this._decodeAndSetCurrent,
       }
     );

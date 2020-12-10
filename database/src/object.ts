@@ -1,11 +1,12 @@
-import { isDate, isEmpty, isPlainObject, mapValues, omit } from 'lodash';
-import type { App, AuthOptions } from '../../core';
+import type { AuthOptions } from '../../types/core';
+import type {
+  LCObject as ILCObject,
+  GetObjectOptions,
+  UpdateObjectOptions,
+} from '../../types/database';
+import type { App } from '../../core';
 
-export interface GetObjectOptions {
-  keys?: string[];
-  include?: string[];
-  returnACL?: boolean;
-}
+import { isDate, isEmpty, isPlainObject, mapValues, omit } from 'lodash';
 
 const META_KEYS = ['__type', 'className', 'objectId', 'createdAt', 'updatedAt'];
 const RESERVED_KEYS = ['objectId', 'createdAt', 'updatedAt'];
@@ -14,7 +15,7 @@ export function omitReservedKeys(data: Record<string, any>): Record<string, any>
   return omit(data, RESERVED_KEYS);
 }
 
-export class LCObject {
+export class LCObject implements ILCObject {
   rawData: Record<string, any>;
 
   data: Record<string, any>;
@@ -59,7 +60,7 @@ export class LCObject {
     };
   }
 
-  get(options?: AuthOptions & GetObjectOptions) {
+  get(options?: GetObjectOptions) {
     return this.app.api(
       {
         method: 'GET',
@@ -82,13 +83,7 @@ export class LCObject {
     );
   }
 
-  update(
-    data: Record<string, any>,
-    options?: AuthOptions & {
-      fetch?: boolean;
-      query?: any; // TODO
-    }
-  ): Promise<LCObject> {
+  update(data: Record<string, any>, options?: UpdateObjectOptions) {
     return this.app.api(
       {
         method: 'PUT',
@@ -105,7 +100,7 @@ export class LCObject {
     );
   }
 
-  delete(options?: AuthOptions): Promise<void> {
+  delete(options?: AuthOptions) {
     return this.app.api(
       {
         method: 'DELETE',

@@ -1,26 +1,14 @@
 import { clone, trimStart } from 'lodash';
-import { RequestTask } from '../http';
-import { IHTTPRequest } from '../http/request';
-import { NamespacedStorage } from '../local-storage';
-
-export interface IAppConfig {
-  appId: string;
-  appKey: string;
-  serverURL?: string;
-  masterKey?: string;
-}
+import { HTTPRequest, RequestTask } from './http';
+import { NamespacedStorage } from './local-storage';
+import { App as IApp, AppConfig, AuthOptions } from '../../types/core';
 
 export interface IAPIRequest {
-  method: IHTTPRequest['method'];
+  method: HTTPRequest['method'];
   path: string;
-  header?: IHTTPRequest['header'];
-  query?: IHTTPRequest['query'];
+  header?: HTTPRequest['header'];
+  query?: HTTPRequest['query'];
   body?: any;
-}
-
-export interface AuthOptions {
-  useMasterKey?: boolean;
-  sessionToken?: string;
 }
 
 export type BeforeInvokeAPI = (
@@ -33,7 +21,7 @@ interface AppHooks {
   beforeInvokeAPI: BeforeInvokeAPI;
 }
 
-export class App {
+export class App implements IApp {
   static hooks = {
     beforeInvokeAPI: new Set<BeforeInvokeAPI>(),
   };
@@ -52,7 +40,7 @@ export class App {
   private _masterKey?: string;
   private _serverURL?: string;
 
-  constructor(config: IAppConfig) {
+  constructor(config: AppConfig) {
     if (!config) {
       throw new Error('The app config is necessary when construct an App');
     }
@@ -63,10 +51,16 @@ export class App {
     if (!appKey) {
       throw new Error('The appKey must be provided');
     }
+    if (!serverURL) {
+      // TODO: 实现 app router
+      throw new Error('The serverURL must be provided');
+    }
 
     this.appId = appId;
     this._appKey = appKey;
-    this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
+    if (masterKey) {
+      this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
+    }
     this._serverURL = serverURL;
     this.storage = new NamespacedStorage(appId);
   }
@@ -89,7 +83,7 @@ export class App {
           throw new Error('The masterKey is not set');
         }
 
-        const sessionToken = options.sessionToken ?? this.authOptions.sessionToken;
+        const user = options.user ?? this.authOptions.user;
 
         return {
           method: request.method,
@@ -99,7 +93,7 @@ export class App {
             'Content-Type': 'application/json',
             'X-LC-Id': this.appId,
             'X-LC-Key': useMasterKey ? this._masterKey : this._appKey,
-            'X-LC-Session': sessionToken,
+            'X-LC-Session': user?.sessionToken,
           },
           query: request.query,
           body: request.body,

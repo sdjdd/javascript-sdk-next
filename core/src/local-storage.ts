@@ -1,4 +1,4 @@
-import { mustGetAdapter } from '../adapters';
+import { mustGetAdapter } from './adapters';
 import { SyncStorage } from '@leancloud/adapter-types';
 
 function mustGetSyncStorage(): SyncStorage {

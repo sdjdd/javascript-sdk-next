@@ -1,20 +1,19 @@
 import { HTTPMethod, AbortSignal as IAbortSignal, ProgressEvent } from '@leancloud/adapter-types';
-import { noop } from 'lodash';
-import { mustGetAdapter } from '../adapters';
-import type { IQuery } from './query';
-import { encodeURL } from './url';
+import { RequestTask as IRequestTask } from '../../types/core';
+import { isUndefined, noop, omitBy } from 'lodash';
+import { mustGetAdapter } from './adapters';
 
-export interface IHTTPRequest {
+export interface HTTPRequest {
   method: HTTPMethod;
   url: string;
   header?: Record<string, string | undefined>;
-  query?: IQuery;
+  query?: Record<string, string | number | boolean | undefined>;
   body?: any;
 }
 
-export interface IHTTPResponse {
+export interface HTTPResponse {
   status: number;
-  header: Record<string, string>;
+  header?: Record<string, string>;
   body?: any;
 }
 
@@ -44,7 +43,32 @@ class AbortSignal implements IAbortSignal {
   }
 }
 
-export class RequestTask<T = IHTTPResponse> extends Promise<T> {
+export function encodeQuery(query: HTTPRequest['query']): string {
+  let str = '';
+  Object.entries(query).forEach(([key, value], index) => {
+    if (value === undefined) {
+      return;
+    }
+
+    if (index) {
+      str += '&';
+    }
+    str += key + '=' + encodeURIComponent(value);
+  });
+  return str;
+}
+
+export function encodeURL(base: string, query?: HTTPRequest['query']): string {
+  if (query) {
+    const queryString = encodeQuery(query);
+    if (queryString) {
+      return base + '?' + queryString;
+    }
+  }
+  return base;
+}
+
+export class RequestTask<T = HTTPResponse> extends Promise<T> implements IRequestTask<T> {
   private _signal: AbortSignal;
   private _slienceAbort?: boolean;
   private _progressListeners?: ((event: ProgressEvent) => void)[];
@@ -54,8 +78,8 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
   }
 
   constructor(
-    request: IHTTPRequest | (() => IHTTPRequest | Promise<IHTTPRequest>),
-    after?: (res: IHTTPResponse) => T
+    request: HTTPRequest | (() => HTTPRequest | Promise<HTTPRequest>),
+    after?: (res: HTTPResponse) => T
   ) {
     const doRequest = mustGetAdapter('request');
     const signal = new AbortSignal();
@@ -66,7 +90,7 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
         const { method, url, header, query, body } = request;
         doRequest(encodeURL(url, query), {
           method,
-          headers: header,
+          headers: omitBy(header, isUndefined),
           data: body,
           signal,
           onprogress: (event) => {
@@ -74,7 +98,7 @@ export class RequestTask<T = IHTTPResponse> extends Promise<T> {
           },
         })
           .then(({ status, headers, data }) => {
-            const res: IHTTPResponse = {
+            const res: HTTPResponse = {
               status: status || 200,
               header: (headers as any) || {},
               body: data,
