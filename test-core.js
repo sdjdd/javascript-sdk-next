@@ -1,7 +1,7 @@
 const LC = require('.');
-// const database = require('./database');
+const adapters = require('@leancloud/platform-adapters-node');
 
-console.log(LC);
+LC.setAdapters(adapters);
 
 const app = LC.init({
   appId: 'oY2aqSxhKvtL2URCcKNehatA-gzGzoHsz',
@@ -9,5 +9,11 @@ const app = LC.init({
   serverURL: 'https://lc-api.sdjdd.com',
 });
 
-// app.database();
-console.log(app.database);
+const db = app.database();
+const auth = app.auth();
+
+const Test = db.class('Test');
+
+auth.login('sdjdd', '1234567').then((user) => {
+  Test.object('5fcf9fb3ffce32297fa40cca').get().then(console.log);
+});

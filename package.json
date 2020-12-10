@@ -14,12 +14,15 @@
   "main": "sdk/index.cjs.js",
   "types": "sdk/index.d.ts",
   "scripts": {
-    "clear": "rm -rf app/dist database/dist",
-    "build": "rollup -c"
+    "build:core": "rm -rf core/dist && rollup -c core/rollup.config.js",
+    "build:auth": "rm -rf auth/dist && rollup -c auth/rollup.config.js",
+    "build:database": "rm -rf database/dist && rollup -c database/rollup.config.js"
   },
   "keywords": [],
   "dependencies": {
     "@leancloud/adapter-types": "^4.0.0",
+    "@types/debug": "^4.1.5",
+    "debug": "^4.3.1",
     "eventemitter3": "^4.0.7",
     "lodash": "^4.17.20"
   },
