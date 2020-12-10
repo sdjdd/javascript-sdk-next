@@ -6,8 +6,7 @@
     "moduleResolution": "Node"
   },
   "include": [
-    "app/src/**/*",
-    "database/src/**/*",
-    "sdk/src/**/*"
+    "core/src/**/*",
+    "database/src/**/*"
   ]
 }

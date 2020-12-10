@@ -15,8 +15,8 @@ const output = (base) => [
 
 export default [
   {
-    input: 'app/src/index.ts',
-    output: output('app'),
+    input: 'core/src/index.ts',
+    output: output('core'),
     plugins: [ts()],
     external: ['lodash', 'eventemitter3'],
   },

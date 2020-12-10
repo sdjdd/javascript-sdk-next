@@ -1,7 +1,7 @@
 import { Database } from './database';
 
 //@ts-ignore
-declare module '../../app' {
+declare module '../../core' {
   interface App {
     database(): Database;
   }

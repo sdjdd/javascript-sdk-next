@@ -1,4 +1,4 @@
-const LC = require('../app');
+const LC = require('../core');
 
 LC.use(require('../database'));
 

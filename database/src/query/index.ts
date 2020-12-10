@@ -1,6 +1,6 @@
 import { isEmpty, isPlainObject } from 'lodash';
 
-import type { App } from '../../../app/src/app';
+import type { App } from '../../../core/src';
 import { orCommand } from './command';
 import { Condition, Constraint, isConstraint, isRawCondition } from './constraint';
 
