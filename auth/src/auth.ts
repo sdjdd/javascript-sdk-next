@@ -28,6 +28,17 @@ export function setHooks(appClass: typeof App): void {
 export class Auth {
   constructor(public readonly app: App) {}
 
+  static getCurrentUser(app: App): User {
+    if (!app.payload[KEY_CURRENT_USER]) {
+      const str = app.storage.get(KEY_CURRENT_USER);
+      if (str) {
+        const user = User.fromJSON(app, JSON.parse(str));
+        app.payload[KEY_CURRENT_USER] = user;
+      }
+    }
+    return app.payload[KEY_CURRENT_USER];
+  }
+
   private _decodeAndSetCurrent = (data: any): User => {
     const user = User.fromJSON(this.app, data);
     this.app.payload[KEY_CURRENT_USER] = user;

@@ -1,5 +1,12 @@
 import { Auth, setHooks } from './auth';
 
+//@ts-ignore
+declare module '../../core' {
+  interface App {
+    auth(): Auth;
+  }
+}
+
 export const name = 'auth';
 
 export function onLoad({ modules }): void {
@@ -10,6 +17,4 @@ export function onLoad({ modules }): void {
   setHooks(App);
 }
 
-export type { Auth };
-
-export default { name, onLoad };
+export { Auth };
