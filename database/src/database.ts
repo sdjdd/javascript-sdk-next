@@ -1,4 +1,4 @@
-import type { App } from '../../core/src';
+import type { App } from '../../core';
 import { LCClass } from './class';
 import { equalCommand, notEqualCommand, orCommand } from './query/command';
 
