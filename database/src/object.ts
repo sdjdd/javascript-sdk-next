@@ -22,9 +22,7 @@ export interface UpdateObjectOptions extends AuthOptions {
 
 export class LCObject {
   rawData: Record<string, any>;
-
   data: Record<string, any>;
-
   createdAt: Date;
   updatedAt: Date;
 
@@ -62,6 +60,8 @@ export class LCObject {
     return {
       ...this.rawData,
       __type: 'Object',
+      className: this.className,
+      objectId: this.id,
     };
   }
 

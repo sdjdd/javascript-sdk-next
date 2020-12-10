@@ -4,21 +4,11 @@ import { User } from './user';
 const KEY_CURRENT_USER = 'currentUser';
 
 export function setHooks(appClass: typeof App): void {
-  appClass.addHook('beforeInvokeAPI', function (_, options) {
+  appClass.addHook('beforeInvokeAPI', async function (_, options) {
     if (options.user) {
       return;
     }
-
-    if (this.payload[KEY_CURRENT_USER] === undefined) {
-      const str = this.storage.get(KEY_CURRENT_USER);
-      if (str) {
-        this.payload[KEY_CURRENT_USER] = User.fromJSON(this, JSON.parse(str));
-      } else {
-        this.payload[KEY_CURRENT_USER] = null;
-      }
-    }
-
-    const currentUser: User = this.payload[KEY_CURRENT_USER];
+    const currentUser = await Auth.getCurrentUserAsync(this);
     if (currentUser) {
       options.user = currentUser;
     }
@@ -28,39 +18,34 @@ export function setHooks(appClass: typeof App): void {
 export class Auth {
   constructor(public readonly app: App) {}
 
-  static getCurrentUser(app: App): User {
+  static getCurrentUser(app: App): User | undefined {
     if (!app.payload[KEY_CURRENT_USER]) {
-      const str = app.storage.get(KEY_CURRENT_USER);
-      if (str) {
-        const user = User.fromJSON(app, JSON.parse(str));
+      const userStr = app.storage.get(KEY_CURRENT_USER);
+      if (userStr) {
+        const user = User.fromJSON(app, JSON.parse(userStr));
         app.payload[KEY_CURRENT_USER] = user;
       }
     }
     return app.payload[KEY_CURRENT_USER];
   }
 
-  private _decodeAndSetCurrent = (data: any): User => {
-    const user = User.fromJSON(this.app, data);
-    this.app.payload[KEY_CURRENT_USER] = user;
-    return user;
-  };
-
-  currentUser(): User | undefined {
-    if (!this.app.payload[KEY_CURRENT_USER]) {
-      const str = this.app.storage.get(KEY_CURRENT_USER);
-      const data = JSON.parse(str);
-      this.app.payload[KEY_CURRENT_USER] = User.fromJSON(this.app, data);
+  static async getCurrentUserAsync(app: App): Promise<User | undefined> {
+    if (!app.payload[KEY_CURRENT_USER]) {
+      const userStr = await app.storage.getAsync(KEY_CURRENT_USER);
+      if (userStr) {
+        const user = User.fromJSON(app, JSON.parse(userStr));
+        app.payload[KEY_CURRENT_USER] = user;
+      }
     }
-    return this.app.payload[KEY_CURRENT_USER];
+    return app.payload[KEY_CURRENT_USER];
   }
 
-  async currentUserAsync(): Promise<User | undefined> {
-    if (!this.app.payload[KEY_CURRENT_USER]) {
-      const str = await this.app.storage.getAsync(KEY_CURRENT_USER);
-      const data = JSON.parse(str);
-      this.app.payload[KEY_CURRENT_USER] = User.fromJSON(this.app, data);
-    }
-    return this.app.payload[KEY_CURRENT_USER];
+  currentUser(): User | undefined {
+    return Auth.getCurrentUser(this.app);
+  }
+
+  currentUserAsync(): Promise<User | undefined> {
+    return Auth.getCurrentUserAsync(this.app);
   }
 
   login(username: string, password: string) {
@@ -89,4 +74,10 @@ export class Auth {
     );
     return task;
   }
+
+  private _decodeAndSetCurrent = (data: any): User => {
+    const user = User.fromJSON(this.app, data);
+    this.app.payload[KEY_CURRENT_USER] = user;
+    return user;
+  };
 }

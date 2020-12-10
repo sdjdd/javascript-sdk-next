@@ -37,10 +37,10 @@ export interface AppConfig {
 
 export class App {
   static hooks = {
-    beforeInvokeAPI: new Set<BeforeInvokeAPI>(),
+    beforeInvokeAPI: [] as BeforeInvokeAPI[],
   };
   static addHook<T extends keyof AppHooks>(name: T, hook: AppHooks[T]): void {
-    this.hooks[name].add(hook);
+    this.hooks[name].push(hook);
   }
 
   readonly appId: string;
@@ -88,9 +88,9 @@ export class App {
 
     return new RequestTask(
       async () => {
-        App.hooks.beforeInvokeAPI.forEach(async (hook) => {
-          await hook.call(this, request, options);
-        });
+        await Promise.all(
+          App.hooks.beforeInvokeAPI.map((hook) => hook.call(this, request, options))
+        );
 
         const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
         if (useMasterKey && !this._masterKey) {
