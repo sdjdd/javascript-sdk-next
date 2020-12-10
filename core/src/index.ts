@@ -12,7 +12,8 @@ export { use };
 
 export { setAdapters } from './adapter';
 
-export type { App, AppConfig, AuthOptions } from './app';
+export { App, AppConfig, AuthOptions } from './app';
+export { RequestTask } from './http';
 
 export function init(config: AppConfig): App {
   return new App(config);

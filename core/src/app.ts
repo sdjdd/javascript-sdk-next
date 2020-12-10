@@ -1,6 +1,7 @@
 import { clone, trimStart } from 'lodash';
 import { HTTPRequest, RequestTask } from './http';
 import { NamespacedStorage } from './local-storage';
+import { log, LogItem } from './runtime';
 
 export interface AuthOptions {
   useMasterKey?: boolean;
@@ -121,5 +122,9 @@ export class App {
         return options.after ? options.after(body) : body;
       }
     );
+  }
+
+  log(logItem: Omit<LogItem, 'appId'>): void {
+    log({ ...logItem, appId: this.appId });
   }
 }

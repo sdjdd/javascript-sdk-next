@@ -6,8 +6,16 @@ export interface Module {
   onLoad?: (rtm: typeof runtime) => void;
 }
 
+export interface LogItem {
+  module: string;
+  action: string;
+  data: any;
+  appId?: string;
+}
+
 export interface Events {
   'module:load': (name: string, modules: Record<string, Module>) => void;
+  log: (logItem: LogItem) => void;
 }
 
 const modules: Record<string, Module> = {};
@@ -27,4 +35,8 @@ export function use(module: Module): void {
   modules[name] = module;
   eventHub.emit('module:load', name, modules);
   module.onLoad?.(runtime);
+}
+
+export function log(item: LogItem): void {
+  eventHub.emit('log', item);
 }
