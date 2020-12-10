@@ -1,6 +1,4 @@
-import type { AuthOptions } from '../../core';
-
-import type { App } from '../../core';
+import type { App, AuthOptions } from '../../app/src/app';
 
 import { isDate, isEmpty, isPlainObject, mapValues, omit } from 'lodash';
 

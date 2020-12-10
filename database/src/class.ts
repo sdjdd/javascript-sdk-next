@@ -1,4 +1,4 @@
-import type { AuthOptions } from '../../core';
+import type { AuthOptions } from '../../app/src/app';
 
 import { LCEncode, LCObject, omitReservedKeys } from './object';
 import { LCQuery } from './query';
