@@ -7,36 +7,32 @@ export interface Module {
 }
 
 export interface LogItem {
-  module: string;
-  action: string;
-  data: any;
-  appId?: string;
+  label: string;
+  level: 'trace' | 'info' | 'error';
+  data: any | any[];
 }
 
 export interface Events {
-  'module:load': (name: string, modules: Record<string, Module>) => void;
+  'module:load': (name: string) => void;
   log: (logItem: LogItem) => void;
 }
 
-const modules: Record<string, Module> = {};
+class Runtime extends EventEmitter<Events> {
+  readonly modules: Record<string, Module> = {};
+}
 
-const eventHub = new EventEmitter<Events>();
-
-export const runtime = {
-  modules,
-  eventHub,
-};
+export const runtime = new Runtime();
 
 export function use(module: Module): void {
   const { name } = module;
-  if (name in modules) {
+  if (name in runtime.modules) {
     throw new Error(`已导入名为 ${name} 的模块`);
   }
-  modules[name] = module;
-  eventHub.emit('module:load', name, modules);
+  runtime.modules[name] = module;
+  runtime.emit('module:load', name);
   module.onLoad?.(runtime);
 }
 
 export function log(item: LogItem): void {
-  eventHub.emit('log', item);
+  runtime.emit('log', item);
 }

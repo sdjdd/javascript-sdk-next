@@ -124,7 +124,7 @@ export class App {
     );
   }
 
-  log(logItem: Omit<LogItem, 'appId'>): void {
-    log({ ...logItem, appId: this.appId });
+  log(logItem: LogItem): void {
+    log(logItem);
   }
 }

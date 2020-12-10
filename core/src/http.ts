@@ -1,6 +1,7 @@
 import { HTTPMethod, AbortSignal as IAbortSignal, ProgressEvent } from '@leancloud/adapter-types';
 import { isUndefined, noop, omitBy } from 'lodash';
 import { mustGetAdapter } from './adapter';
+import { runtime } from './runtime';
 
 export interface HTTPRequest {
   method: HTTPMethod;
@@ -85,7 +86,12 @@ export class RequestTask<T = HTTPResponse> extends Promise<T> {
 
     super((resolve, reject) => {
       Promise.resolve(typeof request === 'function' ? request() : request).then((request) => {
-        console.log(request);
+        runtime.emit('log', {
+          level: 'trace',
+          label: 'http:send',
+          data: request,
+        });
+
         const { method, url, header, query, body } = request;
         doRequest(encodeURL(url, query), {
           method,
@@ -102,6 +108,11 @@ export class RequestTask<T = HTTPResponse> extends Promise<T> {
               header: (headers as any) || {},
               body: data,
             };
+            runtime.emit('log', {
+              level: 'trace',
+              label: 'http:recv',
+              data: res,
+            });
             if (after) {
               resolve(after(res));
             } else {
