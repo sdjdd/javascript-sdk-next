@@ -1,21 +1,24 @@
 import { Adapters } from '@leancloud/adapter-types';
 import { EventEmitter } from 'eventemitter3';
 
-import type { Module } from '../../types/module';
-import type { App as IApp, AppConfig } from '../../types/core';
-
 import { setAdapters } from './adapters';
-import { App } from './app';
+import { App, AppConfig } from './app';
+
+export interface Module {
+  name: string;
+  components?: Record<string, any>;
+  onLoad?: (env: any) => void;
+}
 
 export interface LeanCloudEvents {
   'module:load': (name: string, modules: Record<string, Module>) => void;
 }
 
 export class LeanCloud extends EventEmitter<LeanCloudEvents> {
-  readonly apps: IApp[] = [];
+  readonly apps: App[] = [];
   readonly modules: Record<string, Module> = {};
 
-  init(appConfig: AppConfig): IApp {
+  init(appConfig: AppConfig): App {
     const app = new App(appConfig);
     this.apps.push(app);
     return app;

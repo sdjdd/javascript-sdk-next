@@ -14,3 +14,4 @@ LC.modules.core = {
 export default LC;
 export { LC };
 export type { App };
+export type { AuthOptions } from './app';

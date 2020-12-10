@@ -1,14 +1,18 @@
-import type { AuthOptions } from '../../types/core';
+import type { AuthOptions } from '../../core';
 
 import { LCEncode, LCObject, omitReservedKeys } from './object';
 import { LCQuery } from './query';
+
+export interface AddObjectOptions extends AuthOptions {
+  fetch?: boolean;
+}
 
 export class LCClass extends LCQuery {
   object(id: string): LCObject {
     return new LCObject(this.app, this.className, id);
   }
 
-  add(data: Record<string, any>, options?: AuthOptions & { fetch?: boolean }) {
+  add(data: Record<string, any>, options?: AddObjectOptions) {
     return this.app.api(
       {
         method: 'POST',

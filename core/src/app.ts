@@ -1,7 +1,13 @@
 import { clone, trimStart } from 'lodash';
 import { HTTPRequest, RequestTask } from './http';
 import { NamespacedStorage } from './local-storage';
-import { App as IApp, AppConfig, AuthOptions } from '../../types/core';
+
+export interface AuthOptions {
+  useMasterKey?: boolean;
+  user?: {
+    sessionToken: string;
+  };
+}
 
 export interface IAPIRequest {
   method: HTTPRequest['method'];
@@ -21,7 +27,14 @@ interface AppHooks {
   beforeInvokeAPI: BeforeInvokeAPI;
 }
 
-export class App implements IApp {
+export interface AppConfig {
+  appId: string;
+  appKey: string;
+  serverURL?: string;
+  masterKey?: string;
+}
+
+export class App {
   static hooks = {
     beforeInvokeAPI: new Set<BeforeInvokeAPI>(),
   };

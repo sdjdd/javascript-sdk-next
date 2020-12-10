@@ -1,5 +1,4 @@
 import { HTTPMethod, AbortSignal as IAbortSignal, ProgressEvent } from '@leancloud/adapter-types';
-import { RequestTask as IRequestTask } from '../../types/core';
 import { isUndefined, noop, omitBy } from 'lodash';
 import { mustGetAdapter } from './adapters';
 
@@ -68,7 +67,7 @@ export function encodeURL(base: string, query?: HTTPRequest['query']): string {
   return base;
 }
 
-export class RequestTask<T = HTTPResponse> extends Promise<T> implements IRequestTask<T> {
+export class RequestTask<T = HTTPResponse> extends Promise<T> {
   private _signal: AbortSignal;
   private _slienceAbort?: boolean;
   private _progressListeners?: ((event: ProgressEvent) => void)[];

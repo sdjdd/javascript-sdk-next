@@ -1,6 +1,6 @@
-import type { Database } from '../types/database';
+import type { Database } from './dist';
 
-declare module '../types/core' {
+declare module '../core' {
   interface App {
     database(): Database;
   }

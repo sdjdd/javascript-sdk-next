@@ -1,9 +1,5 @@
-import type { AuthOptions } from '../../types/core';
-import type {
-  LCObject as ILCObject,
-  GetObjectOptions,
-  UpdateObjectOptions,
-} from '../../types/database';
+import type { AuthOptions } from '../../core';
+
 import type { App } from '../../core';
 
 import { isDate, isEmpty, isPlainObject, mapValues, omit } from 'lodash';
@@ -15,7 +11,18 @@ export function omitReservedKeys(data: Record<string, any>): Record<string, any>
   return omit(data, RESERVED_KEYS);
 }
 
-export class LCObject implements ILCObject {
+export interface GetObjectOptions extends AuthOptions {
+  keys?: string[];
+  include?: string[];
+  returnACL?: boolean;
+}
+
+export interface UpdateObjectOptions extends AuthOptions {
+  fetch?: boolean;
+  query?: any; // TODO
+}
+
+export class LCObject {
   rawData: Record<string, any>;
 
   data: Record<string, any>;
