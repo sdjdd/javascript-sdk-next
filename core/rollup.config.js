@@ -19,6 +19,7 @@ export default [
     external: [
       'eventemitter3',
       'lodash/clone',
+      'lodash/cloneDeep',
       'lodash/isDate',
       'lodash/isEmpty',
       'lodash/isPlainObject',

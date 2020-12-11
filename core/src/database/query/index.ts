@@ -1,34 +1,41 @@
+import cloneDeep from 'lodash/cloneDeep';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 
-import type { App } from '../../app';
-import { orCommand } from './command';
-import { Condition, Constraint, isConstraint, isRawCondition } from './constraint';
+import type { App, AuthOptions } from '../../app';
+import { HTTPRequest } from '../../http';
+import { LCObject } from '../lcobject';
+import { Condition, isConstraint, isRawCondition } from './constraint';
 
 export class LCQuery {
+  protected _params: HTTPRequest['query'] = {};
   protected _condition: Condition = {};
 
   constructor(public readonly app: App, public readonly className: string) {}
 
-  protected _applyCondition(cond: Condition): Condition {
+  protected _applyConstraint(cond: Record<string, any>): Condition {
+    if (!isPlainObject(cond)) {
+      throw new Error('无效的查询约束');
+    }
+
     const and: Condition[] = [];
     let tempCond: Condition = {};
-    Object.entries(flat(cond)).forEach(([key, value]) => {
-      // array 等同于 OrConstraint
-      if (Array.isArray(value)) {
-        value = orCommand(value);
-      }
 
-      if (!isConstraint(value)) {
-        throw new Error('无效的查询约束，key=' + key);
+    Object.entries(cond).forEach(([key, value]) => {
+      if (value === undefined) {
+        return;
       }
-
-      tempCond = value.applyQueryConstraint(tempCond, key);
       if (!isRawCondition(tempCond)) {
         and.push(tempCond);
         tempCond = {};
       }
+      if (isConstraint(value)) {
+        tempCond = value.applyQueryConstraint(tempCond, key);
+      } else {
+        tempCond[key] = value;
+      }
     });
+
     if (isEmpty(tempCond)) {
       if (and.length) {
         return { $and: and };
@@ -45,20 +52,20 @@ export class LCQuery {
     }
   }
 
-  where(cond: Record<string, Constraint>): LCQuery;
-  where(cond: Record<string, Constraint>[]): LCQuery;
-  where(cond: Record<string, Constraint> | Record<string, Constraint>[]): LCQuery {
-    if (!cond || (Array.isArray(cond) && cond.length === 0)) {
+  where(cond: Record<string, any>): LCQuery;
+  where(cond: Record<string, any>[]): LCQuery;
+  where(cond: Record<string, any> | Record<string, any>[]): LCQuery {
+    if (isEmpty(cond) || (Array.isArray(cond) && cond.length === 0)) {
       return this;
     }
+
+    const query = this.clone();
+
     let newCond: Condition;
     if (Array.isArray(cond)) {
       const or: Condition[] = [];
       cond.forEach((item) => {
-        if (!isPlainObject(item)) {
-          throw new Error('无效的查询条件');
-        }
-        const tmp = this._applyCondition(item);
+        const tmp = query._applyConstraint(item);
         if (!isEmpty(tmp)) {
           or.push(tmp);
         }
@@ -69,32 +76,50 @@ export class LCQuery {
         newCond = { $or: or };
       }
     } else {
-      newCond = this._applyCondition(cond);
+      newCond = query._applyConstraint(cond);
     }
 
     if (!isEmpty(newCond)) {
-      if (isEmpty(this._condition)) {
-        this._condition = newCond;
+      if (isEmpty(query._condition)) {
+        query._condition = newCond;
       } else {
-        this._condition = { $and: [this._condition, newCond] };
+        query._condition = { $and: [query._condition, newCond] };
       }
     }
 
-    return this;
+    return query;
   }
-}
 
-function flat(obj: Record<string, any>): Record<string, any> {
-  const ret: Record<string, any> = {};
-  Object.entries(obj).forEach(([key, value]) => {
-    if (isPlainObject(value)) {
-      value = flat(value);
-      Object.entries(value).forEach(([innerKey, value]) => {
-        ret[`${key}.${innerKey}`] = value;
-      });
-    } else {
-      ret[key] = value;
-    }
-  });
-  return ret;
+  limit(count: number): LCQuery {
+    const query = this.clone();
+    query._params.limit = count;
+    return query;
+  }
+
+  async find(options?: AuthOptions): Promise<LCObject[]> {
+    const { results = [] } = await this.app.request(
+      {
+        method: 'GET',
+        path: `/1.1/classes/${this.className}`,
+        query: {
+          ...this._params,
+          where: JSON.stringify(this._condition),
+        },
+      },
+      options
+    );
+    return results.map((result) => LCObject.fromJSON(this.app, result, this.className));
+  }
+
+  async first(options?: AuthOptions): Promise<LCObject | null> {
+    const objects = await this.limit(1).find(options);
+    return objects.length ? objects[0] : null;
+  }
+
+  clone(): LCQuery {
+    const query = new LCQuery(this.app, this.className);
+    query._params = cloneDeep(this._params);
+    query._condition = cloneDeep(this._params);
+    return query;
+  }
 }

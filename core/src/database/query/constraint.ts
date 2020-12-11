@@ -47,18 +47,23 @@ export class NotEqualConstraint implements Constraint {
   }
 }
 
-export class OrConstraint implements Constraint<Constraint[]> {
-  constructor(public readonly value: Constraint[]) {}
+export class OrConstraint implements Constraint<any[]> {
+  constructor(public readonly value: any[]) {}
 
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     if (!this.value || this.value.length === 0) {
       return cond;
     }
-    if (this.value.length === 1) {
-      return this.value[0].applyQueryConstraint(cond, key);
-    }
-    return {
-      $or: this.value.map((item) => item.applyQueryConstraint(cond, key)),
-    };
+    const or: Condition[] = [];
+
+    this.value.forEach((item) => {
+      if (isConstraint(item)) {
+        or.push(item.applyQueryConstraint(cond, key));
+      } else {
+        or.push({ ...cond, [key]: item });
+      }
+    });
+
+    return or.length === 1 ? or[0] : { $or: or };
   }
 }
