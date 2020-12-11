@@ -1,4 +1,6 @@
-import { clone, trimStart } from 'lodash';
+import clone from 'lodash/clone';
+import trimStart from 'lodash/trimStart';
+
 import { Database } from './database';
 import { doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
 import { NamespacedStorage } from './local-storage';

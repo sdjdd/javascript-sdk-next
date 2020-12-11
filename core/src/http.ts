@@ -1,5 +1,7 @@
+import isUndefined from 'lodash/isUndefined';
+import omitBy from 'lodash/omitBy';
+
 import { HTTPMethod, RequestOptions } from '@leancloud/adapter-types';
-import { isUndefined, omitBy } from 'lodash';
 import { mustGetAdapter } from './adapter';
 import { runtime } from './runtime';
 

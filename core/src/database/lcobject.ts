@@ -1,6 +1,10 @@
 import type { App, AuthOptions } from '../app';
 
-import { isDate, isEmpty, isPlainObject, mapValues, omit } from 'lodash';
+import isDate from 'lodash/isDate';
+import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
+import mapValues from 'lodash/mapValues';
+import omit from 'lodash/omit';
 
 const META_KEYS = ['__type', 'className', 'objectId', 'createdAt', 'updatedAt'];
 const RESERVED_KEYS = ['objectId', 'createdAt', 'updatedAt'];

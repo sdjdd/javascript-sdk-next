@@ -16,6 +16,17 @@ export default [
       },
     ],
     plugins: [ts({ tsconfig: 'core/tsconfig.json' })],
-    external: ['lodash', 'eventemitter3'],
+    external: [
+      'eventemitter3',
+      'lodash/clone',
+      'lodash/isDate',
+      'lodash/isEmpty',
+      'lodash/isPlainObject',
+      'lodash/isUndefined',
+      'lodash/mapValues',
+      'lodash/omit',
+      'lodash/omitBy',
+      'lodash/trimStart',
+    ],
   },
 ];

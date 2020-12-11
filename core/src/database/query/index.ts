@@ -1,4 +1,5 @@
-import { isEmpty, isPlainObject } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
 
 import type { App } from '../../app';
 import { orCommand } from './command';
