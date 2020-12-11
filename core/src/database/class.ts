@@ -1,6 +1,6 @@
-import type { AuthOptions } from '../../core';
+import type { AuthOptions } from '../app';
 
-import { LCEncode, LCObject, omitReservedKeys } from './object';
+import { LCEncode, LCObject, omitReservedKeys } from './lcobject';
 import { LCQuery } from './query';
 
 export interface AddObjectOptions extends AuthOptions {
@@ -13,7 +13,7 @@ export class LCClass extends LCQuery {
   }
 
   add(data: Record<string, any>, options?: AddObjectOptions) {
-    return this.app.api(
+    return this.app.request(
       {
         method: 'POST',
         path: `/1.1/classes/${this.className}`,
@@ -22,10 +22,7 @@ export class LCClass extends LCQuery {
         },
         body: LCEncode(omitReservedKeys(data)),
       },
-      {
-        ...options,
-        after: (data) => LCObject.fromJSON(this.app, data, this.className),
-      }
+      options
     );
   }
 }

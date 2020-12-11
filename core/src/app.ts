@@ -1,13 +1,12 @@
 import { clone, trimStart } from 'lodash';
-import { HTTPRequest, RequestTask } from './http';
+import { Database } from './database';
+import { doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
 import { NamespacedStorage } from './local-storage';
 import { log, LogItem } from './runtime';
 
-export interface AuthOptions {
+export interface AuthOptions extends HTTPRequestOptions {
   useMasterKey?: boolean;
-  user?: {
-    sessionToken: string;
-  };
+  sessionToken?: string;
 }
 
 export interface IAPIRequest {
@@ -44,7 +43,6 @@ export class App {
   }
 
   readonly appId: string;
-  readonly authOptions: AuthOptions = {};
   readonly payload: Record<string, any> = {};
   readonly storage: NamespacedStorage;
 
@@ -79,52 +77,50 @@ export class App {
     this.storage = new NamespacedStorage(appId);
   }
 
-  api<T = any>(
-    request: IAPIRequest,
-    options?: AuthOptions & { after?: (body: any) => T }
-  ): RequestTask<T> {
+  database(): Database {
+    return new Database(this);
+  }
+
+  async request(request: IAPIRequest, options?: AuthOptions): Promise<any> {
     request = clone(request);
     options = clone(options) || {};
+    await Promise.all(App.hooks.beforeInvokeAPI.map((hook) => hook.call(this, request, options)));
 
-    return new RequestTask(
-      async () => {
-        await Promise.all(
-          App.hooks.beforeInvokeAPI.map((hook) => hook.call(this, request, options))
-        );
+    const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
+    if (useMasterKey && !this._masterKey) {
+      throw new Error('The masterKey is not set');
+    }
 
-        const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
-        if (useMasterKey && !this._masterKey) {
-          throw new Error('The masterKey is not set');
-        }
-
-        const user = options.user ?? this.authOptions.user;
-
-        return {
-          method: request.method,
-          url: this._serverURL + '/' + trimStart(request.path, '/'),
-          header: {
-            ...request.header,
-            'Content-Type': 'application/json',
-            'X-LC-Id': this.appId,
-            'X-LC-Key': useMasterKey ? this._masterKey : this._appKey,
-            'X-LC-Session': user?.sessionToken,
-          },
-          query: request.query,
-          body: request.body,
-        };
+    const { status, body } = await doHTTPRequest({
+      ...request,
+      url: this._serverURL + '/' + trimStart(request.path, '/'),
+      header: {
+        ...request.header,
+        'Content-Type': 'application/json',
+        'X-LC-Id': this.appId,
+        'X-LC-Key': useMasterKey ? this._masterKey : this._appKey,
+        'X-LC-Session': options?.sessionToken,
       },
+    });
 
-      ({ status, body }) => {
-        if (status >= 400) {
-          const { code, error } = body;
-          throw new Error(`${code}: ${error}`);
-        }
-        return options.after ? options.after(body) : body;
+    if (status >= 400) {
+      const { code, error } = body;
+      if (code && error) {
+        throw new APIError(code, error);
       }
-    );
+      throw new Error(JSON.stringify(body));
+    }
+
+    return body;
   }
 
   log(logItem: LogItem): void {
     log(logItem);
+  }
+}
+
+export class APIError extends Error {
+  constructor(public code: number, public error: string) {
+    super(`code: ${code}, error: ${error}`);
   }
 }

@@ -1,4 +1,4 @@
-const LC = require('.');
+const LC = require('./core');
 const adapters = require('@leancloud/platform-adapters-node');
 const debug = require('./debug');
 
@@ -11,13 +11,10 @@ const app = LC.init({
 });
 
 const db = app.database();
-const auth = app.auth();
 
 const Test = db.class('Test');
 
 LC.use(debug);
 debug.debug.enable('leancloud:*');
 
-auth.login('sdjdd', '1234567').then((user) => {
-  Test.object('5fcf9fb3ffce32297fa40cca').get().then(console.log);
-});
+Test.object('5f40e085edbb9745553065d5').get().then(console.log);

@@ -1,4 +1,4 @@
-import type { App } from '../../core';
+import type { App, AuthOptions } from '../../core';
 import { User } from './user';
 
 const KEY_CURRENT_USER = 'currentUser';
@@ -18,7 +18,7 @@ export function setHooks(appClass: typeof App): void {
 export class Auth {
   constructor(public readonly app: App) {}
 
-  static getCurrentUser(app: App): User | undefined {
+  static getCurrentUser(app: App): User | null {
     if (!app.payload[KEY_CURRENT_USER]) {
       const userStr = app.storage.get(KEY_CURRENT_USER);
       if (userStr) {
@@ -26,10 +26,10 @@ export class Auth {
         app.payload[KEY_CURRENT_USER] = user;
       }
     }
-    return app.payload[KEY_CURRENT_USER];
+    return app.payload[KEY_CURRENT_USER] || null;
   }
 
-  static async getCurrentUserAsync(app: App): Promise<User | undefined> {
+  static async getCurrentUserAsync(app: App): Promise<User | null> {
     if (!app.payload[KEY_CURRENT_USER]) {
       const userStr = await app.storage.getAsync(KEY_CURRENT_USER);
       if (userStr) {
@@ -37,15 +37,20 @@ export class Auth {
         app.payload[KEY_CURRENT_USER] = user;
       }
     }
-    return app.payload[KEY_CURRENT_USER];
+    return app.payload[KEY_CURRENT_USER] || null;
   }
 
-  currentUser(): User | undefined {
+  currentUser(): User | null {
     return Auth.getCurrentUser(this.app);
   }
 
-  currentUserAsync(): Promise<User | undefined> {
+  currentUserAsync(): Promise<User | null> {
     return Auth.getCurrentUserAsync(this.app);
+  }
+
+  signUp(data: Record<string, any>, options?: AuthOptions): Promise<User> {
+    //
+    return {} as any;
   }
 
   login(username: string, password: string) {

@@ -1,4 +1,4 @@
-import type { App, AuthOptions } from '../../core';
+import type { App, AuthOptions } from '../app';
 
 import { isDate, isEmpty, isPlainObject, mapValues, omit } from 'lodash';
 
@@ -65,8 +65,8 @@ export class LCObject {
     };
   }
 
-  get(options?: GetObjectOptions) {
-    return this.app.api(
+  async get(options?: GetObjectOptions): Promise<LCObject> {
+    const rawData = await this.app.request(
       {
         method: 'GET',
         path: `/1.1/classes/${this.className}/${this.id}`,
@@ -76,20 +76,16 @@ export class LCObject {
           returnACL: options?.returnACL,
         },
       },
-      {
-        ...options,
-        after: (data) => {
-          if (isEmpty(data)) {
-            throw new Error(`The object(id=${this.id}) is not exists`);
-          }
-          return LCObject.fromJSON(this.app, data, this.className);
-        },
-      }
+      options
     );
+    if (isEmpty(rawData)) {
+      throw new Error(`The object(id=${this.id}) is not exists`);
+    }
+    return LCObject.fromJSON(this.app, rawData, this.className);
   }
 
-  update(data: Record<string, any>, options?: UpdateObjectOptions) {
-    return this.app.api(
+  async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<LCObject> {
+    const rawData = await this.app.request(
       {
         method: 'PUT',
         path: `/1.1/classes/${this.className}/${this.id}`,
@@ -98,15 +94,13 @@ export class LCObject {
         },
         body: LCEncode(omitReservedKeys(data)),
       },
-      {
-        ...options,
-        after: (data) => LCObject.fromJSON(this.app, data, this.className),
-      }
+      options
     );
+    return LCObject.fromJSON(this.app, rawData, this.className);
   }
 
-  delete(options?: AuthOptions) {
-    return this.app.api(
+  delete(options?: AuthOptions): Promise<void> {
+    return this.app.request(
       {
         method: 'DELETE',
         path: `/1.1/classes/${this.className}/${this.id}`,
@@ -126,6 +120,8 @@ export function LCDecode(app: App, data: any): any {
         return LCObject.fromJSON(app, data);
       case 'Date':
         return new Date(data.iso);
+      case 'GeoPoint':
+        return { longitude: data.longitude, latitude: data.latitude };
       default:
         return mapValues(data, (value) => LCDecode(app, value));
     }

@@ -1,5 +1,5 @@
-import { HTTPMethod, AbortSignal as IAbortSignal, ProgressEvent } from '@leancloud/adapter-types';
-import { isUndefined, noop, omitBy } from 'lodash';
+import { HTTPMethod, RequestOptions } from '@leancloud/adapter-types';
+import { isUndefined, omitBy } from 'lodash';
 import { mustGetAdapter } from './adapter';
 import { runtime } from './runtime';
 
@@ -17,30 +17,9 @@ export interface HTTPResponse {
   body?: any;
 }
 
-class AbortSignal implements IAbortSignal {
-  onabort: () => void = noop;
-
-  private _aborted = false;
-  private _abortListeners: (() => void)[] = [];
-
-  get aborted() {
-    return this._aborted;
-  }
-
-  addEventListener(event: 'abort', listener: () => void): void {
-    if (event === 'abort') {
-      this._abortListeners.push(listener);
-    }
-  }
-
-  abort() {
-    if (this._aborted) {
-      return;
-    }
-    this._aborted = true;
-    this.onabort?.();
-    this._abortListeners.forEach((h) => h());
-  }
+export interface HTTPRequestOptions {
+  onProgress?: RequestOptions['onprogress'];
+  abortSignal?: RequestOptions['signal'];
 }
 
 export function encodeQuery(query: HTTPRequest['query']): string {
@@ -68,79 +47,29 @@ export function encodeURL(base: string, query?: HTTPRequest['query']): string {
   return base;
 }
 
-export class RequestTask<T = HTTPResponse> extends Promise<T> {
-  private _signal: AbortSignal;
-  private _slienceAbort?: boolean;
-  private _progressListeners?: ((event: ProgressEvent) => void)[];
+export async function doHTTPRequest(
+  request: HTTPRequest,
+  options?: HTTPRequestOptions
+): Promise<HTTPResponse> {
+  const doRequest = mustGetAdapter('request');
 
-  static get [Symbol.species]() {
-    return Promise;
-  }
+  runtime.emit('log', { level: 'trace', label: 'http:send', data: request });
 
-  constructor(
-    request: HTTPRequest | (() => HTTPRequest | Promise<HTTPRequest>),
-    after?: (res: HTTPResponse) => T
-  ) {
-    const doRequest = mustGetAdapter('request');
-    const signal = new AbortSignal();
+  const url = encodeURL(request.url, request.query);
+  const res = await doRequest(url, {
+    method: request.method,
+    headers: omitBy(request.header, isUndefined),
+    data: request.body,
+    signal: options?.abortSignal,
+    onprogress: options?.onProgress,
+  });
+  const httpRes: HTTPResponse = {
+    status: res.status || 200,
+    header: res.headers as HTTPResponse['header'],
+    body: res.data,
+  };
 
-    super((resolve, reject) => {
-      Promise.resolve(typeof request === 'function' ? request() : request).then((request) => {
-        runtime.emit('log', {
-          level: 'trace',
-          label: 'http:send',
-          data: request,
-        });
+  runtime.emit('log', { level: 'trace', label: 'http:recv', data: httpRes });
 
-        const { method, url, header, query, body } = request;
-        doRequest(encodeURL(url, query), {
-          method,
-          headers: omitBy(header, isUndefined),
-          data: body,
-          signal,
-          onprogress: (event) => {
-            this._progressListeners?.forEach((h) => h(event));
-          },
-        })
-          .then(({ status, headers, data }) => {
-            const res: HTTPResponse = {
-              status: status || 200,
-              header: (headers as any) || {},
-              body: data,
-            };
-            runtime.emit('log', {
-              level: 'trace',
-              label: 'http:recv',
-              data: res,
-            });
-            if (after) {
-              resolve(after(res));
-            } else {
-              resolve(res as any);
-            }
-          })
-          .catch((error) => {
-            if (error.name === 'AbortError' && this._slienceAbort) {
-              return;
-            }
-            reject(error);
-          });
-      });
-    });
-
-    this._signal = signal;
-  }
-
-  onProgress(listener: (event: ProgressEvent) => void): void {
-    if (!this._progressListeners) {
-      this._progressListeners = [listener];
-    } else {
-      this._progressListeners.push(listener);
-    }
-  }
-
-  abort(slience = false): void {
-    this._slienceAbort = slience;
-    this._signal.abort();
-  }
+  return httpRes;
 }
