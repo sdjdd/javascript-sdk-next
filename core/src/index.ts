@@ -12,7 +12,8 @@ export { use };
 
 export { setAdapters } from './adapter';
 
-export { App, AppConfig, AuthOptions } from './app';
+export { App, AppConfig, AuthOptions, APIError } from './app';
+export * from './database';
 
 export function init(config: AppConfig): App {
   return new App(config);

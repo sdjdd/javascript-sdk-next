@@ -6,7 +6,6 @@ import isPlainObject from 'lodash/isPlainObject';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
-const META_KEYS = ['__type', 'className', 'objectId', 'createdAt', 'updatedAt'];
 const RESERVED_KEYS = ['objectId', 'createdAt', 'updatedAt'];
 
 export function omitReservedKeys(data: Record<string, any>): Record<string, any> {
@@ -20,15 +19,20 @@ export interface GetObjectOptions extends AuthOptions {
 }
 
 export interface UpdateObjectOptions extends AuthOptions {
-  fetch?: boolean;
+  fetchUpdatedData?: boolean;
   query?: any; // TODO
 }
 
 export class LCObject {
   rawData: Record<string, any>;
   data: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
+
+  get createdAt(): Date {
+    return this.data.createdAt;
+  }
+  get updatedAt(): Date {
+    return this.data.updatedAt;
+  }
 
   constructor(
     public readonly app: App,
@@ -36,10 +40,7 @@ export class LCObject {
     public readonly id: string
   ) {}
 
-  static fromJSON(app: App, data: any, className?: string): LCObject {
-    if (!className) {
-      className = data.className;
-    }
+  static fromJSON(app: App, data: any, className: string = data.className): LCObject {
     const objectId: string = data.objectId;
     if (!className || !objectId) {
       throw new Error(
@@ -48,15 +49,15 @@ export class LCObject {
     }
     const object = new LCObject(app, className, objectId);
     object.rawData = data;
+    object.data = LCDecode(app, omit(data, ['__type', 'className']));
 
     if (data.createdAt) {
-      object.createdAt = new Date(data.createdAt);
+      object.data.createdAt = new Date(data.createdAt);
     }
     if (data.updatedAt) {
-      object.updatedAt = new Date(data.updatedAt);
+      object.data.updatedAt = new Date(data.updatedAt);
     }
 
-    object.data = LCDecode(app, omit(data, META_KEYS));
     return object;
   }
 
@@ -94,7 +95,7 @@ export class LCObject {
         method: 'PUT',
         path: `/1.1/classes/${this.className}/${this.id}`,
         query: {
-          fetchWhenSave: options?.fetch,
+          fetchWhenSave: options?.fetchUpdatedData,
         },
         body: LCEncode(omitReservedKeys(data)),
       },
@@ -121,6 +122,7 @@ export function LCDecode(app: App, data: any): any {
   if (isPlainObject(data)) {
     switch (data.__type) {
       case 'Pointer':
+      case 'Object':
         return LCObject.fromJSON(app, data);
       case 'Date':
         return new Date(data.iso);

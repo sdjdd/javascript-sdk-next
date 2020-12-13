@@ -1,4 +1,4 @@
-const LC = require('../../core');
+const LC = require('../..');
 const adapters = require('@leancloud/platform-adapters-node');
 const debug = require('../../debug');
 

@@ -37,9 +37,6 @@ export class NotEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
-    if (this.value === undefined) {
-      throw new TypeError('不能使用 undefined 作为查询约束');
-    }
     return {
       ...cond,
       [key]: { $ne: this.value },

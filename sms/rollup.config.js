@@ -2,19 +2,19 @@ import ts from '@wessberg/rollup-plugin-ts';
 
 export default [
   {
-    input: 'auth/src/index.ts',
+    input: 'sms/src/index.ts',
     output: [
       {
-        dir: 'auth/dist',
+        dir: 'sms/dist',
         format: 'cjs',
         entryFileNames: 'index.cjs.js',
       },
       {
-        dir: 'auth/dist',
+        dir: 'sms/dist',
         format: 'esm',
         entryFileNames: 'index.esm.js',
       },
     ],
-    plugins: [ts({ tsconfig: 'auth/tsconfig.json' })],
+    plugins: [ts({ tsconfig: 'sms/tsconfig.json' })],
   },
 ];

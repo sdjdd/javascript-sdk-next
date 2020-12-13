@@ -16,9 +16,8 @@
   "scripts": {
     "build:core": "rm -rf core/dist && rollup -c core/rollup.config.js",
     "build:auth": "rm -rf auth/dist && rollup -c auth/rollup.config.js",
-    "build:database": "rm -rf database/dist && rollup -c database/rollup.config.js",
     "build:debug": "rm -rf debug/dist && rollup -c debug/rollup.config.js",
-    "build": "npm run build:core && npm run build:auth && npm run build:database && npm run build:debug",
+    "build": "npm run build:core && npm run build:auth && npm run build:debug",
     "repl": "node tools/repl"
   },
   "keywords": [],

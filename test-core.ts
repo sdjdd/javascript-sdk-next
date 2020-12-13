@@ -6,4 +6,16 @@ const app = LC.init({
   serverURL: 'https://lc-api.sdjdd.com',
 });
 
-console.log(app.database);
+const db = app.database();
+
+db.class('Test').where({
+  name: db.queryCommand.or(1, 2, 3),
+});
+
+app.auth().signUpOrLoginWithMobilePhone(
+  {
+    aa: 1,
+    mobilePhoneNumber: '11',
+  },
+  ''
+);
