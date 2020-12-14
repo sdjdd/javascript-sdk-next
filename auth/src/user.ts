@@ -80,6 +80,16 @@ export class User {
     await user.app.storage.setAsync(KEY_CURRENT_USER, JSON.stringify(user));
   }
 
+  static removeCurrent(app: App): void {
+    app.payload[KEY_CURRENT_USER] = null;
+    app.storage.remove(KEY_CURRENT_USER);
+  }
+
+  static async removeCurrentAsync(app: App): Promise<void> {
+    app.payload[KEY_CURRENT_USER] = null;
+    await app.storage.removeAsync(KEY_CURRENT_USER);
+  }
+
   isCurrent(): boolean {
     return this === this.app.payload[KEY_CURRENT_USER];
   }

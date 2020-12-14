@@ -1,5 +1,7 @@
+import { Adapters } from '@leancloud/adapter-types';
 import clone from 'lodash/clone';
 import trimStart from 'lodash/trimStart';
+import { mustGetAdapter } from './adapter';
 
 import { Database } from './database';
 import { doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
@@ -118,6 +120,10 @@ export class App {
 
   log(logItem: LogItem): void {
     log(logItem);
+  }
+
+  getAdapter<T extends keyof Adapters>(name: T): Adapters[T] | never {
+    return mustGetAdapter(name);
   }
 }
 
