@@ -5,7 +5,7 @@ import { mustGetAdapter } from './adapter';
 
 import { Database } from './database';
 import { doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
-import { NamespacedStorage } from './local-storage';
+import { localStorage, NamespacedStorage } from './local-storage';
 import { log, LogItem } from './runtime';
 
 export interface AuthOptions extends HTTPRequestOptions {
@@ -78,7 +78,7 @@ export class App {
       this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
     }
     this._serverURL = serverURL;
-    this.storage = new NamespacedStorage(appId);
+    this.storage = new NamespacedStorage(localStorage, appId);
   }
 
   database(): Database {

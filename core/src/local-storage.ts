@@ -35,32 +35,32 @@ class LocalStorage {
   }
 }
 
-export const localStorage = new LocalStorage();
-
 export class NamespacedStorage implements LocalStorage {
-  constructor(public readonly namespace: string) {}
+  constructor(public readonly storage: LocalStorage, public readonly namespace: string) {}
 
   set(key: string, value: string): void {
-    localStorage.set(this.namespace + '/' + key, value);
+    this.storage.set(this.namespace + '/' + key, value);
   }
 
   get(key: string): string {
-    return localStorage.get(this.namespace + '/' + key);
+    return this.storage.get(this.namespace + '/' + key);
   }
 
   remove(key: string): void {
-    localStorage.remove(this.namespace + '/' + key);
+    this.storage.remove(this.namespace + '/' + key);
   }
 
   async setAsync(key: string, value: string): Promise<void> {
-    await localStorage.setAsync(this.namespace + '/' + key, value);
+    await this.storage.setAsync(this.namespace + '/' + key, value);
   }
 
   async getAsync(key: string): Promise<string> {
-    return await localStorage.getAsync(this.namespace + '/' + key);
+    return await this.storage.getAsync(this.namespace + '/' + key);
   }
 
   async removeAsync(key: string): Promise<void> {
-    await localStorage.removeAsync(this.namespace + '/' + key);
+    await this.storage.removeAsync(this.namespace + '/' + key);
   }
 }
+
+export const localStorage = new NamespacedStorage(new LocalStorage(), 'LC');
