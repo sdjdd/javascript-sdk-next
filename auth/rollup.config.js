@@ -16,5 +16,6 @@ export default [
       },
     ],
     plugins: [ts({ tsconfig: 'auth/tsconfig.json' })],
+    external: ['uuid'],
   },
 ];

@@ -23,6 +23,10 @@ export interface UpdateObjectOptions extends AuthOptions {
   query?: any; // TODO
 }
 
+export interface EncodeOptions {
+  full?: boolean;
+}
+
 export class LCObject {
   rawData: Record<string, any>;
   data: Record<string, any>;
@@ -61,13 +65,21 @@ export class LCObject {
     return object;
   }
 
-  toJSON(): Record<string, any> {
-    return {
-      ...this.rawData,
-      __type: 'Object',
-      className: this.className,
-      objectId: this.id,
-    };
+  toJSON(options?: EncodeOptions): Record<string, any> {
+    if (options?.full) {
+      return {
+        ...this.rawData,
+        __type: 'Object',
+        className: this.className,
+        objectId: this.id,
+      };
+    } else {
+      return {
+        __type: 'Pointer',
+        className: this.className,
+        objectId: this.id,
+      };
+    }
   }
 
   async get(options?: GetObjectOptions): Promise<LCObject> {
@@ -138,21 +150,21 @@ export function LCDecode(app: App, data: any): any {
   return data;
 }
 
-export function LCEncode(data: any): any {
+export function LCEncode(data: any, options?: EncodeOptions): any {
   if (!data) {
     return data;
   }
 
-  if (typeof data.toPointer === 'function') {
-    return data.toPointer();
+  if (typeof data.toJSON === 'function') {
+    return data.toJSON(options);
   }
 
   if (isPlainObject(data)) {
-    return mapValues(data, (value) => LCEncode(value));
+    return mapValues(data, (value) => LCEncode(value, options));
   }
 
   if (Array.isArray(data)) {
-    return data.map((value) => LCEncode(value));
+    return data.map((value) => LCEncode(value, options));
   }
 
   if (isDate(data)) {

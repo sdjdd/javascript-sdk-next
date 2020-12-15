@@ -1,10 +1,10 @@
-import cloneDeep from 'lodash/cloneDeep';
+import clone from 'lodash/clone';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 
 import type { App, AuthOptions } from '../../app';
 import { HTTPRequest } from '../../http';
-import { LCObject } from '../lcobject';
+import { LCEncode, LCObject } from '../lcobject';
 import { Condition, isConstraint, isRawCondition } from './constraint';
 
 export class LCQuery {
@@ -32,7 +32,7 @@ export class LCQuery {
       if (isConstraint(value)) {
         tempCond = value.applyQueryConstraint(tempCond, key);
       } else {
-        tempCond[key] = value;
+        tempCond[key] = LCEncode(value);
       }
     });
 
@@ -90,9 +90,40 @@ export class LCQuery {
     return query;
   }
 
+  include(keys: string[]): LCQuery;
+  include(...keys: string[]): LCQuery;
+  include(key: string | string[], ...rest: string[]): LCQuery {
+    const query = this.clone();
+    if (typeof key === 'string') {
+      query._params.include = [key, ...rest].join(',');
+    } else {
+      query._params.include = key.join(',');
+    }
+    return query;
+  }
+
+  skip(count: number): LCQuery {
+    const query = this.clone();
+    query._params.skip = count;
+    return query;
+  }
+
   limit(count: number): LCQuery {
     const query = this.clone();
     query._params.limit = count;
+    return query;
+  }
+
+  orderBy(key: string, direction: 'asc' | 'desc' = 'asc'): LCQuery {
+    const query = this.clone();
+    if (direction === 'desc') {
+      key = '-' + key;
+    }
+    if (this._params.order) {
+      this._params.order += ',' + key;
+    } else {
+      this._params.order = key;
+    }
     return query;
   }
 
@@ -118,8 +149,8 @@ export class LCQuery {
 
   clone(): LCQuery {
     const query = new LCQuery(this.app, this.className);
-    query._params = cloneDeep(this._params);
-    query._condition = cloneDeep(this._params);
+    query._params = clone(this._params);
+    query._condition = clone(this._condition);
     return query;
   }
 }

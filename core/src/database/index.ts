@@ -1,2 +1,2 @@
 export { Database } from './database';
-export { LCObject, GetObjectOptions, UpdateObjectOptions } from './lcobject';
+export { LCObject, EncodeOptions, GetObjectOptions, UpdateObjectOptions } from './lcobject';

@@ -2,12 +2,15 @@ import type { App } from '../app';
 import { LCClass } from './class';
 import { LCDecode, LCEncode, LCObject, omitReservedKeys } from './lcobject';
 import { equalCommand, notEqualCommand, orCommand } from './query/command';
+import { ExistsConstraint, NotExistsConstraint } from './query/constraint';
 
 export class Database {
   readonly queryCommand = {
     eq: equalCommand,
     ne: notEqualCommand,
     or: orCommand,
+    exists: new ExistsConstraint(),
+    notExists: new NotExistsConstraint(),
   };
 
   constructor(public readonly app: App) {}

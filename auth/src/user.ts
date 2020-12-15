@@ -1,4 +1,4 @@
-import type { App, AuthOptions, GetObjectOptions, LCObject } from '../../core';
+import type { App, AuthOptions, EncodeOptions, GetObjectOptions, LCObject } from '../../core';
 
 export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
   // TODO: 支持按条件更新
@@ -215,13 +215,21 @@ export class User {
     }
   }
 
-  toJSON(): Record<string, any> {
-    return {
-      ...this.rawData,
-      __type: 'Object',
-      className: this.className,
-      objectId: this.id,
-    };
+  toJSON(options?: EncodeOptions): Record<string, any> {
+    if (options?.full) {
+      return {
+        ...this.rawData,
+        __type: 'Object',
+        className: this.className,
+        objectId: this.id,
+      };
+    } else {
+      return {
+        __type: 'Pointer',
+        className: this.className,
+        objectId: this.id,
+      };
+    }
   }
 
   private _merge(obj: LCObject): void {

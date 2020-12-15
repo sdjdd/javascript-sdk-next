@@ -1,3 +1,5 @@
+import { LCEncode } from '../lcobject';
+
 export type RawCondition = Record<string, any>;
 
 export type AndCondition = { $and: Condition[] };
@@ -11,7 +13,7 @@ export function isRawCondition(cond: Condition): cond is RawCondition {
 }
 
 export interface Constraint<T = any> {
-  value: T;
+  value?: T;
   applyQueryConstraint(condition: RawCondition, key: string): Condition;
 }
 
@@ -28,7 +30,7 @@ export class EqualConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: this.value,
+      [key]: LCEncode(this.value),
     };
   }
 }
@@ -39,7 +41,25 @@ export class NotEqualConstraint implements Constraint {
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     return {
       ...cond,
-      [key]: { $ne: this.value },
+      [key]: { $ne: LCEncode(this.value) },
+    };
+  }
+}
+
+export class ExistsConstraint implements Constraint {
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $exists: true },
+    };
+  }
+}
+
+export class NotExistsConstraint implements Constraint {
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $exists: false },
     };
   }
 }
@@ -57,7 +77,10 @@ export class OrConstraint implements Constraint<any[]> {
       if (isConstraint(item)) {
         or.push(item.applyQueryConstraint(cond, key));
       } else {
-        or.push({ ...cond, [key]: item });
+        or.push({
+          ...cond,
+          [key]: LCEncode(item),
+        });
       }
     });
 
