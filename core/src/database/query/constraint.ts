@@ -30,7 +30,7 @@ export class EqualConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: LCEncode(this.value),
+      [key]: LCEncode(this.value, { pointer: true }),
     };
   }
 }
@@ -41,7 +41,7 @@ export class NotEqualConstraint implements Constraint {
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     return {
       ...cond,
-      [key]: { $ne: LCEncode(this.value) },
+      [key]: { $ne: LCEncode(this.value, { pointer: true }) },
     };
   }
 }
@@ -79,7 +79,7 @@ export class OrConstraint implements Constraint<any[]> {
       } else {
         or.push({
           ...cond,
-          [key]: LCEncode(item),
+          [key]: LCEncode(item, { pointer: true }),
         });
       }
     });

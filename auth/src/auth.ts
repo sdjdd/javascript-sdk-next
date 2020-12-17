@@ -1,6 +1,7 @@
 import { v4 as uuid_v4 } from 'uuid';
 
-import type { App, AuthOptions } from '../../core';
+import type { App, AuthOptions, Query } from '../../core';
+import { Role } from './role';
 import { User } from './user';
 
 export function setHooks(appClass: typeof App): void {
@@ -32,6 +33,18 @@ export interface AuthOptionsWithCaptchaToken extends AuthOptions {
 
 export class Auth {
   constructor(public readonly app: App) {}
+
+  role(id: string): Role {
+    return new Role(this.app, id);
+  }
+
+  queryUser(): Query<User> {
+    return this.app.database().createQuery('_User', User.fromJSON);
+  }
+
+  queryRole(): Query<Role> {
+    return this.app.database().createQuery('_Role', Role.fromJSON);
+  }
 
   currentUser(): User | null {
     return User.getCurrent(this.app);

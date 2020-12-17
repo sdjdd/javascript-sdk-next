@@ -8,12 +8,12 @@ export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
 export const KEY_CURRENT_USER = 'currentUser';
 
 export class User {
-  readonly className = '_User';
-
-  id: string;
   rawData: Record<string, any>;
   data: Record<string, any>;
 
+  get className(): '_User' {
+    return '_User';
+  }
   get username(): string {
     return this.data.username;
   }
@@ -42,13 +42,12 @@ export class User {
     return this.data.updatedAt;
   }
 
-  constructor(public readonly app: App) {}
+  constructor(public readonly app: App, public readonly id: string) {}
 
   static fromJSON(app: App, json: any): User {
-    const user = new User(app);
     const obj = app.database().decodeObject(json, '_User');
+    const user = new User(app, obj.id);
     user.rawData = json;
-    user.id = obj.id;
     user.data = obj.data;
     return user;
   }
@@ -216,16 +215,16 @@ export class User {
   }
 
   toJSON(options?: EncodeOptions): Record<string, any> {
-    if (options?.full) {
+    if (options?.pointer) {
       return {
-        ...this.rawData,
-        __type: 'Object',
+        __type: 'Pointer',
         className: this.className,
         objectId: this.id,
       };
     } else {
       return {
-        __type: 'Pointer',
+        ...this.rawData,
+        __type: 'Object',
         className: this.className,
         objectId: this.id,
       };

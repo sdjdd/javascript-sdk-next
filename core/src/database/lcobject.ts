@@ -24,7 +24,7 @@ export interface UpdateObjectOptions extends AuthOptions {
 }
 
 export interface EncodeOptions {
-  full?: boolean;
+  pointer?: boolean;
 }
 
 export class LCObject {
@@ -66,16 +66,16 @@ export class LCObject {
   }
 
   toJSON(options?: EncodeOptions): Record<string, any> {
-    if (options?.full) {
+    if (options?.pointer) {
       return {
-        ...this.rawData,
-        __type: 'Object',
+        __type: 'Pointer',
         className: this.className,
         objectId: this.id,
       };
     } else {
       return {
-        __type: 'Pointer',
+        ...this.rawData,
+        __type: 'Object',
         className: this.className,
         objectId: this.id,
       };
@@ -109,7 +109,7 @@ export class LCObject {
         query: {
           fetchWhenSave: options?.fetchUpdatedData,
         },
-        body: LCEncode(omitReservedKeys(data)),
+        body: encodeObjectData(data),
       },
       options
     );
@@ -172,4 +172,8 @@ export function LCEncode(data: any, options?: EncodeOptions): any {
   }
 
   return data;
+}
+
+export function encodeObjectData(data: Record<string, any>): Record<string, any> {
+  return LCEncode(omitReservedKeys(data), { pointer: true });
 }

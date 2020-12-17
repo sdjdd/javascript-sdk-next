@@ -6,22 +6,22 @@ import {
   OrConstraint,
 } from './constraint';
 
-export function equalCommand(value: any): EqualConstraint {
+export function eq(value: any): EqualConstraint {
   return new EqualConstraint(value);
 }
 
-export function notEqualCommand(value: any): NotEqualConstraint {
+export function ne(value: any): NotEqualConstraint {
   return new NotEqualConstraint(value);
 }
 
-export function existsCommand(): ExistsConstraint {
+export function exists(): ExistsConstraint {
   return new ExistsConstraint();
 }
 
-export function notExistsCommand(): NotExistsConstraint {
+export function notExists(): NotExistsConstraint {
   return new NotExistsConstraint();
 }
 
-export function orCommand(...args: any[]): OrConstraint {
+export function or(...args: any[]): OrConstraint {
   return new OrConstraint(args);
 }

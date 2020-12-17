@@ -4,14 +4,21 @@ import isPlainObject from 'lodash/isPlainObject';
 
 import type { App, AuthOptions } from '../../app';
 import { HTTPRequest } from '../../http';
-import { LCEncode, LCObject } from '../lcobject';
+import { LCEncode } from '../lcobject';
 import { Condition, isConstraint, isRawCondition } from './constraint';
 
-export class LCQuery {
-  protected _params: HTTPRequest['query'] = {};
-  protected _condition: Condition = {};
+export type QueryDecoder<T = any> = (app: App, data: any, className: string) => T;
 
-  constructor(public readonly app: App, public readonly className: string) {}
+export class Query<T> {
+  params: HTTPRequest['query'] = {};
+
+  private _condition: Condition = {};
+
+  constructor(
+    public readonly app: App,
+    public readonly className: string,
+    protected _decoder: QueryDecoder<T>
+  ) {}
 
   protected _applyConstraint(cond: Record<string, any>): Condition {
     if (!isPlainObject(cond)) {
@@ -32,7 +39,7 @@ export class LCQuery {
       if (isConstraint(value)) {
         tempCond = value.applyQueryConstraint(tempCond, key);
       } else {
-        tempCond[key] = LCEncode(value);
+        tempCond[key] = LCEncode(value, { pointer: true });
       }
     });
 
@@ -52,9 +59,15 @@ export class LCQuery {
     }
   }
 
-  where(cond: Record<string, any>): LCQuery;
-  where(cond: Record<string, any>[]): LCQuery;
-  where(cond: Record<string, any> | Record<string, any>[]): LCQuery {
+  decodeWith<T>(decoder: QueryDecoder<T>): Query<T> {
+    const query: Query<T> = this.clone() as any;
+    query._decoder = decoder;
+    return query;
+  }
+
+  where(cond: Record<string, any>): Query<T>;
+  where(cond: Record<string, any>[]): Query<T>;
+  where(cond: Record<string, any> | Record<string, any>[]): Query<T> {
     if (isEmpty(cond) || (Array.isArray(cond) && cond.length === 0)) {
       return this;
     }
@@ -90,67 +103,69 @@ export class LCQuery {
     return query;
   }
 
-  include(keys: string[]): LCQuery;
-  include(...keys: string[]): LCQuery;
-  include(key: string | string[], ...rest: string[]): LCQuery {
+  include(keys: string[]): Query<T>;
+  include(...keys: string[]): Query<T>;
+  include(key: string | string[], ...rest: string[]): Query<T> {
     const query = this.clone();
-    if (typeof key === 'string') {
-      query._params.include = [key, ...rest].join(',');
+    const include = typeof key === 'string' ? [key, ...rest] : key;
+    if (query.params.include) {
+      query.params.include += ',' + include.join(',');
     } else {
-      query._params.include = key.join(',');
+      query.params.include = include.join(',');
     }
     return query;
   }
 
-  skip(count: number): LCQuery {
+  skip(count: number): Query<T> {
     const query = this.clone();
-    query._params.skip = count;
+    query.params.skip = count;
     return query;
   }
 
-  limit(count: number): LCQuery {
+  limit(count: number): Query<T> {
     const query = this.clone();
-    query._params.limit = count;
+    query.params.limit = count;
     return query;
   }
 
-  orderBy(key: string, direction: 'asc' | 'desc' = 'asc'): LCQuery {
+  orderBy(key: string, direction: 'asc' | 'desc' = 'asc'): Query<T> {
     const query = this.clone();
     if (direction === 'desc') {
       key = '-' + key;
     }
-    if (this._params.order) {
-      this._params.order += ',' + key;
+    if (this.params.order) {
+      this.params.order += ',' + key;
     } else {
-      this._params.order = key;
+      this.params.order = key;
     }
     return query;
   }
 
-  async find(options?: AuthOptions): Promise<LCObject[]> {
+  async find(options?: AuthOptions): Promise<T[]> {
     const { results = [] } = await this.app.request(
       {
         method: 'GET',
         path: `/1.1/classes/${this.className}`,
         query: {
-          ...this._params,
-          where: JSON.stringify(this._condition),
+          ...this.params,
+          where: isEmpty(this._condition) ? undefined : JSON.stringify(this._condition),
         },
       },
       options
     );
-    return results.map((result) => LCObject.fromJSON(this.app, result, this.className));
+    return results.map((result) => this._decoder(this.app, result, this.className));
   }
 
-  async first(options?: AuthOptions): Promise<LCObject | null> {
+  async first(options?: AuthOptions): Promise<T | null> {
     const objects = await this.limit(1).find(options);
     return objects.length ? objects[0] : null;
   }
 
-  clone(): LCQuery {
-    const query = new LCQuery(this.app, this.className);
-    query._params = clone(this._params);
+  clone(): Query<T> {
+    const query = new Query<T>(this.app, this.className, this._decoder);
+    query.params = clone(this.params);
     query._condition = clone(this._condition);
+    query._decoder = this._decoder;
     return query;
   }
 }
