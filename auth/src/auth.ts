@@ -39,11 +39,11 @@ export class Auth {
   }
 
   queryUser(): Query<User> {
-    return this.app.database().createQuery('_User', User.fromJSON);
+    return this.app.database().class('_User', User.fromJSON);
   }
 
   queryRole(): Query<Role> {
-    return this.app.database().createQuery('_Role', Role.fromJSON);
+    return this.app.database().class('_Role', Role.fromJSON);
   }
 
   currentUser(): User | null {

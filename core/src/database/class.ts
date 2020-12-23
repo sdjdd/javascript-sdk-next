@@ -1,4 +1,4 @@
-import type { App, AuthOptions } from '../app';
+import type { AuthOptions } from '../app';
 
 import { encodeObjectData, LCObject } from './lcobject';
 import { Query } from './query';
@@ -7,16 +7,12 @@ export interface AddObjectOptions extends AuthOptions {
   fetchData?: boolean;
 }
 
-export class Class extends Query<LCObject> {
-  constructor(app: App, className: string) {
-    super(app, className, LCObject.fromJSON);
-  }
-
+export class Class<T> extends Query<T> {
   object(id: string): LCObject {
     return new LCObject(this.app, this.className, id);
   }
 
-  async add(data: Record<string, any>, options?: AddObjectOptions): Promise<LCObject> {
+  async add(data: Record<string, any>, options?: AddObjectOptions): Promise<T> {
     const rawData = await this.app.request(
       {
         method: 'POST',

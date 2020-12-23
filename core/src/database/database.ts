@@ -4,7 +4,7 @@ import { Class } from './class';
 import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from './lcobject';
 import * as op from './operation';
 import { Pipeline } from './pipeline';
-import { Query, QueryDecoder } from './query';
+import { QueryDecoder } from './query';
 import * as cmd from './query/command';
 import { InConstraint } from './query/constraint';
 
@@ -17,8 +17,13 @@ export class Database {
 
   constructor(public readonly app: App) {}
 
-  class(name: string): Class {
-    return new Class(this.app, name);
+  class(name: string): Class<LCObject>;
+  class<T>(name: string, decoder: QueryDecoder<T>): Class<T>;
+  class<T>(name: string, decoder?: QueryDecoder<T>): Class<LCObject> | Class<T> {
+    if (decoder) {
+      return new Class(this.app, name, decoder);
+    }
+    return new Class(this.app, name, LCObject.fromJSON);
   }
 
   ACL(data?: Record<string, ACLPrivilege>): ACL {
@@ -26,15 +31,6 @@ export class Database {
       return ACL.fromJSON(data);
     }
     return new ACL();
-  }
-
-  createQuery(className: string): Query<LCObject>;
-  createQuery<T>(className: string, decoder: QueryDecoder<T>): Query<T>;
-  createQuery<T>(className: string, decoder?: QueryDecoder<T>): Query<LCObject> | Query<T> {
-    if (decoder) {
-      return new Query<T>(this.app, className, decoder);
-    }
-    return new Query<LCObject>(this.app, className, LCObject.fromJSON);
   }
 
   pipeline(): Pipeline {
