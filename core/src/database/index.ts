@@ -1,4 +1,5 @@
-export { Database } from './database';
-export { Query } from './query';
-export { LCObject, EncodeOptions, GetObjectOptions, UpdateObjectOptions } from './lcobject';
+export * from './query';
 export * from './acl';
+export * from './class';
+export * from './database';
+export { LCObject, EncodeOptions, GetObjectOptions, UpdateObjectOptions } from './lcobject';

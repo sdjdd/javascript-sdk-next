@@ -2,18 +2,15 @@ import type { App } from '../app';
 import { ACL, ACLPrivilege } from './acl';
 import { Class } from './class';
 import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from './lcobject';
-import * as op from './operation';
+import * as operation from './operation';
 import { Pipeline } from './pipeline';
-import { QueryDecoder } from './query';
-import * as cmd from './query/command';
-import { InConstraint } from './query/constraint';
+import { queryCommand, QueryDecoder } from './query';
+
+export { operation };
 
 export class Database {
-  readonly cmd = {
-    ...cmd,
-    in: (value: any) => new InConstraint(value),
-  };
-  readonly op = op;
+  readonly cmd = queryCommand;
+  readonly op = operation;
 
   constructor(public readonly app: App) {}
 
