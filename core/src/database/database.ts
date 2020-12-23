@@ -3,6 +3,7 @@ import { ACL, ACLPrivilege } from './acl';
 import { Class } from './class';
 import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from './lcobject';
 import * as op from './operation';
+import { Pipeline } from './pipeline';
 import { Query, QueryDecoder } from './query';
 import * as cmd from './query/command';
 import { InConstraint } from './query/constraint';
@@ -34,6 +35,10 @@ export class Database {
       return new Query<T>(this.app, className, decoder);
     }
     return new Query<LCObject>(this.app, className, LCObject.fromJSON);
+  }
+
+  pipeline(): Pipeline {
+    return new Pipeline(this.app);
   }
 
   encode(data: any, options?: EncodeOptions): any {

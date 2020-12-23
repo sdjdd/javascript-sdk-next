@@ -27,6 +27,8 @@ export interface EncodeOptions {
   pointer?: boolean;
 }
 
+export type LCObjectData = Record<string, any>;
+
 export class LCObject {
   rawData: Record<string, any>;
   data: Record<string, any>;
