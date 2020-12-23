@@ -5,9 +5,13 @@ import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from '.
 import * as op from './operation';
 import { Query, QueryDecoder } from './query';
 import * as cmd from './query/command';
+import { InConstraint } from './query/constraint';
 
 export class Database {
-  readonly cmd = cmd;
+  readonly cmd = {
+    ...cmd,
+    in: (value: any) => new InConstraint(value),
+  };
   readonly op = op;
 
   constructor(public readonly app: App) {}

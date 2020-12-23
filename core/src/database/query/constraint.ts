@@ -21,6 +21,10 @@ export function isConstraint(value: any): value is Constraint {
   return value && typeof value.applyQueryConstraint === 'function';
 }
 
+function encode(value: any): any {
+  return LCEncode(value, { pointer: true });
+}
+
 export class EqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
@@ -30,7 +34,7 @@ export class EqualConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: LCEncode(this.value, { pointer: true }),
+      [key]: encode(this.value),
     };
   }
 }
@@ -41,7 +45,51 @@ export class NotEqualConstraint implements Constraint {
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     return {
       ...cond,
-      [key]: { $ne: LCEncode(this.value, { pointer: true }) },
+      [key]: { $ne: encode(this.value) },
+    };
+  }
+}
+
+export class GreaterThanConstraint implements Constraint {
+  constructor(public readonly value: any) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $gt: encode(this.value) },
+    };
+  }
+}
+
+export class GreaterThanOrEqualConstraint implements Constraint {
+  constructor(public readonly value: any) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $gte: encode(this.value) },
+    };
+  }
+}
+
+export class LessThanConstraint implements Constraint {
+  constructor(public readonly value: any) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $lt: encode(this.value) },
+    };
+  }
+}
+
+export class LessThanOrEqualConstraint implements Constraint {
+  constructor(public readonly value: any) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $lte: encode(this.value) },
     };
   }
 }
@@ -85,5 +133,40 @@ export class OrConstraint implements Constraint<any[]> {
     });
 
     return or.length === 1 ? or[0] : { $or: or };
+  }
+}
+
+export class AndConstraint implements Constraint<any[]> {
+  constructor(public readonly value: any[]) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    if (!this.value || this.value.length === 0) {
+      return cond;
+    }
+    const and: Condition[] = [];
+
+    this.value.forEach((item) => {
+      if (isConstraint(item)) {
+        and.push(item.applyQueryConstraint(cond, key));
+      } else {
+        and.push({
+          ...cond,
+          [key]: LCEncode(item, { pointer: true }),
+        });
+      }
+    });
+
+    return and.length === 1 ? and[0] : { $and: and };
+  }
+}
+
+export class InConstraint implements Constraint {
+  constructor(public readonly value: any) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { $in: encode(this.value) },
+    };
   }
 }
