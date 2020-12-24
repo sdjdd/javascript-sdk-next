@@ -4,7 +4,7 @@ import { Class } from './class';
 import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from './lcobject';
 import * as operation from './operation';
 import { Pipeline } from './pipeline';
-import { queryCommand, QueryDecoder } from './query';
+import { queryCommand } from './query';
 
 export { operation };
 
@@ -14,13 +14,8 @@ export class Database {
 
   constructor(public readonly app: App) {}
 
-  class(name: string): Class<LCObject>;
-  class<T>(name: string, decoder: QueryDecoder<T>): Class<T>;
-  class<T>(name: string, decoder?: QueryDecoder<T>): Class<LCObject> | Class<T> {
-    if (decoder) {
-      return new Class(this.app, name, decoder);
-    }
-    return new Class(this.app, name, LCObject.fromJSON);
+  class(name: string): Class {
+    return new Class(this.app, name);
   }
 
   ACL(data?: Record<string, ACLPrivilege>): ACL {

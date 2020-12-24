@@ -97,7 +97,8 @@ export class Role {
   queryUsers(): Query<User> {
     return this.app
       .database()
-      .class('_User', User.fromJSON)
+      .class('_User')
+      .decodeWith(User.fromJSON)
       .where({
         $relatedTo: {
           key: 'users',
@@ -109,7 +110,8 @@ export class Role {
   queryRoles(): Query<Role> {
     return this.app
       .database()
-      .class('_Role', Role.fromJSON)
+      .class('_Role')
+      .decodeWith(Role.fromJSON)
       .where({
         $relatedTo: {
           key: 'roles',
