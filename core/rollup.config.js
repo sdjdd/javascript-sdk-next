@@ -1,4 +1,5 @@
 import ts from '@wessberg/rollup-plugin-ts';
+import json from '@rollup/plugin-json';
 
 export default [
   {
@@ -15,7 +16,7 @@ export default [
         entryFileNames: 'index.esm.js',
       },
     ],
-    plugins: [ts({ tsconfig: 'core/tsconfig.json' })],
+    plugins: [ts({ tsconfig: 'core/tsconfig.json' }), json()],
     external: [
       'eventemitter3',
       'lodash/clone',

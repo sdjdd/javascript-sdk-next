@@ -4,7 +4,7 @@ import trimStart from 'lodash/trimStart';
 import { mustGetAdapter } from './adapter';
 
 import { Database } from './database';
-import { doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
+import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
 import { log, LogItem } from './runtime';
 
@@ -101,6 +101,7 @@ export class App {
       header: {
         ...request.header,
         'Content-Type': 'application/json',
+        'X-LC-UA': getUserAgent(),
         'X-LC-Id': this.appId,
         'X-LC-Key': useMasterKey ? this._masterKey : this._appKey,
         'X-LC-Session': options?.sessionToken,

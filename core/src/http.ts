@@ -2,8 +2,9 @@ import isUndefined from 'lodash/isUndefined';
 import omitBy from 'lodash/omitBy';
 
 import { HTTPMethod, RequestOptions } from '@leancloud/adapter-types';
-import { mustGetAdapter } from './adapter';
+import { getAdapter, mustGetAdapter } from './adapter';
 import { runtime } from './runtime';
+import { version } from './version';
 
 export interface HTTPRequest {
   method: HTTPMethod;
@@ -74,4 +75,20 @@ export async function doHTTPRequest(
   runtime.emit('log', { level: 'trace', label: 'http:recv', data: httpRes });
 
   return httpRes;
+}
+
+let userAgent: string;
+export function getUserAgent(): string {
+  if (userAgent) {
+    return userAgent;
+  }
+  userAgent = 'LeanCloud-JS-SDK/' + version;
+  const platformInfo = getAdapter('platformInfo');
+  if (platformInfo) {
+    const { name, version } = platformInfo;
+    if (name) {
+      userAgent += version ? ` (${name}/${version})` : ` (${name})`;
+    }
+  }
+  return userAgent;
 }
