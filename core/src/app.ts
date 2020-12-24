@@ -13,7 +13,7 @@ export interface AuthOptions extends HTTPRequestOptions {
   sessionToken?: string;
 }
 
-export interface IAPIRequest {
+export interface APIRequest {
   method: HTTPRequest['method'];
   path: string;
   header?: HTTPRequest['header'];
@@ -23,7 +23,7 @@ export interface IAPIRequest {
 
 export type BeforeInvokeAPI = (
   this: App,
-  request: IAPIRequest,
+  request: APIRequest,
   options: AuthOptions
 ) => void | Promise<void>;
 
@@ -85,7 +85,7 @@ export class App {
     return new Database(this);
   }
 
-  async request(request: IAPIRequest, options?: AuthOptions): Promise<any> {
+  async request(request: APIRequest, options?: AuthOptions): Promise<any> {
     request = clone(request);
     options = clone(options) || {};
     await Promise.all(App.hooks.beforeInvokeAPI.map((hook) => hook.call(this, request, options)));

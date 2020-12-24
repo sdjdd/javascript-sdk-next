@@ -5,7 +5,7 @@ const debug = require('../../debug');
 LC.setAdapters(adapters);
 LC.use(debug);
 
-debug.debug.enable('leancloud:*');
+debug.debug.enable('LC:*');
 
 const app = LC.init({
   appId: 'oY2aqSxhKvtL2URCcKNehatA-gzGzoHsz',

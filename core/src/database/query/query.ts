@@ -9,8 +9,10 @@ import { Condition, isConstraint, isRawCondition } from './constraint';
 
 export type QueryDecoder<T = any> = (app: App, data: any, className: string) => T;
 
+export type QueryParams = HTTPRequest['query'];
+
 export class Query<T> {
-  params: HTTPRequest['query'] = {};
+  params: QueryParams = {};
 
   private _condition: Condition = {};
 

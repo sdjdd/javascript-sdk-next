@@ -1,6 +1,5 @@
 import { Auth, setHooks } from './auth';
 
-//@ts-ignore
 declare module '../../core' {
   interface App {
     auth(): Auth;
