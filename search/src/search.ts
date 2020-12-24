@@ -27,9 +27,9 @@ interface GeoPoint {
 export class FullTextSearch {
   readonly params: QueryParams = {};
 
-  private _sort: Record<string, FullTextSearchSortOptions>[] = [];
-
-  constructor(public readonly app: App, public readonly className?: string) {}
+  constructor(public readonly app: App, className?: string) {
+    this.params.clazz = className;
+  }
 
   queryString(str: string): this {
     this.params.q = str;
@@ -92,7 +92,10 @@ export class FullTextSearch {
   }
 
   whereNear(key: string, geo: GeoPoint, options?: FullTextSearchNearOptions): this {
-    this._sort.push({
+    if (!this.params.sort) {
+      this.params.sort = [];
+    }
+    this.params.sort.push({
       _geo_distance: {
         ...options,
         [key]: [geo.latitude, geo.longitude],
@@ -106,11 +109,7 @@ export class FullTextSearch {
       {
         method: 'GET',
         path: '/1.1/search/select',
-        query: {
-          ...this.params,
-          clazz: this.className,
-          sort: this._sort.length ? JSON.stringify(this._sort) : undefined,
-        },
+        query: this.params,
       },
       options
     );
@@ -131,7 +130,10 @@ export class FullTextSearch {
   }
 
   private _sortBy(key: string, options: FullTextSearchSortOptions): this {
-    this._sort.push({ [key]: options });
+    if (!this.params.sort) {
+      this.params.sort = [];
+    }
+    this.params.sort.push({ [key]: options });
     return this;
   }
 }

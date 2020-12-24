@@ -10,7 +10,7 @@ export interface HTTPRequest {
   method: HTTPMethod;
   url: string;
   header?: Record<string, string | undefined>;
-  query?: Record<string, string | number | boolean | undefined>;
+  query?: Record<string, any>;
   body?: any;
 }
 
@@ -31,11 +31,10 @@ export function encodeQuery(query: HTTPRequest['query']): string {
     if (value === undefined) {
       return;
     }
-
     if (index) {
       str += '&';
     }
-    str += key + '=' + encodeURIComponent(value);
+    str += key + '=' + encodeURIComponent(JSON.stringify(value));
   });
   return str;
 }
