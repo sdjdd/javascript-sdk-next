@@ -1,14 +1,18 @@
-export type ACLAction = 'read' | 'write';
+export const ACL_ACTIONS = ['read', 'write'] as const;
+
+export type ACLAction = typeof ACL_ACTIONS[number];
 
 export type ACLPrivilege = Partial<Record<ACLAction, boolean>>;
 
 export type ACLSubject = string | { id: string } | { aclKey: string };
 
 export class ACL {
-  private _privileges: Record<ACLAction, Set<string>> = {
-    read: new Set(),
-    write: new Set(),
-  };
+  private _privileges: Record<ACLAction, Set<string>>;
+
+  constructor() {
+    this._privileges = {} as any;
+    ACL_ACTIONS.forEach((action) => (this._privileges[action] = new Set()));
+  }
 
   static fromJSON(data: Record<string, ACLPrivilege>): ACL {
     const acl = new ACL();
@@ -54,7 +58,7 @@ export class ACL {
     const json: Record<string, ACLPrivilege> = {};
     Object.entries(this._privileges).forEach(([action, subjects]) => {
       subjects.forEach((subject) => {
-        if (!(subject in json)) {
+        if (!json[subject]) {
           json[subject] = {};
         }
         json[subject][action] = true;
