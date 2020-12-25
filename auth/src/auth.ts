@@ -1,5 +1,6 @@
 import { v4 as uuid_v4 } from 'uuid';
 
+import { SDKError } from '../../common/error';
 import type { App, AuthOptions, Query } from '../../core';
 import { Role } from './role';
 import { User } from './user';
@@ -47,7 +48,14 @@ export class Auth {
   }
 
   currentUser(): User | null {
-    return User.getCurrent(this.app);
+    try {
+      return User.getCurrent(this.app);
+    } catch (e) {
+      if (SDKError.is(e, SDKError.code.ASYNC_STORAGE)) {
+        throw new Error('请使用 currentUserAsync 方法获取当前用户');
+      }
+      throw e;
+    }
   }
 
   currentUserAsync(): Promise<User | null> {

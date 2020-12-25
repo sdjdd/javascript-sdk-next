@@ -58,18 +58,18 @@ export class App {
 
   constructor(config: AppConfig) {
     if (!config) {
-      throw new Error('The app config is necessary when construct an App');
+      throw new Error('请提供必要的信息来初始化 App');
     }
     const { appId, appKey, masterKey, serverURL } = config;
     if (!appId) {
-      throw new Error('The appId must be provided');
+      throw new Error('初始化 App 时必须提供 appId');
     }
     if (!appKey) {
-      throw new Error('The appKey must be provided');
+      throw new Error('初始化 App 时必须提供 appKey');
     }
     if (!serverURL) {
       // TODO: 实现 app router
-      throw new Error('The serverURL must be provided');
+      throw new Error('初始化 App 时必须提供 serverURL');
     }
 
     this.appId = appId;
@@ -92,7 +92,7 @@ export class App {
 
     const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
     if (useMasterKey && !this._masterKey) {
-      throw new Error('The masterKey is not set');
+      throw new Error('useMasterKey 已开启，但 masterKey 为空');
     }
 
     const { status, body } = await doHTTPRequest({

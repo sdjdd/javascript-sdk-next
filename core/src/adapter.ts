@@ -13,7 +13,7 @@ export function getAdapter<T extends keyof Adapters>(name: T): typeof ADAPTERS[T
 export function mustGetAdapter<T extends keyof Adapters>(name: T): Adapters[T] | never {
   const adapter = getAdapter(name);
   if (!adapter) {
-    throw new Error(`The adapter "${name}" is not set`);
+    throw new Error(`未设置 adapter ${name}`);
   }
   return adapter as Adapters[T];
 }
