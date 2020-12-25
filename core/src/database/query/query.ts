@@ -4,6 +4,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import type { App, AuthOptions } from '../../app';
 import { HTTPRequest } from '../../http';
 import { LCEncode } from '../lcobject';
+import { queryCommand, QueryCommand } from './command';
 import { Condition, isConstraint, isRawCondition } from './constraint';
 
 export type QueryDecoder<T = any> = (app: App, data: any, className: string) => T;
@@ -86,7 +87,23 @@ export class Query<T> {
     }
   }
 
-  where(cond: QueryConstraint): Query<T> {
+  where<T extends keyof QueryCommand>(
+    key: string,
+    command: T,
+    ...values: Parameters<QueryCommand[T]>
+  ): this;
+  where(cond: QueryConstraint): this;
+  where(cond: string | QueryConstraint, command?: any, ...values: any[]): this {
+    if (typeof cond === 'string') {
+      if (!command) {
+        throw new TypeError('查询命令不能为空');
+      }
+      if (!queryCommand[command]) {
+        throw new TypeError(`未知的查询命令 ${command}`);
+      }
+      return this.where({ [cond]: queryCommand[command](...values) });
+    }
+
     if (isEmpty(cond)) {
       return this;
     }
