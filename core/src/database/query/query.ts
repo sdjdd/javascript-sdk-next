@@ -3,7 +3,6 @@ import isPlainObject from 'lodash/isPlainObject';
 
 import type { App, AuthOptions } from '../../app';
 import { HTTPRequest } from '../../http';
-import { LCEncode } from '../lcobject';
 import { queryCommand, QueryCommand } from './command';
 import { Condition, isConstraint, isRawCondition } from './constraint';
 
@@ -64,11 +63,10 @@ export class Query<T> {
         and.push(tempCond);
         tempCond = {};
       }
-      if (isConstraint(value)) {
-        tempCond = value.applyQueryConstraint(tempCond, key);
-      } else {
-        tempCond[key] = LCEncode(value, { pointer: true });
+      if (!isConstraint(value)) {
+        value = queryCommand.eq(value);
       }
+      tempCond = value.applyQueryConstraint(tempCond, key);
     });
 
     if (isEmpty(tempCond)) {

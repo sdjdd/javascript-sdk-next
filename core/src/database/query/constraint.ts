@@ -164,14 +164,10 @@ export class AndConstraint implements Constraint<any[]> {
 
     const and: Condition[] = [];
     this.value.forEach((item) => {
-      if (isConstraint(item)) {
-        and.push(item.applyQueryConstraint(cond, key));
-      } else {
-        and.push({
-          ...cond,
-          [key]: encode(item),
-        });
+      if (!isConstraint(item)) {
+        item = new EqualConstraint(item);
       }
+      and.push(item.applyQueryConstraint(cond, key));
     });
     return and.length === 1 ? and[0] : { $and: and };
   }
