@@ -1,26 +1,24 @@
 import type { App, AuthOptions } from '../app';
 
 import { encodeObjectData, GetObjectOptions, LCObject } from './lcobject';
-import { Query } from './query';
+import { Query, QueryConstraint } from './query';
 
 export interface AddObjectOptions extends AuthOptions {
   fetchData?: boolean;
 }
 
-export class Class extends Query<LCObject> {
-  constructor(app: App, name: string) {
-    super(app, name, LCObject.fromJSON);
-  }
+export class Class {
+  constructor(public readonly app: App, public readonly name: string) {}
 
   object(id: string): LCObject {
-    return new LCObject(this.app, this.className, id);
+    return new LCObject(this.app, this.name, id);
   }
 
   async add(data: Record<string, any>, options?: AddObjectOptions): Promise<LCObject> {
     const rawData = await this.app.request(
       {
         method: 'POST',
-        path: `/1.1/classes/${this.className}`,
+        path: `/1.1/classes/${this.name}`,
         query: {
           fetchWhenSave: options?.fetchData,
         },
@@ -28,10 +26,15 @@ export class Class extends Query<LCObject> {
       },
       options
     );
-    return this._decoder(this.app, rawData, this.className);
+    return LCObject.fromJSON(this.app, rawData, this.name);
   }
 
-  get(id: string, options?: GetObjectOptions): Promise<LCObject> {
-    return new LCObject(this.app, this.className, id).get(options);
+  get(objectId: string, options?: GetObjectOptions): Promise<LCObject>;
+  get(cond: QueryConstraint, options?: AuthOptions): Promise<LCObject[]>;
+  get(arg: any, options?: any): any {
+    if (typeof arg === 'string') {
+      return new LCObject(this.app, this.name, arg).get(options);
+    }
+    return new Query(this.app, this.name, LCObject.fromJSON).where(arg).find(options);
   }
 }

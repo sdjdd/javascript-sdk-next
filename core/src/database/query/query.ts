@@ -1,4 +1,3 @@
-import clone from 'lodash/clone';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 
@@ -11,9 +10,15 @@ export type QueryDecoder<T = any> = (app: App, data: any, className: string) => 
 
 export type QueryParams = HTTPRequest['query'];
 
-export class Query<T> {
-  params: QueryParams = {};
+export type QueryConstraint = Record<string, any> | Record<string, any>[];
 
+export type QueryOrder = 'asc' | 'desc';
+
+export class Query<T> {
+  private _include = new Set<string>();
+  private _order = new Set<string>();
+  private _skip?: number;
+  private _limit?: number;
   private _condition: Condition = {};
 
   constructor(
@@ -21,6 +26,26 @@ export class Query<T> {
     public readonly className: string,
     protected _decoder: QueryDecoder<T>
   ) {}
+
+  get params(): QueryParams {
+    const params: QueryParams = {};
+    if (this._include.size) {
+      params.include = Array.from(this._include).join(',');
+    }
+    if (this._order.size) {
+      params.order = Array.from(this._order).join(',');
+    }
+    if (this._skip !== undefined) {
+      params.skip = this._skip;
+    }
+    if (this._limit !== undefined) {
+      params.limit = this._limit;
+    }
+    if (!isEmpty(this._condition)) {
+      params.where = this._condition;
+    }
+    return params;
+  }
 
   protected _applyConstraint(cond: Record<string, any>): Condition {
     if (!isPlainObject(cond)) {
@@ -61,26 +86,16 @@ export class Query<T> {
     }
   }
 
-  decodeWith<T>(decoder: QueryDecoder<T>): Query<T> {
-    const query: Query<T> = this.clone() as any;
-    query._decoder = decoder;
-    return query;
-  }
-
-  where(cond: Record<string, any>): Query<T>;
-  where(cond: Record<string, any>[]): Query<T>;
-  where(cond: Record<string, any> | Record<string, any>[]): Query<T> {
-    if (isEmpty(cond) || (Array.isArray(cond) && cond.length === 0)) {
+  where(cond: QueryConstraint): Query<T> {
+    if (isEmpty(cond)) {
       return this;
     }
-
-    const query = this.clone();
 
     let newCond: Condition;
     if (Array.isArray(cond)) {
       const or: Condition[] = [];
       cond.forEach((item) => {
-        const tmp = query._applyConstraint(item);
+        const tmp = this._applyConstraint(item);
         if (!isEmpty(tmp)) {
           or.push(tmp);
         }
@@ -91,56 +106,56 @@ export class Query<T> {
         newCond = { $or: or };
       }
     } else {
-      newCond = query._applyConstraint(cond);
+      newCond = this._applyConstraint(cond);
     }
 
     if (!isEmpty(newCond)) {
-      if (isEmpty(query._condition)) {
-        query._condition = newCond;
+      if (isEmpty(this._condition)) {
+        this._condition = newCond;
       } else {
-        query._condition = { $and: [query._condition, newCond] };
+        this._condition = { $and: [this._condition, newCond] };
       }
     }
 
-    return query;
+    return this;
   }
 
   include(keys: string[]): Query<T>;
   include(...keys: string[]): Query<T>;
   include(key: string | string[], ...rest: string[]): Query<T> {
-    const query = this.clone();
-    const include = typeof key === 'string' ? [key, ...rest] : key;
-    if (query.params.include) {
-      query.params.include += ',' + include.join(',');
+    if (Array.isArray(key)) {
+      key.forEach((k) => this._include.add(k));
     } else {
-      query.params.include = include.join(',');
+      this._include.add(key);
     }
-    return query;
+    rest.forEach((k) => this._include.add(k));
+    return this;
   }
 
   skip(count: number): Query<T> {
-    const query = this.clone();
-    query.params.skip = count;
-    return query;
+    this._skip = count;
+    return this;
   }
 
   limit(count: number): Query<T> {
-    const query = this.clone();
-    query.params.limit = count;
-    return query;
+    this._limit = count;
+    return this;
   }
 
-  orderBy(key: string, direction: 'asc' | 'desc' = 'asc'): Query<T> {
-    const query = this.clone();
-    if (direction === 'desc') {
-      key = '-' + key;
+  orderBy(key: string, order: QueryOrder = 'asc'): Query<T> {
+    switch (order) {
+      case 'asc':
+        this._order.add(key);
+        this._order.delete('-' + key);
+        break;
+      case 'desc':
+        this._order.add('-' + key);
+        this._order.delete(key);
+        break;
+      default:
+        throw new TypeError(`未知的查询排序方式 ${order}`);
     }
-    if (this.params.order) {
-      this.params.order += ',' + key;
-    } else {
-      this.params.order = key;
-    }
-    return query;
+    return this;
   }
 
   async find(options?: AuthOptions): Promise<T[]> {
@@ -148,10 +163,7 @@ export class Query<T> {
       {
         method: 'GET',
         path: `/1.1/classes/${this.className}`,
-        query: {
-          ...this.params,
-          where: isEmpty(this._condition) ? undefined : JSON.stringify(this._condition),
-        },
+        query: this.params,
       },
       options
     );
@@ -161,13 +173,5 @@ export class Query<T> {
   async first(options?: AuthOptions): Promise<T | null> {
     const objects = await this.limit(1).find(options);
     return objects.length ? objects[0] : null;
-  }
-
-  clone(): Query<T> {
-    const query = new Query<T>(this.app, this.className, this._decoder);
-    query.params = clone(this.params);
-    query._condition = clone(this._condition);
-    query._decoder = this._decoder;
-    return query;
   }
 }
