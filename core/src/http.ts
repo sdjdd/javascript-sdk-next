@@ -31,10 +31,13 @@ export function encodeQuery(query: HTTPRequest['query']): string {
     if (value === undefined) {
       return;
     }
+    if (typeof value !== 'string') {
+      value = JSON.stringify(value);
+    }
     if (index) {
       str += '&';
     }
-    str += key + '=' + encodeURIComponent(JSON.stringify(value));
+    str += key + '=' + encodeURIComponent(value);
   });
   return str;
 }
