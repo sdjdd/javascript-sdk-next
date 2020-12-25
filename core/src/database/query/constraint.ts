@@ -8,8 +8,16 @@ export type OrCondition = { $or: Condition[] };
 
 export type Condition = RawCondition | AndCondition | OrCondition;
 
+export function isAndCondition(cond: Condition): cond is AndCondition {
+  return !!(cond as AndCondition).$and;
+}
+
+export function isOrCondition(cond: Condition): cond is OrCondition {
+  return !!(cond as OrCondition).$or;
+}
+
 export function isRawCondition(cond: Condition): cond is RawCondition {
-  return !(cond as AndCondition).$and && !(cond as OrCondition).$or;
+  return !isOrCondition(cond) && !isAndCondition(cond);
 }
 
 export interface Constraint<T = any> {
@@ -137,14 +145,10 @@ export class OrConstraint implements Constraint<any[]> {
 
     const or: Condition[] = [];
     this.value.forEach((item) => {
-      if (isConstraint(item)) {
-        or.push(item.applyQueryConstraint(cond, key));
-      } else {
-        or.push({
-          ...cond,
-          [key]: encode(item),
-        });
+      if (!isConstraint(item)) {
+        item = new EqualConstraint(item);
       }
+      or.push(item.applyQueryConstraint(cond, key));
     });
     return or.length === 1 ? or[0] : { $or: or };
   }
