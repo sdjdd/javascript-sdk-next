@@ -1,3 +1,4 @@
-export * from '../core';
+import '../core';
 import '../auth';
 import '../search';
+import '../cloud';
