@@ -6,7 +6,7 @@ import { mustGetAdapter } from './adapter';
 import { Database } from './database';
 import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
-import { log, LogItem } from './runtime';
+import { log } from './runtime';
 
 export interface AuthOptions extends HTTPRequestOptions {
   useMasterKey?: boolean;
@@ -49,6 +49,7 @@ export class App {
   readonly appId: string;
   readonly payload: Record<string, any> = {};
   readonly storage: NamespacedStorage;
+  readonly log = log;
 
   useMasterKey = false;
 
@@ -117,10 +118,6 @@ export class App {
     }
 
     return body;
-  }
-
-  log(logItem: LogItem): void {
-    log(logItem);
   }
 
   getAdapter<T extends keyof Adapters>(name: T): Adapters[T] | never {

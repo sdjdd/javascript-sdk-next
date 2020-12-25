@@ -6,10 +6,16 @@ export interface Module {
   onLoad?: (rtm: typeof runtime) => void;
 }
 
-export interface LogItem {
+export enum LogLevel {
+  TRACE = 'TRACE',
+  INFO = 'INFO',
+  ERROR = 'ERROR',
+}
+
+export interface LogItem extends Record<string, any> {
   label: string;
-  level: 'trace' | 'info' | 'error';
-  data: any | any[];
+  level?: LogLevel;
+  data: any;
 }
 
 export interface Events {
@@ -33,6 +39,11 @@ export function use(module: Module): void {
   module.onLoad?.(runtime);
 }
 
-export function log(item: LogItem): void {
-  runtime.emit('log', item);
-}
+export const log = {
+  trace: (label: string, data: any, extra?: Record<string, any>) =>
+    runtime.emit('log', { level: LogLevel.TRACE, label, data, ...extra }),
+  info: (label: string, data: any, extra?: Record<string, any>) =>
+    runtime.emit('log', { level: LogLevel.INFO, label, data, ...extra }),
+  error: (label: string, data: any, extra?: Record<string, any>) =>
+    runtime.emit('log', { level: LogLevel.ERROR, label, data, ...extra }),
+};

@@ -3,7 +3,7 @@ import omitBy from 'lodash/omitBy';
 
 import { HTTPMethod, RequestOptions } from '@leancloud/adapter-types';
 import { getAdapter, mustGetAdapter } from './adapter';
-import { runtime } from './runtime';
+import { log } from './runtime';
 import { version } from './version';
 
 export interface HTTPRequest {
@@ -55,7 +55,7 @@ export async function doHTTPRequest(
 ): Promise<HTTPResponse> {
   const doRequest = mustGetAdapter('request');
 
-  runtime.emit('log', { level: 'trace', label: 'http:send', data: request });
+  log.trace('http:send', request);
 
   const url = encodeURL(request.url, request.query);
   const res = await doRequest(url, {
@@ -71,7 +71,7 @@ export async function doHTTPRequest(
     body: res.data,
   };
 
-  runtime.emit('log', { level: 'trace', label: 'http:recv', data: httpRes });
+  log.trace('http:recv', httpRes);
 
   return httpRes;
 }
