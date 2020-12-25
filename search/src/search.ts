@@ -1,7 +1,7 @@
 import uniq from 'lodash/uniq';
 
 import type { App, AuthOptions, LCObject, QueryParams } from '../../core';
-import { ensureArray } from '../../utils';
+import { ensureArray } from '../../common/utils';
 
 export type FullTextSearchSortMode = 'min' | 'max' | 'sum' | 'avg';
 

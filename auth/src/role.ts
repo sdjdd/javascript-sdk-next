@@ -1,4 +1,4 @@
-import { ensureArray, pointer } from '../../utils';
+import { ensureArray, pointer } from '../../common/utils';
 import type { App, AuthOptions, EncodeOptions, LCObject, Query } from '../../core';
 import { User } from './user';
 

@@ -1,15 +1,8 @@
-import { ensureArray } from '../../../utils';
+import { ensureArray, pointer } from '../../../common/utils';
 
 interface LCObjectLike {
   className: string;
   id: string;
-}
-function pointer(object: LCObjectLike) {
-  return {
-    __type: 'Pointer',
-    className: object.className,
-    objectId: object.id,
-  };
 }
 
 export interface Operation {
