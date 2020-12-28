@@ -1,11 +1,10 @@
+import { KEY_CURRENT_USER } from '../../common/const';
 import type { App, AuthOptions, EncodeOptions, GetObjectOptions, LCObject } from '../../core';
 
 export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
   // TODO: 支持按条件更新
   query?: any;
 }
-
-export const KEY_CURRENT_USER = 'currentUser';
 
 export class User {
   rawData: Record<string, any>;

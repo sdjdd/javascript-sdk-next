@@ -20,6 +20,7 @@
     "build:search": "rm -rf search/dist && rollup -c search/rollup.config.js",
     "build:debug": "rm -rf debug/dist && rollup -c debug/rollup.config.js",
     "build:cloud": "rm -rf cloud/dist && rollup -c cloud/rollup.config.js",
+    "build:storage": "rm -rf storage/dist && rollup -c storage/rollup.config.js",
     "build": "npm run build:core && npm run build:auth && npm run build:search && npm run build:debug",
     "repl": "node tools/repl"
   },
@@ -27,6 +28,7 @@
   "dependencies": {
     "@leancloud/adapter-types": "^4.0.0",
     "@types/debug": "^4.1.5",
+    "base64-arraybuffer": "^0.2.0",
     "debug": "^4.3.1",
     "eventemitter3": "^4.0.7",
     "lodash": "^4.17.20",
@@ -53,6 +55,7 @@
     "core/dist/",
     "debug/dist/",
     "search/dist/",
+    "storage/dist/",
     "sdk/"
   ]
 }

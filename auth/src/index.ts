@@ -17,3 +17,4 @@ export function onLoad({ modules }): void {
 }
 
 export { Auth };
+export * from './user';
