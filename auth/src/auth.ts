@@ -1,19 +1,24 @@
 import { v4 as uuid_v4 } from 'uuid';
 
-import { SDKError } from '../../common/error';
 import type { App, AuthOptions, Query } from '../../core';
 import { Role } from './role';
 import { User } from './user';
 
 export function setHooks(appClass: typeof App): void {
-  appClass.addHook('beforeInvokeAPI', async function (_, options) {
+  appClass.beforeInvokeAPI(async (app, request, options) => {
     if (options.sessionToken) {
       return;
     }
-    const currentUser = await User.getCurrentAsync(this);
-    if (currentUser) {
-      options.sessionToken = currentUser.sessionToken;
+    const user = await User.getCurrentAsync(app);
+    if (user) {
+      options.sessionToken = user.sessionToken;
     }
+  });
+
+  appClass.onCreated((app) => {
+    User.getCurrentAsync(app).then((user) => {
+      app.log.trace('auth:user', { message: 'get current user from local-storage', user });
+    });
   });
 }
 
@@ -48,14 +53,7 @@ export class Auth {
   }
 
   currentUser(): User | null {
-    try {
-      return User.getCurrent(this.app);
-    } catch (e) {
-      if (SDKError.is(e, SDKError.code.ASYNC_STORAGE)) {
-        throw new Error('请使用 currentUserAsync 方法获取当前用户');
-      }
-      throw e;
-    }
+    return User.getCurrent(this.app);
   }
 
   currentUserAsync(): Promise<User | null> {

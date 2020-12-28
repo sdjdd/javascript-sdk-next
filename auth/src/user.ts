@@ -53,40 +53,49 @@ export class User {
   }
 
   static getCurrent(app: App): User | null {
-    if (!app.payload[KEY_CURRENT_USER]) {
-      const userStr = app.storage.get(KEY_CURRENT_USER);
-      if (userStr) {
-        const user = User.fromJSON(app, JSON.parse(userStr));
-        app.payload[KEY_CURRENT_USER] = user;
+    if (KEY_CURRENT_USER in app.payload) {
+      const user = app.payload[KEY_CURRENT_USER];
+      if (typeof user?.then === 'function') {
+        throw new Error('请使用异步方法获取当前登录用户');
       }
+      return user;
     }
-    return app.payload[KEY_CURRENT_USER] || null;
+    const encodedUser = app.localStorage.get(KEY_CURRENT_USER);
+    if (encodedUser) {
+      app.payload[KEY_CURRENT_USER] = User.fromJSON(app, JSON.parse(encodedUser));
+    }
+    return app.payload[KEY_CURRENT_USER];
   }
 
   static async getCurrentAsync(app: App): Promise<User | null> {
-    if (!app.payload[KEY_CURRENT_USER]) {
-      const userStr = await app.storage.getAsync(KEY_CURRENT_USER);
-      if (userStr) {
-        const user = User.fromJSON(app, JSON.parse(userStr));
-        app.payload[KEY_CURRENT_USER] = user;
-      }
+    if (KEY_CURRENT_USER in app.payload) {
+      return await app.payload[KEY_CURRENT_USER];
     }
-    return app.payload[KEY_CURRENT_USER] || null;
+    app.payload[KEY_CURRENT_USER] = app.localStorage
+      .getAsync(KEY_CURRENT_USER)
+      .then((encodedUser) => {
+        if (!encodedUser) {
+          return null;
+        }
+        return User.fromJSON(app, JSON.parse(encodedUser));
+      })
+      .then((user) => (app.payload[KEY_CURRENT_USER] = user));
+    return User.getCurrentAsync(app);
   }
 
   static async setCurrentAsync(user: User): Promise<void> {
     user.app.payload[KEY_CURRENT_USER] = user;
-    await user.app.storage.setAsync(KEY_CURRENT_USER, JSON.stringify(user));
+    await user.app.localStorage.setAsync(KEY_CURRENT_USER, JSON.stringify(user));
   }
 
   static removeCurrent(app: App): void {
-    app.payload[KEY_CURRENT_USER] = null;
-    app.storage.remove(KEY_CURRENT_USER);
+    delete app.payload[KEY_CURRENT_USER];
+    app.localStorage.remove(KEY_CURRENT_USER);
   }
 
   static async removeCurrentAsync(app: App): Promise<void> {
-    app.payload[KEY_CURRENT_USER] = null;
-    await app.storage.removeAsync(KEY_CURRENT_USER);
+    delete app.payload[KEY_CURRENT_USER];
+    await app.localStorage.removeAsync(KEY_CURRENT_USER);
   }
 
   isCurrent(): boolean {
@@ -210,7 +219,7 @@ export class User {
         sessionToken: this.sessionToken,
       });
     if (this.isCurrent()) {
-      await this.app.storage.removeAsync(KEY_CURRENT_USER);
+      await this.app.localStorage.removeAsync(KEY_CURRENT_USER);
     }
   }
 

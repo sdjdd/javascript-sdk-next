@@ -22,14 +22,12 @@ export interface APIRequest {
 }
 
 export type BeforeInvokeAPI = (
-  this: App,
+  app: App,
   request: APIRequest,
   options: AuthOptions
 ) => void | Promise<void>;
 
-interface AppHooks {
-  beforeInvokeAPI: BeforeInvokeAPI;
-}
+export type OnAppCreated = (app: App) => void;
 
 export interface AppConfig {
   appId: string;
@@ -41,14 +39,12 @@ export interface AppConfig {
 export class App {
   static hooks = {
     beforeInvokeAPI: [] as BeforeInvokeAPI[],
+    onCreated: [] as OnAppCreated[],
   };
-  static addHook<T extends keyof AppHooks>(name: T, hook: AppHooks[T]): void {
-    this.hooks[name].push(hook);
-  }
 
   readonly appId: string;
   readonly payload: Record<string, any> = {};
-  readonly storage: NamespacedStorage;
+  readonly localStorage: NamespacedStorage;
   readonly log = log;
 
   useMasterKey = false;
@@ -79,7 +75,9 @@ export class App {
       this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
     }
     this._serverURL = serverURL;
-    this.storage = new NamespacedStorage(localStorage, appId);
+    this.localStorage = new NamespacedStorage(localStorage, appId);
+
+    App.hooks.onCreated.forEach((h) => h(this));
   }
 
   database(): Database {
@@ -89,7 +87,7 @@ export class App {
   async request(request: APIRequest, options?: AuthOptions): Promise<any> {
     request = clone(request);
     options = clone(options) || {};
-    await Promise.all(App.hooks.beforeInvokeAPI.map((hook) => hook.call(this, request, options)));
+    await Promise.all(App.hooks.beforeInvokeAPI.map((h) => h(this, request, options)));
 
     const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
     if (useMasterKey && !this._masterKey) {
@@ -122,6 +120,14 @@ export class App {
 
   getAdapter<T extends keyof Adapters>(name: T): Adapters[T] | never {
     return mustGetAdapter(name);
+  }
+
+  static onCreated(h: OnAppCreated): void {
+    App.hooks.onCreated.push(h);
+  }
+
+  static beforeInvokeAPI(h: BeforeInvokeAPI): void {
+    App.hooks.beforeInvokeAPI.push(h);
   }
 }
 
