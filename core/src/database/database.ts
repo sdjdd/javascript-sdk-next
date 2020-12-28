@@ -53,4 +53,20 @@ export class Database {
   decodeObject(data: Record<string, any>, className?: string): LCObject {
     return LCObject.fromJSON(this.app, data, className);
   }
+
+  pointer(className: string, objectId: string): any;
+  pointer(ptr: { className: string; objectId: string }): any;
+  pointer(arg1: any, arg2?: string): any {
+    if (typeof arg1 === 'string') {
+      if (typeof arg2 !== 'string') {
+        throw new TypeError('参数 objectId 必须是 string');
+      }
+      return { __type: 'Pointer', className: arg1, objectId: arg2 };
+    }
+    const { className, objectId } = arg1;
+    if (typeof className !== 'string' || typeof objectId !== 'string') {
+      throw new TypeError('参数 className 和 objectId 必须是 string');
+    }
+    return { __type: 'Pointer', className, objectId };
+  }
 }

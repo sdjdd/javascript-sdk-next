@@ -30,11 +30,15 @@ export class Class {
   }
 
   get(objectId: string, options?: GetObjectOptions): Promise<LCObject>;
-  get(cond: QueryConstraint, options?: AuthOptions): Promise<LCObject[]>;
+  get(cond?: QueryConstraint, options?: AuthOptions): Promise<LCObject[]>;
   get(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       return new LCObject(this.app, this.name, arg).get(options);
     }
-    return new Query(this.app, this.name, LCObject.fromJSON).where(arg).find(options);
+    const query = new Query(this.app, this.name, LCObject.fromJSON);
+    if (arg) {
+      query.where(arg);
+    }
+    return query.find(options);
   }
 }
