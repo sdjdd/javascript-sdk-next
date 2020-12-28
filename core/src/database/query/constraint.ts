@@ -1,3 +1,4 @@
+import isEmpty from 'lodash/isEmpty';
 import { LCEncode } from '../lcobject';
 
 export type RawCondition = Record<string, any>;
@@ -38,11 +39,11 @@ export class EqualConstraint implements Constraint {
 
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     if (this.value === undefined) {
-      return cond;
+      throw new TypeError('不支持使用 undefined 作为相等约束的比较值');
     }
     return {
       ...cond,
-      [key]: encode(this.value),
+      [key]: { ...cond[key], $eq: encode(this.value) },
     };
   }
 }
@@ -56,7 +57,7 @@ export class NotEqualConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: { $ne: encode(this.value) },
+      [key]: { ...cond[key], $ne: encode(this.value) },
     };
   }
 }
@@ -70,7 +71,7 @@ export class GreaterThanConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: { $gt: encode(this.value) },
+      [key]: { ...cond[key], $gt: encode(this.value) },
     };
   }
 }
@@ -84,7 +85,7 @@ export class GreaterThanOrEqualConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: { $gte: encode(this.value) },
+      [key]: { ...cond[key], $gte: encode(this.value) },
     };
   }
 }
@@ -98,7 +99,7 @@ export class LessThanConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: { $lt: encode(this.value) },
+      [key]: { ...cond[key], $lt: encode(this.value) },
     };
   }
 }
@@ -112,7 +113,7 @@ export class LessThanOrEqualConstraint implements Constraint {
     }
     return {
       ...cond,
-      [key]: { $lte: encode(this.value) },
+      [key]: { ...cond[key], $lte: encode(this.value) },
     };
   }
 }
@@ -121,7 +122,7 @@ export class ExistsConstraint implements Constraint {
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     return {
       ...cond,
-      [key]: { $exists: true },
+      [key]: { ...cond[key], $exists: true },
     };
   }
 }
@@ -130,7 +131,7 @@ export class NotExistsConstraint implements Constraint {
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     return {
       ...cond,
-      [key]: { $exists: false },
+      [key]: { ...cond[key], $exists: false },
     };
   }
 }
@@ -148,8 +149,14 @@ export class OrConstraint implements Constraint<any[]> {
       if (!isConstraint(item)) {
         item = new EqualConstraint(item);
       }
-      or.push(item.applyQueryConstraint(cond, key));
+      const tempCond = item.applyQueryConstraint(cond, key);
+      if (!isEmpty(tempCond)) {
+        or.push(tempCond);
+      }
     });
+    if (or.length === 0) {
+      return cond;
+    }
     return or.length === 1 ? or[0] : { $or: or };
   }
 }
@@ -167,8 +174,14 @@ export class AndConstraint implements Constraint<any[]> {
       if (!isConstraint(item)) {
         item = new EqualConstraint(item);
       }
-      and.push(item.applyQueryConstraint(cond, key));
+      const tempCond = item.applyQueryConstraint(cond, key);
+      if (isEmpty(tempCond)) {
+        and.push(tempCond);
+      }
     });
+    if (and.length === 0) {
+      return cond;
+    }
     return and.length === 1 ? and[0] : { $and: and };
   }
 }
@@ -179,7 +192,7 @@ export class InConstraint implements Constraint {
   applyQueryConstraint(cond: RawCondition, key: string): Condition {
     return {
       ...cond,
-      [key]: { $in: encode(this.value) },
+      [key]: { ...cond[key], $in: encode(this.value) },
     };
   }
 }

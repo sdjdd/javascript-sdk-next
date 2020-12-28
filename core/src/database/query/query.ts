@@ -27,6 +27,25 @@ export class Query<T> {
     protected _decoder: QueryDecoder<T>
   ) {}
 
+  get condition(): Condition {
+    const rm$eq = (cond: Condition) => {
+      if ('$and' in cond) {
+        cond.$and = cond.$and.map(rm$eq);
+      } else if ('$or' in cond) {
+        cond.$or = cond.$or.map(rm$eq);
+      } else {
+        Object.entries(cond).forEach(([key, value]) => {
+          if (value.$eq) {
+            cond[key] = value.$eq;
+          }
+        });
+      }
+      return cond;
+    };
+    rm$eq(this._condition);
+    return this._condition;
+  }
+
   get params(): QueryParams {
     const params: QueryParams = {};
     if (this._include.size) {
@@ -42,7 +61,7 @@ export class Query<T> {
       params.limit = this._limit;
     }
     if (!isEmpty(this._condition)) {
-      params.where = this._condition;
+      params.where = this.condition;
     }
     return params;
   }
@@ -53,18 +72,17 @@ export class Query<T> {
     }
 
     const and: Condition[] = [];
-    let tempCond: Condition = {};
-
+    let tempCond: Condition = this._condition;
     Object.entries(cond).forEach(([key, value]) => {
       if (value === undefined) {
         return;
       }
+      if (!isConstraint(value)) {
+        value = queryCommand.eq(value);
+      }
       if (!isRawCondition(tempCond)) {
         and.push(tempCond);
         tempCond = {};
-      }
-      if (!isConstraint(value)) {
-        value = queryCommand.eq(value);
       }
       tempCond = value.applyQueryConstraint(tempCond, key);
     });
@@ -106,32 +124,20 @@ export class Query<T> {
       return this;
     }
 
-    let newCond: Condition;
     if (Array.isArray(cond)) {
       const or: Condition[] = [];
       cond.forEach((item) => {
-        const tmp = this._applyConstraint(item);
-        if (!isEmpty(tmp)) {
-          or.push(tmp);
+        const tempCond = this._applyConstraint(item);
+        if (!isEmpty(tempCond)) {
+          or.push(tempCond);
         }
       });
-      if (or.length === 1) {
-        newCond = or[0];
-      } else {
-        newCond = { $or: or };
+      if (or.length) {
+        this._condition = or.length === 1 ? or[0] : { $or: or };
       }
     } else {
-      newCond = this._applyConstraint(cond);
+      this._condition = this._applyConstraint(cond);
     }
-
-    if (!isEmpty(newCond)) {
-      if (isEmpty(this._condition)) {
-        this._condition = newCond;
-      } else {
-        this._condition = { $and: [this._condition, newCond] };
-      }
-    }
-
     return this;
   }
 
