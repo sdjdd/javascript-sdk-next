@@ -1,4 +1,4 @@
-import { mustGetAdapter } from './adapter';
+import { mustGetAdapter } from './runtime';
 import { SyncStorage } from '@leancloud/adapter-types';
 import { SDKError } from '../../common/error';
 

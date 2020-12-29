@@ -1,12 +1,11 @@
 import { Adapters } from '@leancloud/adapter-types';
 import clone from 'lodash/clone';
 import trimStart from 'lodash/trimStart';
-import { mustGetAdapter } from './adapter';
 
 import { Database } from './database';
 import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions, upload } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
-import { log } from './runtime';
+import { log, mustGetAdapter } from './runtime';
 
 export interface AuthOptions extends HTTPRequestOptions {
   useMasterKey?: boolean;
@@ -43,6 +42,9 @@ export class App {
   };
 
   readonly appId: string;
+  readonly appKey: string;
+  readonly serverURL?: string;
+
   readonly payload: Record<string, any> = {};
   readonly localStorage: NamespacedStorage;
   readonly log = log;
@@ -51,9 +53,7 @@ export class App {
 
   useMasterKey = false;
 
-  private _appKey: string;
   private _masterKey?: string;
-  private _serverURL?: string;
 
   constructor(config: AppConfig) {
     if (!config) {
@@ -72,11 +72,11 @@ export class App {
     }
 
     this.appId = appId;
-    this._appKey = appKey;
+    this.appKey = appKey;
     if (masterKey) {
       this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
     }
-    this._serverURL = serverURL;
+    this.serverURL = serverURL;
     this.localStorage = new NamespacedStorage(localStorage, appId);
 
     App.hooks.onCreated.forEach((h) => h(this));
@@ -98,13 +98,13 @@ export class App {
 
     const { status, body } = await doHTTPRequest({
       ...request,
-      url: this._serverURL + '/' + trimStart(request.path, '/'),
+      url: this.serverURL + '/' + trimStart(request.path, '/'),
       header: {
         ...request.header,
         'Content-Type': 'application/json',
         'X-LC-UA': getUserAgent(),
         'X-LC-Id': this.appId,
-        'X-LC-Key': useMasterKey ? this._masterKey : this._appKey,
+        'X-LC-Key': useMasterKey ? this._masterKey : this.appKey,
         'X-LC-Session': options?.sessionToken,
       },
     });

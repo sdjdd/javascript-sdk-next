@@ -15,11 +15,13 @@ export type QueryConstraint = Record<string, any> | Record<string, any>[];
 export type QueryOrder = 'asc' | 'desc';
 
 export class Query<T> {
-  private _include = new Set<string>();
   private _order = new Set<string>();
+  private _include = new Set<string>();
+  private _keys = new Set<string>();
+  private _condition: Condition = {};
   private _skip?: number;
   private _limit?: number;
-  private _condition: Condition = {};
+  private _returnACL?: boolean;
 
   constructor(
     public readonly app: App,
@@ -48,17 +50,23 @@ export class Query<T> {
 
   get params(): QueryParams {
     const params: QueryParams = {};
+    if (this._order.size) {
+      params.order = Array.from(this._order).join(',');
+    }
     if (this._include.size) {
       params.include = Array.from(this._include).join(',');
     }
-    if (this._order.size) {
-      params.order = Array.from(this._order).join(',');
+    if (this._keys.size) {
+      params.keys = Array.from(this._keys).join(',');
     }
     if (this._skip !== undefined) {
       params.skip = this._skip;
     }
     if (this._limit !== undefined) {
       params.limit = this._limit;
+    }
+    if (this._returnACL) {
+      params.returnACL = true;
     }
     if (!isEmpty(this._condition)) {
       params.where = this.condition;
@@ -141,9 +149,21 @@ export class Query<T> {
     return this;
   }
 
-  include(keys: string[]): Query<T>;
-  include(...keys: string[]): Query<T>;
-  include(key: string | string[], ...rest: string[]): Query<T> {
+  select(keys: string[]): this;
+  select(...keys: string[]): this;
+  select(key: string | string[], ...rest: string[]): this {
+    if (Array.isArray(key)) {
+      key.forEach((k) => this._keys.add(k));
+    } else {
+      this._keys.add(key);
+    }
+    rest.forEach((k) => this._keys.add(k));
+    return this;
+  }
+
+  include(keys: string[]): this;
+  include(...keys: string[]): this;
+  include(key: string | string[], ...rest: string[]): this {
     if (Array.isArray(key)) {
       key.forEach((k) => this._include.add(k));
     } else {
@@ -177,6 +197,15 @@ export class Query<T> {
         throw new TypeError(`未知的查询排序方式 ${order}`);
     }
     return this;
+  }
+
+  returnACL(enable: boolean): this {
+    this._returnACL = enable;
+    return this;
+  }
+
+  decodeObject(data: any): T {
+    return this._decoder(this.app, data, this.className);
   }
 
   async find(options?: AuthOptions): Promise<T[]> {

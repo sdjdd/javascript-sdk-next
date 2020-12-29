@@ -1,4 +1,5 @@
 import { EventEmitter } from 'eventemitter3';
+import { Adapters } from '@leancloud/adapter-types';
 
 export interface Module {
   name: string;
@@ -21,10 +22,12 @@ export interface LogItem extends Record<string, any> {
 export interface Events {
   'module:load': (name: string) => void;
   log: (logItem: LogItem) => void;
+  'adapters:set': (adapters: Record<string, any>) => void;
 }
 
 export class Runtime extends EventEmitter<Events> {
   readonly modules: Record<string, Module> = {};
+  readonly adapters: Partial<Adapters> = {};
 }
 
 export const runtime = new Runtime();
@@ -54,3 +57,20 @@ export const log = {
   error: (label: string, data: any, extra?: Record<string, any>) =>
     runtime.emit('log', { level: LogLevel.ERROR, label, data, ...extra }),
 };
+
+export function setAdapters(adapters: Partial<Adapters>): void {
+  Object.assign(runtime.adapters, adapters);
+  runtime.emit('adapters:set', adapters);
+}
+
+export function getAdapter<T extends keyof Adapters>(name: T): Partial<Adapters>[T] {
+  return runtime.adapters[name];
+}
+
+export function mustGetAdapter<T extends keyof Adapters>(name: T): Adapters[T] | never {
+  const adapter = getAdapter(name);
+  if (!adapter) {
+    throw new Error(`未设置 adapter ${name}`);
+  }
+  return adapter as Adapters[T];
+}

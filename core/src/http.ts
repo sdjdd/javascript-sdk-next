@@ -2,8 +2,7 @@ import isUndefined from 'lodash/isUndefined';
 import omitBy from 'lodash/omitBy';
 
 import { FormDataPart, HTTPMethod, RequestOptions, Response } from '@leancloud/adapter-types';
-import { getAdapter, mustGetAdapter } from './adapter';
-import { log } from './runtime';
+import { getAdapter, log, mustGetAdapter } from './runtime';
 import { version } from './version';
 
 export interface HTTPRequest {
