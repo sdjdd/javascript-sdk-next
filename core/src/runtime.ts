@@ -23,7 +23,7 @@ export interface Events {
   log: (logItem: LogItem) => void;
 }
 
-class Runtime extends EventEmitter<Events> {
+export class Runtime extends EventEmitter<Events> {
   readonly modules: Record<string, Module> = {};
 }
 
@@ -34,9 +34,16 @@ export function use(module: Module): void {
   if (name in runtime.modules) {
     throw new Error(`已导入名为 ${name} 的模块`);
   }
+
+  log.trace('module', module);
+
   runtime.modules[name] = module;
   runtime.emit('module:load', name);
   module.onLoad?.(runtime);
+}
+
+export function getModules(): Record<string, Module> {
+  return runtime.modules;
 }
 
 export const log = {

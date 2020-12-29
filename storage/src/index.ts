@@ -1,4 +1,5 @@
 import { Storage } from './storage';
+import { providers } from './provider';
 
 declare module '../../core' {
   interface App {
@@ -15,4 +16,10 @@ export function onLoad({ modules }): void {
   };
 }
 
+export const components = {
+  providers,
+  Storage,
+};
+
 export * from './storage';
+export * from './provider';

@@ -14,4 +14,5 @@ export function onLoad(runtime): void {
   });
 }
 
-export { debug };
+export const enable = debug.enable;
+export const disable = debug.disable;

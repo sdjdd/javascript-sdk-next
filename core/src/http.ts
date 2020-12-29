@@ -1,7 +1,7 @@
 import isUndefined from 'lodash/isUndefined';
 import omitBy from 'lodash/omitBy';
 
-import { HTTPMethod, RequestOptions } from '@leancloud/adapter-types';
+import { FormDataPart, HTTPMethod, RequestOptions, Response } from '@leancloud/adapter-types';
 import { getAdapter, mustGetAdapter } from './adapter';
 import { log } from './runtime';
 import { version } from './version';
@@ -12,6 +12,11 @@ export interface HTTPRequest {
   header?: Record<string, string | undefined>;
   query?: Record<string, any>;
   body?: any;
+}
+
+export interface UploadRequest extends Omit<HTTPRequest, 'body'> {
+  file: FormDataPart;
+  form?: Record<string, any>;
 }
 
 export interface HTTPResponse {
@@ -52,31 +57,59 @@ export function encodeURL(base: string, query?: HTTPRequest['query']): string {
   return base;
 }
 
+function convertResponse(res: Response): HTTPResponse {
+  return {
+    status: res.status || 200,
+    header: res.headers as HTTPResponse['header'],
+    body: res.data,
+  };
+}
+
+let nextId = 1;
+
 export async function doHTTPRequest(
   request: HTTPRequest,
   options?: HTTPRequestOptions
 ): Promise<HTTPResponse> {
   const doRequest = mustGetAdapter('request');
+  const id = nextId++;
 
-  log.trace('http:send', request);
+  log.trace('http:send', { id, request });
 
   const url = encodeURL(request.url, request.query);
-  const res = await doRequest(url, {
+  const response = await doRequest(url, {
     method: request.method,
     headers: omitBy(request.header, isUndefined),
     data: request.body,
     signal: options?.abortSignal,
     onprogress: options?.onProgress,
-  });
-  const httpRes: HTTPResponse = {
-    status: res.status || 200,
-    header: res.headers as HTTPResponse['header'],
-    body: res.data,
-  };
+  }).then(convertResponse);
 
-  log.trace('http:recv', httpRes);
+  log.trace('http:recv', { id, response });
 
-  return httpRes;
+  return response;
+}
+
+export async function upload(
+  request: UploadRequest,
+  options?: HTTPRequestOptions
+): Promise<HTTPResponse> {
+  const upload = mustGetAdapter('upload');
+  const url = encodeURL(request.url, request.query);
+  const id = nextId++;
+
+  log.trace('upload:send', { id, request });
+
+  const response = await upload(url, request.file, {
+    ...options,
+    method: request.method,
+    headers: request.header,
+    data: request.form,
+  }).then(convertResponse);
+
+  log.trace('upload:recv', { id, response });
+
+  return response;
 }
 
 let userAgent: string;

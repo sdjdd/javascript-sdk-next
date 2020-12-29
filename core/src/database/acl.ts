@@ -1,4 +1,4 @@
-export const ACL_ACTIONS = ['read', 'write'] as const;
+const ACL_ACTIONS = ['read', 'write'] as const;
 
 export type ACLAction = typeof ACL_ACTIONS[number];
 

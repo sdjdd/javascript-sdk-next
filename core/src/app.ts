@@ -4,7 +4,7 @@ import trimStart from 'lodash/trimStart';
 import { mustGetAdapter } from './adapter';
 
 import { Database } from './database';
-import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions } from './http';
+import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions, upload } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
 import { log } from './runtime';
 
@@ -46,6 +46,8 @@ export class App {
   readonly payload: Record<string, any> = {};
   readonly localStorage: NamespacedStorage;
   readonly log = log;
+  readonly httpRequest = doHTTPRequest;
+  readonly upload = upload;
 
   useMasterKey = false;
 
