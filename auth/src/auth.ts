@@ -14,12 +14,6 @@ export function setHooks(appClass: typeof App): void {
       options.sessionToken = user.sessionToken;
     }
   });
-
-  appClass.onCreated((app) => {
-    User.getCurrentAsync(app).then((user) => {
-      app.log.trace('auth:user', { message: 'get current user from local-storage', user });
-    });
-  });
 }
 
 export interface LoginWithAuthDataOptions extends AuthOptions {

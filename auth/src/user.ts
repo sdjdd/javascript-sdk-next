@@ -61,29 +61,29 @@ export class User {
       throw new Error('请使用异步方法获取当前登录用户');
     }
     const encodedUser = app.localStorage.get(KEY_CURRENT_USER);
-    if (encodedUser) {
-      app.payload[KEY_CURRENT_USER] = User.fromJSON(app, JSON.parse(encodedUser));
-    }
+    app.payload[KEY_CURRENT_USER] = encodedUser
+      ? User.fromJSON(app, JSON.parse(encodedUser))
+      : null;
     return app.payload[KEY_CURRENT_USER];
   }
 
   static async getCurrentAsync(app: App): Promise<User | null> {
     if (KEY_CURRENT_USER in app.payload) {
-      return await app.payload[KEY_CURRENT_USER];
+      return app.payload[KEY_CURRENT_USER];
+    }
+    if (KEY_CURRENT_USER_PROMISE in app.payload) {
+      return await app.payload[KEY_CURRENT_USER_PROMISE];
     }
     app.payload[KEY_CURRENT_USER_PROMISE] = app.localStorage
       .getAsync(KEY_CURRENT_USER)
       .then((encodedUser) => {
-        if (!encodedUser) {
-          return null;
-        }
-        return User.fromJSON(app, JSON.parse(encodedUser));
-      })
-      .then((user) => {
-        app.payload[KEY_CURRENT_USER] = user;
         delete app.payload[KEY_CURRENT_USER_PROMISE];
+        app.payload[KEY_CURRENT_USER] = encodedUser
+          ? User.fromJSON(app, JSON.parse(encodedUser))
+          : null;
+        return app.payload[KEY_CURRENT_USER];
       });
-    return User.getCurrentAsync(app);
+    return await app.payload[KEY_CURRENT_USER_PROMISE];
   }
 
   static async setCurrentAsync(user: User): Promise<void> {
