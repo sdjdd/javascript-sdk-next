@@ -58,6 +58,7 @@
     "cloud/dist/",
     "core/dist/",
     "debug/dist/",
+    "live-query/dist",
     "search/dist/",
     "storage/dist/",
     "sdk/"
