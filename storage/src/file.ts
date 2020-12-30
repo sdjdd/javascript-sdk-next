@@ -1,4 +1,4 @@
-import { App, AuthOptions, LCObject } from '../../core';
+import { App, AuthOptions, EncodeOptions, LCObject } from '../../core';
 
 export class LCFile {
   rawData: Record<string, any>;
@@ -46,5 +46,22 @@ export class LCFile {
 
   delete(options?: AuthOptions): Promise<void> {
     return this.app.database().class(this.className).object(this.id).delete(options);
+  }
+
+  toJSON(options?: EncodeOptions): Record<string, any> {
+    if (options?.pointer) {
+      return {
+        __type: 'Pointer',
+        className: this.className,
+        objectId: this.id,
+      };
+    }
+    return {
+      ...this.rawData,
+      __type: 'Object',
+      // __type: 'File,
+      className: this.className,
+      objectId: this.id,
+    };
   }
 }

@@ -31,7 +31,7 @@ export type LCObjectData = Record<string, any>;
 
 export class LCObject {
   rawData: Record<string, any>;
-  data: Record<string, any>;
+  data: LCObjectData;
 
   get createdAt(): Date {
     return this.data.createdAt;

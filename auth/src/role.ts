@@ -1,4 +1,4 @@
-import { ensureArray, pointer } from '../../common/utils';
+import { ensureArray } from '../../common/utils';
 import type { App, AuthOptions, EncodeOptions, LCObject, Query } from '../../core';
 import { User } from './user';
 
@@ -128,14 +128,17 @@ export class Role {
 
   toJSON(options?: EncodeOptions): Record<string, any> {
     if (options?.pointer) {
-      return pointer(this);
-    } else {
       return {
-        ...this.rawData,
-        __type: 'Object',
+        __type: 'Pointer',
         className: this.className,
         objectId: this.id,
       };
     }
+    return {
+      ...this.rawData,
+      __type: 'Object',
+      className: this.className,
+      objectId: this.id,
+    };
   }
 }

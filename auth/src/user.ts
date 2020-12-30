@@ -233,14 +233,13 @@ export class User {
         className: this.className,
         objectId: this.id,
       };
-    } else {
-      return {
-        ...this.rawData,
-        __type: 'Object',
-        className: this.className,
-        objectId: this.id,
-      };
     }
+    return {
+      ...this.rawData,
+      __type: 'Object',
+      className: this.className,
+      objectId: this.id,
+    };
   }
 
   private _merge(obj: LCObject): void {
