@@ -83,15 +83,19 @@ export class Subscription<T> extends EventEmitter<LiveQueryListeners<T>> {
   }
 
   async unsubscribe(): Promise<void> {
-    if (this._state === LiveQueryState.INIT_CLIENT || this._state === LiveQueryState.CONNECTED) {
+    if (this._state === LiveQueryState.CONNECTING) {
+      this._state = LiveQueryState.CLOSED;
+      return;
+    }
+    if (this._state !== LiveQueryState.INIT_CLIENT && this._state !== LiveQueryState.CONNECTED) {
       throw new Error(`退订失败，当前状态：${this._state}`);
     }
     this._state = LiveQueryState.CLOSING;
 
     try {
-      this._client.off('message', this._onMessage);
-      this._client.off('reconnect', this._onReconnect);
-      this._client.deregister(this.query);
+      this._client?.off('message', this._onMessage);
+      this._client?.off('reconnect', this._onReconnect);
+      this._client?.deregister(this.query);
       await this.query.app.request(
         {
           method: 'POST',
@@ -122,8 +126,9 @@ function subscribe(
         id: options?.subscriptionID || undefined,
         query: {
           className,
-          where: params.where,
-          keys: params.keys,
+          where: params.where || {},
+          // TODO: 有问题, 待查明: https://github.com/leancloud/javascript-sdk/issues/637
+          // keys: (params.keys as string)?.split(','),
           returnACL: params.returnACL || undefined,
         },
       },

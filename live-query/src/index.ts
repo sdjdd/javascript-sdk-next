@@ -1,6 +1,6 @@
-import { setAdapters } from 'leancloud-realtime/core';
+import { setAdapters, debug } from 'leancloud-realtime/core';
 
-import { AuthOptions } from '../../core';
+import { AuthOptions, Runtime } from '../../core';
 import { Subscription } from './live-query';
 
 declare module '../../core' {
@@ -16,7 +16,7 @@ declare module '../../core' {
 
 export const name = 'live-query';
 
-export function onLoad(runtime): void {
+export function onLoad(runtime: Runtime): void {
   const { modules, adapters } = runtime;
   setAdapters(adapters);
   runtime.on('adapters:set', setAdapters);
@@ -32,3 +32,7 @@ export function onLoad(runtime): void {
     return new Subscription(this, options).subscribe();
   };
 }
+
+export const components = {
+  debug,
+};

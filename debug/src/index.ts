@@ -1,10 +1,34 @@
 import debug from 'debug';
 
-export const name = 'debug';
+import type { Runtime } from '../../core';
 
 const logger: Record<string, any> = {};
 
-export function onLoad(runtime): void {
+let SDKRuntime: Runtime;
+export function enable(namespace: string, modules = false): void {
+  debug.enable(namespace);
+  if (modules && SDKRuntime) {
+    Object.values(SDKRuntime.modules).forEach((module) => {
+      if (typeof module.components?.debug?.enable === 'function') {
+        module.components.debug.enable(namespace);
+      }
+    });
+  }
+}
+export function disable(modules = false): void {
+  debug.disable();
+  if (modules && SDKRuntime) {
+    Object.values(SDKRuntime.modules).forEach((module) => {
+      if (typeof module.components?.debug?.disable === 'function') {
+        module.components.debug.disable();
+      }
+    });
+  }
+}
+
+export const name = 'debug';
+export function onLoad(runtime: Runtime): void {
+  SDKRuntime = runtime;
   runtime.on('log', (item) => {
     const ns = `LC:${item.label}`;
     if (!logger[ns]) {
@@ -13,6 +37,3 @@ export function onLoad(runtime): void {
     logger[ns]('%O', item.data);
   });
 }
-
-export const enable = debug.enable;
-export const disable = debug.disable;

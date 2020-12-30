@@ -13,7 +13,7 @@ use({
 export * from './database';
 export { App, AppConfig, AuthOptions, APIError } from './app';
 export { HTTPRequest, HTTPResponse } from './http';
-export { getModules, setAdapters } from './runtime';
+export { getModules, setAdapters, Runtime } from './runtime';
 export * from './version';
 
 export { use };
