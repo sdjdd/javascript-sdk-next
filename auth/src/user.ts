@@ -1,6 +1,8 @@
 import { KEY_CURRENT_USER } from '../../common/const';
 import type { App, AuthOptions, EncodeOptions, GetObjectOptions, LCObject } from '../../core';
 
+const KEY_CURRENT_USER_PROMISE = KEY_CURRENT_USER + '-promise';
+
 export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
   // TODO: 支持按条件更新
   query?: any;
@@ -53,11 +55,10 @@ export class User {
 
   static getCurrent(app: App): User | null {
     if (KEY_CURRENT_USER in app.payload) {
-      const user = app.payload[KEY_CURRENT_USER];
-      if (typeof user?.then === 'function') {
-        throw new Error('请使用异步方法获取当前登录用户');
-      }
-      return user;
+      return app.payload[KEY_CURRENT_USER];
+    }
+    if (KEY_CURRENT_USER_PROMISE in app.payload) {
+      throw new Error('请使用异步方法获取当前登录用户');
     }
     const encodedUser = app.localStorage.get(KEY_CURRENT_USER);
     if (encodedUser) {
@@ -70,7 +71,7 @@ export class User {
     if (KEY_CURRENT_USER in app.payload) {
       return await app.payload[KEY_CURRENT_USER];
     }
-    app.payload[KEY_CURRENT_USER] = app.localStorage
+    app.payload[KEY_CURRENT_USER_PROMISE] = app.localStorage
       .getAsync(KEY_CURRENT_USER)
       .then((encodedUser) => {
         if (!encodedUser) {
@@ -78,7 +79,10 @@ export class User {
         }
         return User.fromJSON(app, JSON.parse(encodedUser));
       })
-      .then((user) => (app.payload[KEY_CURRENT_USER] = user));
+      .then((user) => {
+        app.payload[KEY_CURRENT_USER] = user;
+        delete app.payload[KEY_CURRENT_USER_PROMISE];
+      });
     return User.getCurrentAsync(app);
   }
 

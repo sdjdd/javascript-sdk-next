@@ -1,11 +1,11 @@
 import { mustGetAdapter } from './runtime';
 import { SyncStorage } from '@leancloud/adapter-types';
-import { SDKError } from '../../common/error';
+import { SDKError, ErrorName } from '../../common/error';
 
 function mustGetSyncStorage(): SyncStorage {
   const storage = mustGetAdapter('storage');
   if (storage.async) {
-    throw new SDKError(SDKError.code.ASYNC_STORAGE);
+    throw new SDKError(ErrorName.ASYNC_STORAGE);
   }
   return storage as SyncStorage;
 }
