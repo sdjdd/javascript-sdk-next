@@ -1,6 +1,4 @@
-import uniq from 'lodash/uniq';
-
-import type { App, AuthOptions, LCObject, QueryParams } from '../../core';
+import type { App, AuthOptions, LCObject, QueryOrder, QueryParams } from '../../core';
 import { ensureArray } from '../../common/utils';
 
 export type FullTextSearchSortMode = 'min' | 'max' | 'sum' | 'avg';
@@ -25,59 +23,88 @@ interface GeoPoint {
 }
 
 export class FullTextSearch {
-  readonly params: QueryParams = {};
+  private _clazz?: string;
+  private _q?: string;
+  private _skip?: number;
+  private _limit?: number;
+  private _sid?: string;
+  private _fields?: string[];
+  private _include?: string[];
+  private _highlights?: string[];
+  private _order?: Set<string>;
+  private _sort?: any[];
 
   constructor(public readonly app: App, className?: string) {
-    this.params.clazz = className;
+    this._clazz = className;
+  }
+
+  get params(): QueryParams {
+    if (!this._q) {
+      throw new Error('执行全文搜索时必须提供 queryString');
+    }
+    const params: QueryParams = {
+      q: this._q,
+      clazz: this._clazz,
+      skip: this._skip,
+      limit: this._limit,
+      sid: this._sid,
+    };
+    if (this._fields?.length) {
+      params.fields = this._fields.join(',');
+    }
+    if (this._highlights?.length) {
+      params.highlights = this._highlights.join(',');
+    }
+    if (this._include?.length) {
+      params.include = this._include.join(',');
+    }
+    if (this._order?.size) {
+      params.order = Array.from(this._order).join(',');
+    }
+    if (this._sort?.length) {
+      params.sort = this._sort;
+    }
+    return params;
   }
 
   queryString(str: string): this {
-    this.params.q = str;
+    this._q = str;
     return this;
   }
 
   skip(count: number): this {
-    this.params.skip = count;
+    this._skip = count;
     return this;
   }
 
   limit(count: number): this {
-    this.params.limit = count;
+    this._limit = count;
     return this;
   }
 
   sid(sid: string): this {
-    this.params.sid = sid;
+    this._sid = sid;
     return this;
   }
 
   fields(fields: string[]): this;
   fields(...fields: string[]): this;
   fields(field: string | string[], ...rest: string[]): this {
-    const fields = ensureArray(field)
-      .concat(rest)
-      .concat((this.params.fields as string)?.split(','));
-    this.params.fields = uniq(fields).join(',');
+    this._fields = ensureArray(field).concat(rest);
     return this;
   }
 
   include(keys: string[]): this;
   include(...keys: string[]): this;
   include(key: string | string[], ...rest: string[]): this {
-    const include = ensureArray(key)
-      .concat(rest)
-      .concat((this.params.include as string)?.split(','));
-    this.params.include = uniq(include).join(',');
+    this._include = ensureArray(key).concat(rest);
     return this;
   }
 
   highlights(keys: string[]): this;
   highlights(...keys: string[]): this;
   highlights(key: string | string[], ...rest: string[]): this {
-    const highlights = ensureArray(key)
-      .concat(rest)
-      .concat((this.params.highlights as string)?.split(','));
-    this.params.highlights = uniq(highlights).join(',');
+    this._highlights = ensureArray(key).concat(rest);
     return this;
   }
 
@@ -92,10 +119,10 @@ export class FullTextSearch {
   }
 
   whereNear(key: string, geo: GeoPoint, options?: FullTextSearchNearOptions): this {
-    if (!this.params.sort) {
-      this.params.sort = [];
+    if (!this._sort) {
+      this._sort = [];
     }
-    this.params.sort.push({
+    this._sort.push({
       _geo_distance: {
         ...options,
         [key]: [geo.latitude, geo.longitude],
@@ -116,24 +143,28 @@ export class FullTextSearch {
     return new FullTextSearchResult(this.app, rawResult);
   }
 
-  private _orderBy(key: string, direction?: 'asc' | 'desc'): this {
-    const order = new Set((this.params.order as string)?.split(','));
-    if (direction === 'desc') {
-      order.add('-' + key);
-      order.delete(key);
-    } else {
-      order.add(key);
-      order.delete('-' + key);
+  private _orderBy(key: string, order: QueryOrder = 'asc'): this {
+    if (!this._order) {
+      this._order = new Set();
     }
-    this.params.order = Array.from(order).join(',');
+    switch (order) {
+      case 'asc':
+        this._order.add(key).delete('-' + key);
+        break;
+      case 'desc':
+        this._order.add('-' + key).delete(key);
+        break;
+      default:
+        throw new TypeError(`未知的查询排序方式 ${order}`);
+    }
     return this;
   }
 
   private _sortBy(key: string, options: FullTextSearchSortOptions): this {
-    if (!this.params.sort) {
-      this.params.sort = [];
+    if (!this._sort) {
+      this._sort = [];
     }
-    this.params.sort.push({ [key]: options });
+    this._sort.push({ [key]: options });
     return this;
   }
 }

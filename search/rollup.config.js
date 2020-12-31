@@ -16,6 +16,5 @@ export default [
       },
     ],
     plugins: [ts({ tsconfig: 'search/tsconfig.json' })],
-    external: ['lodash/uniq'],
   },
 ];
