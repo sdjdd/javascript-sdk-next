@@ -138,6 +138,8 @@ export function LCDecode(app: App, data: any): any {
       case 'Pointer':
       case 'Object':
         return LCObject.fromJSON(app, data);
+      case 'File':
+        return LCObject.fromJSON(app, data, '_File');
       case 'Date':
         return new Date(data.iso);
       case 'GeoPoint':

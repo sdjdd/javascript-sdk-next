@@ -58,8 +58,7 @@ export class LCFile {
     }
     return {
       ...this.rawData,
-      __type: 'Object',
-      // __type: 'File,
+      __type: 'File',
       className: this.className,
       objectId: this.id,
     };
