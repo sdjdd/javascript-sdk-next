@@ -6,6 +6,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
+// TODO: 加上 className
 const RESERVED_KEYS = ['objectId', 'createdAt', 'updatedAt'];
 
 export function omitReservedKeys(data: Record<string, any>): Record<string, any> {

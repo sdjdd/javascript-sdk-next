@@ -1,4 +1,5 @@
 import 'should';
+import { omit } from 'lodash';
 import './init';
 import * as LC from '..';
 import { getAppConfig } from './utils';
@@ -34,6 +35,14 @@ describe('LCObject', () => {
     it('通过对象引用获取', async () => {
       const obj = await db.class('Test').object(objectId).get();
       obj.data.should.containEql(data);
+    });
+
+    it('获取时指定 keys', async () => {
+      const obj = await db
+        .class('Test')
+        .object(objectId)
+        .get({ keys: ['str'] });
+      omit(obj.data, ['objectId', 'createdAt', 'updatedAt']).should.eql({ str: data.str });
     });
   });
 
