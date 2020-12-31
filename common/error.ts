@@ -14,3 +14,9 @@ export class SDKError extends Error {
     super(message || DEFAULT_ERROR_MESSAGE[name]);
   }
 }
+
+export class APIError extends Error {
+  constructor(public code: number, public error: string) {
+    super(`code: ${code}, error: ${error}`);
+  }
+}

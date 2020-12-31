@@ -1,5 +1,6 @@
+import { APIError } from '../../../common/error';
 import { App, AuthOptions } from '../app';
-import { encodeObjectData, LCObjectData } from './lcobject';
+import { encodeObjectData, LCObject, LCObjectData } from './lcobject';
 
 type PipelineRequest =
   | {
@@ -8,17 +9,28 @@ type PipelineRequest =
       body: Record<string, any>;
     }
   | {
-      method: 'DELETE';
+      method: 'GET' | 'DELETE';
       path: string;
     };
 
 export interface PipelineResult {
-  results: any;
+  results: any[];
   errors: Error[];
 }
 
+interface ActionResult {
+  success?: Record<string, any>;
+  error?: {
+    code: number;
+    error: string;
+  };
+}
+
+const deleteDecoder = () => undefined;
+
 export class Pipeline {
   private _requests: PipelineRequest[] = [];
+  private _decoders: ((data: Record<string, any>) => any)[] = [];
 
   constructor(public readonly app: App) {}
 
@@ -28,6 +40,23 @@ export class Pipeline {
       path: `/1.1/classes/${className}`,
       body: encodeObjectData(data),
     });
+    this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
+  }
+
+  private _get(className: string, objectId: string): void {
+    this._requests.push({
+      method: 'GET',
+      path: `/1.1/classes/${className}/${objectId}`,
+    });
+    this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
+  }
+
+  private _delete(className: string, objectId: string): void {
+    this._requests.push({
+      method: 'DELETE',
+      path: `/1.1/classes/${className}/${objectId}`,
+    });
+    this._decoders.push(deleteDecoder);
   }
 
   add(className: string, data: LCObjectData | LCObjectData[]): this {
@@ -39,8 +68,30 @@ export class Pipeline {
     return this;
   }
 
+  get(className: string, objectId: string): this;
+  get(object: { className: string; id: string }): this;
+  get(arg1: string | { className: string; id: string }, objectId?: string): this {
+    if (typeof arg1 === 'string') {
+      this._get(arg1, objectId);
+    } else {
+      this._get(arg1.className, arg1.id);
+    }
+    return this;
+  }
+
+  delete(className: string, objectId: string): this;
+  delete(object: { className: string; id: string }): this;
+  delete(arg1: string | { className: string; id: string }, objectId?: string): this {
+    if (typeof arg1 === 'string') {
+      this._delete(arg1, objectId);
+    } else {
+      this._delete(arg1.className, arg1.id);
+    }
+    return this;
+  }
+
   async commit(options?: AuthOptions): Promise<PipelineResult> {
-    const res = (await this.app.request(
+    const actionResults = (await this.app.request(
       {
         method: 'POST',
         path: '/1.1/batch',
@@ -49,18 +100,19 @@ export class Pipeline {
         },
       },
       options
-    )) as (
-      | {
-          error: {
-            code: number;
-            error: string;
-          };
-        }
-      | { success: Record<string, any> }
-    )[];
-    return {
-      results: res,
-      errors: [],
-    };
+    )) as ActionResult[];
+
+    const results: any[] = [];
+    const errors: APIError[] = [];
+    actionResults.forEach((result, index) => {
+      if (result.error) {
+        const { code, error } = result.error;
+        errors.push(new APIError(code, error));
+      } else {
+        results.push(this._decoders[index](result.success));
+      }
+    });
+
+    return { results, errors };
   }
 }

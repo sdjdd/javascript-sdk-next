@@ -171,12 +171,10 @@ export class Query<T> {
   orderBy(key: string, order: QueryOrder = 'asc'): Query<T> {
     switch (order) {
       case 'asc':
-        this._order.add(key);
-        this._order.delete('-' + key);
+        this._order.add(key).delete('-' + key);
         break;
       case 'desc':
-        this._order.add('-' + key);
-        this._order.delete(key);
+        this._order.add('-' + key).delete(key);
         break;
       default:
         throw new TypeError(`未知的查询排序方式 ${order}`);

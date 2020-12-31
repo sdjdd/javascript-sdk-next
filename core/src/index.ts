@@ -11,7 +11,7 @@ use({
 });
 
 export * from './database';
-export { App, AppConfig, AuthOptions, APIError } from './app';
+export { App, AppConfig, AuthOptions } from './app';
 export { HTTPRequest, HTTPResponse } from './http';
 export { getModules, setAdapters, Runtime } from './runtime';
 export * from './version';

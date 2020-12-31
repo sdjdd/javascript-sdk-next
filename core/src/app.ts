@@ -2,6 +2,7 @@ import { Adapters } from '@leancloud/adapter-types';
 import clone from 'lodash/clone';
 import trimStart from 'lodash/trimStart';
 
+import { APIError } from '../../common/error';
 import { Database } from './database';
 import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions, upload } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
@@ -130,11 +131,5 @@ export class App {
 
   static beforeInvokeAPI(h: BeforeInvokeAPI): void {
     App.hooks.beforeInvokeAPI.push(h);
-  }
-}
-
-export class APIError extends Error {
-  constructor(public code: number, public error: string) {
-    super(`code: ${code}, error: ${error}`);
   }
 }
