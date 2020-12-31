@@ -14,6 +14,8 @@ export type QueryConstraint = Record<string, any> | Record<string, any>[];
 
 export type QueryOrder = 'asc' | 'desc';
 
+export type ForEachCallback<T> = (object: T, index: number) => void | Promise<void>;
+
 export class Query<T> {
   private _order = new Set<string>();
   private _include = new Set<string>();
@@ -29,27 +31,19 @@ export class Query<T> {
     protected _decoder: QueryDecoder<T>
   ) {}
 
-  get condition(): Condition {
-    const rm$eq = (cond: Condition) => {
-      if ('$and' in cond) {
-        cond.$and = cond.$and.map(rm$eq);
-      } else if ('$or' in cond) {
-        cond.$or = cond.$or.map(rm$eq);
-      } else {
-        Object.entries(cond).forEach(([key, value]) => {
-          if (value.$eq) {
-            cond[key] = value.$eq;
-          }
-        });
-      }
-      return cond;
-    };
-    rm$eq(this._condition);
-    return this._condition;
+  get condition(): Condition | undefined {
+    if (isEmpty(this._condition)) {
+      return undefined;
+    }
+    return rm$eq(this._condition);
   }
 
   get params(): QueryParams {
-    const params: QueryParams = {};
+    const params: QueryParams = {
+      where: this.condition,
+      skip: this._skip,
+      limit: this._limit,
+    };
     if (this._order.size) {
       params.order = Array.from(this._order).join(',');
     }
@@ -59,17 +53,8 @@ export class Query<T> {
     if (this._keys.size) {
       params.keys = Array.from(this._keys).join(',');
     }
-    if (this._skip !== undefined) {
-      params.skip = this._skip;
-    }
-    if (this._limit !== undefined) {
-      params.limit = this._limit;
-    }
     if (this._returnACL) {
       params.returnACL = true;
-    }
-    if (!isEmpty(this._condition)) {
-      params.where = this.condition;
     }
     return params;
   }
@@ -224,4 +209,47 @@ export class Query<T> {
     const objects = await this.limit(1).find(options);
     return objects.length ? objects[0] : null;
   }
+
+  async forEach(
+    callback: ForEachCallback<T>,
+    options?: Omit<AuthOptions, 'useMasterKey'>
+  ): Promise<void> {
+    // TODO: 在未设置 masterKey 时提示使用者
+    const authOptions: AuthOptions = { ...options, useMasterKey: true };
+
+    let index = 0;
+    let cursor: string;
+    while (cursor !== null) {
+      const { results = [], cursor: newCursor = null } = (await this.app.request(
+        {
+          method: 'GET',
+          path: `/1.1/scan/classes/${this.className}`,
+          query: {
+            cursor,
+            limit: this._limit,
+            where: this.condition,
+          },
+        },
+        authOptions
+      )) as { results: Record<string, any>[]; cursor: string | null };
+      cursor = newCursor;
+
+      await Promise.all(results.map((data) => callback(this.decodeObject(data), index++)));
+    }
+  }
+}
+
+function rm$eq(cond: Condition) {
+  if ('$and' in cond) {
+    cond.$and = cond.$and.map(rm$eq);
+  } else if ('$or' in cond) {
+    cond.$or = cond.$or.map(rm$eq);
+  } else {
+    Object.entries(cond).forEach(([key, value]) => {
+      if (value.$eq) {
+        cond[key] = value.$eq;
+      }
+    });
+  }
+  return cond;
 }

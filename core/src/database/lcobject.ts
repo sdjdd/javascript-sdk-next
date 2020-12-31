@@ -98,7 +98,7 @@ export class LCObject {
       options
     );
     if (isEmpty(rawData)) {
-      throw new Error(`The object(id=${this.id}) is not exists`);
+      throw new Error(`不存在 objectId 为 ${this.id} 的对象`);
     }
     return LCObject.fromJSON(this.app, rawData, this.className);
   }
