@@ -4,7 +4,7 @@ import './init';
 import * as LC from '..';
 import { getAppConfig } from './utils';
 
-describe('LCObject', () => {
+describe('对象(LCObject)', () => {
   const app = LC.init(getAppConfig());
   const db = app.database();
   const data = {

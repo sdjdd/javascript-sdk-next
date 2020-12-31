@@ -34,6 +34,7 @@ export interface AppConfig {
   appKey: string;
   serverURL?: string;
   masterKey?: string;
+  useMasterKey?: boolean;
 }
 
 export class App {
@@ -52,7 +53,7 @@ export class App {
   readonly httpRequest = doHTTPRequest;
   readonly upload = upload;
 
-  useMasterKey = false;
+  useMasterKey: boolean;
 
   private _masterKey?: string;
 
@@ -78,6 +79,7 @@ export class App {
       this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
     }
     this.serverURL = serverURL;
+    this.useMasterKey = Boolean(config.useMasterKey);
     this.localStorage = new NamespacedStorage(localStorage, appId);
 
     App.hooks.onCreated.forEach((h) => h(this));
