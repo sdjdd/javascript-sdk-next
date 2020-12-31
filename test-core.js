@@ -1,11 +1,17 @@
 const LC = require('./core');
 const adapters = require('@leancloud/platform-adapters-node');
 const debug = require('./debug');
+const search = require('./search');
+const storage = require('./storage');
+const liveQuery = require('./live-query');
 
 LC.setAdapters(adapters);
 LC.use(require('./auth'));
 LC.use(debug);
-debug.debug.enable('LC*');
+LC.use(search);
+LC.use(storage);
+LC.use(liveQuery);
+debug.enable('LC*');
 
 const app = LC.init({
   appId: 'oY2aqSxhKvtL2URCcKNehatA-gzGzoHsz',
@@ -17,12 +23,5 @@ const app = LC.init({
 app.useMasterKey = true;
 
 const db = app.database();
-const auth = app.auth();
 
-auth
-  .queryRole()
-  .where({ name: 'admin' })
-  .first()
-  .then((role) => {
-    role.getRoles().then(console.log);
-  });
+db.query('Person').where('a', 'or', 1, 2, 3);

@@ -4,7 +4,7 @@ import * as debug from './debug';
 
 LC.setAdapters(adapters);
 LC.use(debug);
-debug.debug.enable('*');
+debug.enable('*');
 
 const app = LC.init({
   appId: 'oY2aqSxhKvtL2URCcKNehatA-gzGzoHsz',
