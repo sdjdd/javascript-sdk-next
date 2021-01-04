@@ -208,32 +208,57 @@ export class Query<T> {
     return objects.length ? objects[0] : null;
   }
 
-  async forEach(
-    callback: ForEachCallback<T>,
-    options?: Omit<AuthOptions, 'useMasterKey'>
-  ): Promise<void> {
-    // TODO: 在未设置 masterKey 时提示使用者
-    const authOptions: AuthOptions = { ...options, useMasterKey: true };
+  scan(options?: Omit<AuthOptions, 'useMasterKey'>): QueryIterator<T> {
+    return new QueryIterator(this, options);
+  }
 
-    let index = 0;
-    let cursor: string;
-    while (cursor !== null) {
-      const { results = [], cursor: newCursor = null } = (await this.app.request(
-        {
-          method: 'GET',
-          path: `/1.1/scan/classes/${this.className}`,
-          query: {
-            cursor,
-            limit: this._limit,
-            where: this.condition,
-          },
-        },
-        authOptions
-      )) as { results: Record<string, any>[]; cursor: string | null };
-      cursor = newCursor;
+  [Symbol.asyncIterator](): QueryIterator<T> {
+    return this.scan();
+  }
+}
 
-      await Promise.all(results.map((data) => callback(this.decodeObject(data), index++)));
+class QueryIterator<T> {
+  private _app: App;
+  private _className: string;
+  private _query: Query<T>;
+  private _limit?: number;
+  private _condition?: Condition;
+  private _cursor?: string;
+  private _options?: AuthOptions;
+
+  constructor(query: Query<T>, options?: Omit<AuthOptions, 'useMasterKey'>) {
+    this._app = query.app;
+    this._className = query.className;
+    this._query = query;
+    this._options = { ...options, useMasterKey: true };
+    const { limit, where } = query.params;
+    this._limit = limit;
+    this._condition = where;
+  }
+
+  async next(): Promise<{ value: T[]; done: boolean }> {
+    if (this._cursor === null) {
+      return { value: [], done: true };
     }
+
+    const { results = [], cursor: cursor = null } = (await this._app.request(
+      {
+        method: 'GET',
+        path: `/1.1/scan/classes/${this._className}`,
+        query: {
+          cursor: this._cursor,
+          limit: this._limit,
+          where: this._condition,
+        },
+      },
+      this._options
+    )) as { results: Record<string, any>[]; cursor: string | null };
+
+    this._cursor = cursor;
+    return {
+      value: results.map((data) => this._query.decodeObject(data)),
+      done: cursor === null && results.length === 0,
+    };
   }
 }
 
