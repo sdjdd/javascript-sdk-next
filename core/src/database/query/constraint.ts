@@ -1,4 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
+
+import { GeoPoint, GeoPointLike, geoPoint } from '../../../../common/types';
 import { LCEncode } from '../lcobject';
 
 export type RawCondition = Record<string, any>;
@@ -136,6 +138,263 @@ export class NotExistsConstraint implements Constraint {
   }
 }
 
+export class SizeEqualConstraint implements Constraint {
+  constructor(public readonly size: number) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { ...cond[key], $size: this.size },
+    };
+  }
+}
+
+export class MatchesKeyConstraint implements Constraint {
+  constructor(
+    public readonly className: string,
+    public readonly key: string, // query key
+    public readonly condition?: Condition
+  ) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: {
+        ...cond[key],
+        $select: {
+          key: this.key,
+          query: {
+            className: this.className,
+            where: this.condition,
+          },
+        },
+      },
+    };
+  }
+}
+
+export class NotMatchesKeyConstraint implements Constraint {
+  constructor(
+    public readonly className: string,
+    public readonly key: string, // query key
+    public readonly condition?: Condition
+  ) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: {
+        ...cond[key],
+        $dontSelect: {
+          key: this.key,
+          query: {
+            className: this.className,
+            where: this.condition,
+          },
+        },
+      },
+    };
+  }
+}
+
+export class MatchesQueryConstraint implements Constraint {
+  constructor(public readonly className: string, public readonly condition?: Condition) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: {
+        ...cond[key],
+        $inQuery: {
+          className: this.className,
+          where: this.condition,
+        },
+      },
+    };
+  }
+}
+
+export class NotMatchesQueryConstraint implements Constraint {
+  constructor(public readonly className: string, public readonly condition?: Condition) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: {
+        ...cond[key],
+        $notInQuery: {
+          className: this.className,
+          where: this.condition,
+        },
+      },
+    };
+  }
+}
+
+export interface RegExpLike {
+  source: string;
+  ignoreCase?: boolean;
+  ignoreBlank?: boolean;
+  multiline?: boolean;
+  dotAll?: boolean;
+}
+export class MatchesConstraint implements Constraint {
+  private _regexp: string;
+  private _flags = '';
+
+  constructor(regexp: string | RegExpLike) {
+    if (typeof regexp === 'string') {
+      this._regexp = regexp;
+    } else {
+      this._regexp = regexp.source;
+      if (regexp.ignoreCase) {
+        this._flags += 'i';
+      }
+      if (regexp.multiline) {
+        this._flags += 'm';
+      }
+      if (regexp.ignoreBlank) {
+        this._flags += 'x';
+      }
+      if (regexp.dotAll) {
+        this._flags += 's';
+      }
+    }
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: {
+        ...cond[key],
+        $regex: this._regexp,
+        $options: this._flags || undefined,
+      },
+    };
+  }
+}
+
+export class InConstraint implements Constraint {
+  constructor(public readonly value: any[]) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { ...cond[key], $in: encode(this.value) },
+    };
+  }
+}
+
+export class NotInConstraint implements Constraint {
+  constructor(public readonly value: any[]) {}
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { ...cond[key], $nin: encode(this.value) },
+    };
+  }
+}
+
+export class ContainsAllConstraint implements Constraint {
+  private _value: any[];
+
+  constructor(value: any[]) {
+    this._value = encode(value);
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+    return {
+      ...cond,
+      [key]: { ...cond[key], $all: this._value },
+    };
+  }
+}
+
+export class NearConstraint implements Constraint {
+  private _geoPoint: GeoPoint;
+
+  constructor(geo: GeoPointLike) {
+    this._geoPoint = geoPoint(geo);
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+    return {
+      ...cond,
+      [key]: { ...cond[key], $nearSphere: this._geoPoint },
+    };
+  }
+}
+
+export class NearWithinMilesConstraint extends NearConstraint implements Constraint {
+  private _maxDistance: number;
+  private _minDistance?: number;
+
+  constructor(geo: GeoPointLike, maxDistance: number, minDistance?: number) {
+    super(geo);
+    this._maxDistance = maxDistance;
+    this._minDistance = minDistance;
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+    const condition = super.applyQueryConstraint(cond, key);
+    condition[key].$maxDistanceInMiles = this._maxDistance;
+    condition[key].$minDistanceInMiles = this._minDistance;
+    return condition;
+  }
+}
+
+export class NearWithinKilometersConstraint extends NearConstraint implements Constraint {
+  private _maxDistance: number;
+  private _minDistance?: number;
+
+  constructor(geo: GeoPointLike, maxDistance: number, minDistance?: number) {
+    super(geo);
+    this._maxDistance = maxDistance;
+    this._minDistance = minDistance;
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+    const condition = super.applyQueryConstraint(cond, key);
+    condition[key].$maxDistanceInKilometers = this._maxDistance;
+    condition[key].$minDistanceInKilometers = this._minDistance;
+    return condition;
+  }
+}
+
+export class NearWithinRadiansConstraint extends NearConstraint implements Constraint {
+  private _maxDistance: number;
+  private _minDistance?: number;
+
+  constructor(geo: GeoPointLike, maxDistance: number, minDistance?: number) {
+    super(geo);
+    this._maxDistance = maxDistance;
+    this._minDistance = minDistance;
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+    const condition = super.applyQueryConstraint(cond, key);
+    condition[key].$maxDistanceInRadians = this._maxDistance;
+    condition[key].$minDistanceInRadians = this._minDistance;
+    return condition;
+  }
+}
+
+export class WithinBoxConstraint implements Constraint {
+  private _box: [GeoPoint, GeoPoint];
+
+  constructor(southwest: GeoPointLike, northeast: GeoPointLike) {
+    this._box = [geoPoint(southwest), geoPoint(northeast)];
+  }
+
+  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+    return {
+      ...cond,
+      [key]: { ...cond[key], $within: { $box: this._box } },
+    };
+  }
+}
+
 export class OrConstraint implements Constraint<any[]> {
   constructor(public readonly value: any[]) {}
 
@@ -183,16 +442,5 @@ export class AndConstraint implements Constraint<any[]> {
       return cond;
     }
     return and.length === 1 ? and[0] : { $and: and };
-  }
-}
-
-export class InConstraint implements Constraint {
-  constructor(public readonly value: any) {}
-
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
-    return {
-      ...cond,
-      [key]: { ...cond[key], $in: encode(this.value) },
-    };
   }
 }
