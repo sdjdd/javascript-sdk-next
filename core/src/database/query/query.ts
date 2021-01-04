@@ -204,8 +204,22 @@ export class Query<T> {
   }
 
   async first(options?: AuthOptions): Promise<T | null> {
+    const _limit = this._limit;
     const objects = await this.limit(1).find(options);
+    this._limit = _limit;
     return objects.length ? objects[0] : null;
+  }
+
+  async count(options?: AuthOptions): Promise<number> {
+    const { count = 0 } = (await this.app.request(
+      {
+        method: 'GET',
+        path: `/1.1/classes/${this.className}`,
+        query: { ...this.params, limit: 0, count: 1 },
+      },
+      options
+    )) as { count: number };
+    return count;
   }
 
   scan(options?: Omit<AuthOptions, 'useMasterKey'>): QueryIterator<T> {
