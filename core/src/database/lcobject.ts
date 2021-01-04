@@ -75,14 +75,13 @@ export class LCObject {
         className: this.className,
         objectId: this.id,
       };
-    } else {
-      return {
-        ...this.rawData,
-        __type: 'Object',
-        className: this.className,
-        objectId: this.id,
-      };
     }
+    return {
+      ...this.rawData,
+      __type: 'Object',
+      className: this.className,
+      objectId: this.id,
+    };
   }
 
   async get(options?: GetObjectOptions): Promise<LCObject> {
