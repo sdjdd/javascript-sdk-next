@@ -94,7 +94,7 @@ export class Role {
     );
   }
 
-  queryUsers(): Query<User> {
+  queryUser(): Query<User> {
     return this.app
       .database()
       .query('_User', User.fromJSON)
@@ -106,7 +106,7 @@ export class Role {
       });
   }
 
-  queryRoles(): Query<Role> {
+  queryRole(): Query<Role> {
     return this.app
       .database()
       .query('_Role', Role.fromJSON)
@@ -119,11 +119,11 @@ export class Role {
   }
 
   getUsers(options?: AuthOptions): Promise<User[]> {
-    return this.queryUsers().find(options);
+    return this.queryUser().find(options);
   }
 
   getRoles(options?: AuthOptions): Promise<Role[]> {
-    return this.queryRoles().find(options);
+    return this.queryRole().find(options);
   }
 
   toJSON(options?: EncodeOptions): Record<string, any> {
