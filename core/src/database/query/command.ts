@@ -98,6 +98,14 @@ function matches(regexp: string | RegExpLike): MatchesConstraint {
   return new MatchesConstraint(regexp);
 }
 
+function quote(s: string): string {
+  return '\\Q' + s.replace('\\E', '\\E\\\\E\\Q') + '\\E';
+}
+
+function contains(s: string): MatchesConstraint {
+  return matches(quote(s));
+}
+
 function containsAll(values: any[]): ContainsAllConstraint {
   return new ContainsAllConstraint(values);
 }
@@ -132,6 +140,7 @@ export const queryCommand = {
   notIn,
   'not-in': notIn,
   matches,
+  contains,
   containsAll,
   'contains-all': containsAll,
   // TODO: 补充地理位置查询命令
