@@ -4,7 +4,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import type { App, AuthOptions } from '../../app';
 import { HTTPRequest } from '../../http';
 import { queryCommand, QueryCommand } from './command';
-import { Condition, isConstraint, isRawCondition } from './constraint';
+import { Condition, isConstraint } from './constraint';
 
 export type QueryDecoder<T = any> = (app: App, data: any, className: string) => T;
 
@@ -64,8 +64,7 @@ export class Query<T> {
       throw new Error('无效的查询约束');
     }
 
-    const and: Condition[] = [];
-    let tempCond: Condition = this._condition;
+    let tempCond = this._condition;
     Object.entries(cond).forEach(([key, value]) => {
       if (value === undefined) {
         return;
@@ -73,27 +72,9 @@ export class Query<T> {
       if (!isConstraint(value)) {
         value = queryCommand.eq(value);
       }
-      if (!isRawCondition(tempCond)) {
-        and.push(tempCond);
-        tempCond = {};
-      }
       tempCond = value.applyQueryConstraint(tempCond, key);
     });
-
-    if (isEmpty(tempCond)) {
-      if (and.length) {
-        return { $and: and };
-      } else {
-        return {};
-      }
-    } else {
-      if (and.length) {
-        and.push(tempCond);
-        return { $and: and };
-      } else {
-        return tempCond;
-      }
-    }
+    return tempCond;
   }
 
   where<T extends keyof QueryCommand>(

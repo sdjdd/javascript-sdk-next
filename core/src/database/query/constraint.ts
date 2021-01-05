@@ -3,29 +3,26 @@ import isEmpty from 'lodash/isEmpty';
 import { GeoPoint, GeoPointLike, geoPoint } from '../../../../common/types';
 import { LCEncode } from '../lcobject';
 
-export type RawCondition = Record<string, any>;
-
-export type AndCondition = { $and: Condition[] };
-
-export type OrCondition = { $or: Condition[] };
-
-export type Condition = RawCondition | AndCondition | OrCondition;
-
-export function isAndCondition(cond: Condition): cond is AndCondition {
-  return !!(cond as AndCondition).$and;
+export interface Condition extends Record<string, any> {
+  $and?: Condition[];
+  $or?: Condition[];
 }
 
-export function isOrCondition(cond: Condition): cond is OrCondition {
-  return !!(cond as OrCondition).$or;
+export function isAndCondition(cond: Condition): cond is Condition & { $and: Condition[] } {
+  return '$and' in cond;
 }
 
-export function isRawCondition(cond: Condition): cond is RawCondition {
+export function isOrCondition(cond: Condition): cond is Condition & { $or: Condition[] } {
+  return '$or' in cond;
+}
+
+export function isRawCondition(cond: Condition): boolean {
   return !isOrCondition(cond) && !isAndCondition(cond);
 }
 
 export interface Constraint<T = any> {
   value?: T;
-  applyQueryConstraint(condition: RawCondition, key: string): Condition;
+  applyQueryConstraint(condition: Condition, key: string): Condition;
 }
 
 export function isConstraint(value: any): value is Constraint {
@@ -39,7 +36,7 @@ function encode(value: any): any {
 export class EqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (this.value === undefined) {
       throw new TypeError('不支持使用 undefined 作为相等约束的比较值');
     }
@@ -53,7 +50,7 @@ export class EqualConstraint implements Constraint {
 export class NotEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (this.value === undefined) {
       return cond;
     }
@@ -67,7 +64,7 @@ export class NotEqualConstraint implements Constraint {
 export class GreaterThanConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (this.value === undefined) {
       return cond;
     }
@@ -81,7 +78,7 @@ export class GreaterThanConstraint implements Constraint {
 export class GreaterThanOrEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (this.value === undefined) {
       return cond;
     }
@@ -95,7 +92,7 @@ export class GreaterThanOrEqualConstraint implements Constraint {
 export class LessThanConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (this.value === undefined) {
       return cond;
     }
@@ -109,7 +106,7 @@ export class LessThanConstraint implements Constraint {
 export class LessThanOrEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (this.value === undefined) {
       return cond;
     }
@@ -121,7 +118,7 @@ export class LessThanOrEqualConstraint implements Constraint {
 }
 
 export class ExistsConstraint implements Constraint {
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $exists: true },
@@ -130,7 +127,7 @@ export class ExistsConstraint implements Constraint {
 }
 
 export class NotExistsConstraint implements Constraint {
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $exists: false },
@@ -141,7 +138,7 @@ export class NotExistsConstraint implements Constraint {
 export class SizeEqualConstraint implements Constraint {
   constructor(public readonly size: number) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $size: this.size },
@@ -156,7 +153,7 @@ export class MatchesKeyConstraint implements Constraint {
     public readonly condition?: Condition
   ) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: {
@@ -180,7 +177,7 @@ export class NotMatchesKeyConstraint implements Constraint {
     public readonly condition?: Condition
   ) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: {
@@ -200,7 +197,7 @@ export class NotMatchesKeyConstraint implements Constraint {
 export class MatchesQueryConstraint implements Constraint {
   constructor(public readonly className: string, public readonly condition?: Condition) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: {
@@ -217,7 +214,7 @@ export class MatchesQueryConstraint implements Constraint {
 export class NotMatchesQueryConstraint implements Constraint {
   constructor(public readonly className: string, public readonly condition?: Condition) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: {
@@ -262,7 +259,7 @@ export class MatchesConstraint implements Constraint {
     }
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: {
@@ -277,7 +274,7 @@ export class MatchesConstraint implements Constraint {
 export class InConstraint implements Constraint {
   constructor(public readonly value: any[]) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $in: encode(this.value) },
@@ -288,7 +285,7 @@ export class InConstraint implements Constraint {
 export class NotInConstraint implements Constraint {
   constructor(public readonly value: any[]) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $nin: encode(this.value) },
@@ -303,7 +300,7 @@ export class ContainsAllConstraint implements Constraint {
     this._value = encode(value);
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $all: this._value },
@@ -318,7 +315,7 @@ export class NearConstraint implements Constraint {
     this._geoPoint = geoPoint(geo);
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $nearSphere: this._geoPoint },
@@ -336,7 +333,7 @@ export class NearWithinMilesConstraint extends NearConstraint implements Constra
     this._minDistance = minDistance;
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     const condition = super.applyQueryConstraint(cond, key);
     condition[key].$maxDistanceInMiles = this._maxDistance;
     condition[key].$minDistanceInMiles = this._minDistance;
@@ -354,7 +351,7 @@ export class NearWithinKilometersConstraint extends NearConstraint implements Co
     this._minDistance = minDistance;
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     const condition = super.applyQueryConstraint(cond, key);
     condition[key].$maxDistanceInKilometers = this._maxDistance;
     condition[key].$minDistanceInKilometers = this._minDistance;
@@ -372,7 +369,7 @@ export class NearWithinRadiansConstraint extends NearConstraint implements Const
     this._minDistance = minDistance;
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     const condition = super.applyQueryConstraint(cond, key);
     condition[key].$maxDistanceInRadians = this._maxDistance;
     condition[key].$minDistanceInRadians = this._minDistance;
@@ -387,7 +384,7 @@ export class WithinBoxConstraint implements Constraint {
     this._box = [geoPoint(southwest), geoPoint(northeast)];
   }
 
-  applyQueryConstraint(cond: RawCondition, key: string): RawCondition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     return {
       ...cond,
       [key]: { ...cond[key], $within: { $box: this._box } },
@@ -398,7 +395,7 @@ export class WithinBoxConstraint implements Constraint {
 export class OrConstraint implements Constraint<any[]> {
   constructor(public readonly value: any[]) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (!this.value || this.value.length === 0) {
       return cond;
     }
@@ -408,22 +405,24 @@ export class OrConstraint implements Constraint<any[]> {
       if (!isConstraint(item)) {
         item = new EqualConstraint(item);
       }
-      const tempCond = item.applyQueryConstraint(cond, key);
-      if (!isEmpty(tempCond)) {
-        or.push(tempCond);
-      }
+      or.push(item.applyQueryConstraint({}, key));
     });
-    if (or.length === 0) {
-      return cond;
+    const newCond = or.length === 1 ? or[0] : { $or: or };
+
+    if (isEmpty(cond)) {
+      return newCond;
     }
-    return or.length === 1 ? or[0] : { $or: or };
+    if (isAndCondition(cond)) {
+      return { ...cond, $and: [...cond.$and, newCond] };
+    }
+    return { $and: [cond, newCond] };
   }
 }
 
 export class AndConstraint implements Constraint<any[]> {
   constructor(public readonly value: any[]) {}
 
-  applyQueryConstraint(cond: RawCondition, key: string): Condition {
+  applyQueryConstraint(cond: Condition, key: string): Condition {
     if (!this.value || this.value.length === 0) {
       return cond;
     }
@@ -433,14 +432,16 @@ export class AndConstraint implements Constraint<any[]> {
       if (!isConstraint(item)) {
         item = new EqualConstraint(item);
       }
-      const tempCond = item.applyQueryConstraint(cond, key);
-      if (isEmpty(tempCond)) {
-        and.push(tempCond);
-      }
+      and.push(item.applyQueryConstraint({}, key));
     });
-    if (and.length === 0) {
-      return cond;
+    const newCond = and.length === 1 ? and[0] : { $and: and };
+
+    if (isEmpty(cond)) {
+      return newCond;
     }
-    return and.length === 1 ? and[0] : { $and: and };
+    if (isAndCondition(cond)) {
+      return { ...cond, $and: [...cond.$and, newCond] };
+    }
+    return { $and: [cond, newCond] };
   }
 }
