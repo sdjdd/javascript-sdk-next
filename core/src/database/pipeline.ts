@@ -51,6 +51,15 @@ export class Pipeline {
     this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
   }
 
+  private _update(className: string, objectId: string, data: LCObjectData): void {
+    this._requests.push({
+      method: 'PUT',
+      path: `/1.1/classes/${className}/${objectId}`,
+      body: encodeObjectData(data),
+    });
+    this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
+  }
+
   private _delete(className: string, objectId: string): void {
     this._requests.push({
       method: 'DELETE',
@@ -75,6 +84,24 @@ export class Pipeline {
       this._get(arg1, objectId);
     } else {
       this._get(arg1.className, arg1.id);
+    }
+    return this;
+  }
+
+  update(className: string, objectId: string, data: LCObjectData): this;
+  update(object: { className: string; id: string }, data: LCObjectData): this;
+  update(
+    arg1: string | { className: string; id: string },
+    arg2?: string | LCObjectData,
+    data?: LCObjectData
+  ): this {
+    if (typeof arg1 === 'string') {
+      if (typeof arg2 !== 'string') {
+        throw new TypeError('objectId 必须是 string');
+      }
+      this._update(arg1, arg2, data);
+    } else {
+      this._update(arg1.className, arg1.id, arg2 as LCObjectData);
     }
     return this;
   }
