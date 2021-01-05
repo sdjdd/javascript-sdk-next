@@ -17,4 +17,5 @@ module.exports = {
   LC,
   app,
   db: app.database(),
+  auth: app.auth(),
 };

@@ -142,3 +142,5 @@ export class Role {
     };
   }
 }
+
+export type RoleReference = Pick<Role, 'app' | 'className' | 'id'>;

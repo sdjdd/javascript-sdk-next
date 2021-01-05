@@ -45,11 +45,21 @@ export class ACL {
   }
 
   // 不用 deny 是因为 deny 这个词给人一种支持黑名单的感觉，实际上不支持。
+  /**
+   * 取消对某一主体的授权
+   * @param subject
+   * @param action
+   */
   disallow(subject: ACLSubject, action: ACLAction): this {
     this._privileges[action].delete(ACL.getSubjectKey(subject));
     return this;
   }
 
+  /**
+   * 测试某一主体是否有进行某项操作的权力
+   * @param subject
+   * @param action
+   */
   can(subject: ACLSubject, action: ACLAction): boolean {
     return this._privileges[action].has(ACL.getSubjectKey(subject));
   }

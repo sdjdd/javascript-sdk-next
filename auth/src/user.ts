@@ -247,3 +247,5 @@ export class User {
     Object.assign(this.data, obj.data);
   }
 }
+
+export type UserReference = Pick<User, 'app' | 'className' | 'id'>;

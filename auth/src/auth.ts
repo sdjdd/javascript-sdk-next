@@ -1,8 +1,8 @@
 import { v4 as uuid_v4 } from 'uuid';
 
-import type { App, AuthOptions, Query } from '../../core';
-import { Role } from './role';
-import { User } from './user';
+import type { ACL, AddObjectOptions, App, AuthOptions, Query } from '../../core';
+import { Role, RoleReference } from './role';
+import { User, UserReference } from './user';
 
 export function setHooks(appClass: typeof App): void {
   appClass.beforeInvokeAPI(async (app, request, options) => {
@@ -31,11 +31,50 @@ export interface AuthOptionsWithCaptchaToken extends AuthOptions {
   validateToken?: string;
 }
 
+interface AddRoleData {
+  ACL: ACL;
+  name: string;
+  users?: UserReference[];
+  roles?: RoleReference[];
+}
+
 export class Auth {
   constructor(public readonly app: App) {}
 
-  role(id: string): Role {
+  user(id: string): UserReference {
+    return new User(this.app, id);
+  }
+
+  role(id: string): RoleReference {
     return new Role(this.app, id);
+  }
+
+  async addRole(data: AddRoleData, options?: AddObjectOptions): Promise<Role> {
+    const { ACL, name, users, roles } = data;
+    if (!data.ACL || !data.name) {
+      throw new Error('创建角色时必须提供 name 和 ACL');
+    }
+
+    const db = this.app.database();
+    const rawData = await this.app.request(
+      {
+        method: 'POST',
+        path: '/1.1/roles',
+        query: {
+          fetchWhenSave: options?.fetchData,
+        },
+        body: db.encodeObjectData({
+          ...data,
+          name,
+          ACL,
+          users: users?.length ? db.op.addRelation(users) : undefined,
+          roles: roles?.length ? db.op.addRelation(roles) : undefined,
+        }),
+      },
+      options
+    );
+
+    return Role.fromJSON(this.app, rawData);
   }
 
   queryUser(): Query<User> {
