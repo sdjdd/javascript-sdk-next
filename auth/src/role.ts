@@ -1,5 +1,13 @@
 import { ensureArray } from '../../common/utils';
-import type { App, AuthOptions, EncodeOptions, LCObject, Query } from '../../core';
+import type {
+  App,
+  AuthOptions,
+  EncodeOptions,
+  GetObjectOptions,
+  LCObject,
+  Query,
+  UpdateObjectOptions,
+} from '../../core';
 import { User } from './user';
 
 interface RoleSubject {
@@ -126,6 +134,24 @@ export class Role {
     return this.queryRole().find(options);
   }
 
+  async get(options?: GetObjectOptions): Promise<Role> {
+    const obj = await this.app.database().class(this.className).get(this.id, options);
+    return Role.fromLCObject(obj);
+  }
+
+  async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<Role> {
+    const obj = await this.app
+      .database()
+      .class(this.className)
+      .object(this.id)
+      .update(data, options);
+    return Role.fromLCObject(obj);
+  }
+
+  delete(options?: AuthOptions): Promise<void> {
+    return this.app.database().class(this.className).object(this.id).delete(options);
+  }
+
   toJSON(options?: EncodeOptions): Record<string, any> {
     if (options?.pointer) {
       return {
@@ -143,4 +169,18 @@ export class Role {
   }
 }
 
-export type RoleReference = Pick<Role, 'app' | 'className' | 'id'>;
+export type RoleReference = Pick<
+  Role,
+  | 'app'
+  | 'className'
+  | 'id'
+  | 'get'
+  | 'update'
+  | 'delete'
+  | 'add'
+  | 'remove'
+  | 'queryRole'
+  | 'queryUser'
+  | 'getRoles'
+  | 'getUsers'
+>;

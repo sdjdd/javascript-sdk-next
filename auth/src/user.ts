@@ -248,4 +248,4 @@ export class User {
   }
 }
 
-export type UserReference = Pick<User, 'app' | 'className' | 'id'>;
+export type UserReference = Pick<User, 'app' | 'className' | 'id' | 'get' | 'update' | 'delete'>;
