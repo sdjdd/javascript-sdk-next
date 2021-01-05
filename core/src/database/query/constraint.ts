@@ -9,11 +9,11 @@ export interface Condition extends Record<string, any> {
 }
 
 export function isAndCondition(cond: Condition): cond is Condition & { $and: Condition[] } {
-  return '$and' in cond;
+  return cond && '$and' in cond;
 }
 
 export function isOrCondition(cond: Condition): cond is Condition & { $or: Condition[] } {
-  return '$or' in cond;
+  return cond && '$or' in cond;
 }
 
 export function isRawCondition(cond: Condition): boolean {
