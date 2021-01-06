@@ -8,6 +8,7 @@ import { LCFile } from './file';
 
 export interface UploadOptions extends AuthOptions {
   ACL?: ACL;
+  key?: string;
   mime?: string;
   metaData?: Record<string, any>;
   header?: Record<string, string>;
@@ -88,7 +89,7 @@ export class Storage {
 
   private _getFileTokens(
     name: string,
-    options?: Pick<UploadOptions, 'ACL' | 'metaData' | 'mime'>
+    options?: Pick<UploadOptions, 'ACL' | 'key' | 'metaData' | 'mime'>
   ): Promise<FileTokens> {
     return this.app.request({
       method: 'POST',
@@ -96,6 +97,7 @@ export class Storage {
       body: {
         name,
         ACL: options?.ACL,
+        key: options?.key,
         metaData: options?.metaData,
         mime_type: options?.mime,
       },
