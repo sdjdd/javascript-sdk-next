@@ -7,11 +7,7 @@ LC.use(debug);
 
 debug.enable('LC:*');
 
-const app = LC.init({
-  appId: 'oY2aqSxhKvtL2URCcKNehatA-gzGzoHsz',
-  appKey: 'yr6xMoCYahu75yy1uRug7Vmv',
-  serverURL: 'https://lc-api.sdjdd.com',
-});
+const app = LC.init(require('../../env').cn_n1);
 
 module.exports = {
   LC,

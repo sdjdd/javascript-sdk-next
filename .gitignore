@@ -1,3 +1,7 @@
 node_modules
 dist
 /tools/repl/.history
+
+# temp
+/env.js
+/test-core*
