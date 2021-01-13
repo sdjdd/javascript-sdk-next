@@ -1,10 +1,10 @@
-import type { App, AuthOptions } from '../app';
-
-import isDate from 'lodash/isDate';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
+
+import type { App, AuthOptions } from '../app';
+import { ACL } from './acl';
 
 // TODO: 加上 className
 const RESERVED_KEYS = ['objectId', 'createdAt', 'updatedAt'];
@@ -31,8 +31,9 @@ export interface EncodeOptions {
 export type LCObjectData = Record<string, any>;
 
 export class LCObject {
-  rawData: Record<string, any>;
   data: LCObjectData;
+
+  private _rawData: Record<string, any>;
 
   get createdAt(): Date {
     return this.data.createdAt;
@@ -55,9 +56,12 @@ export class LCObject {
       );
     }
     const object = new LCObject(app, className, objectId);
-    object.rawData = data;
+    object._rawData = data;
     object.data = LCDecode(app, omit(data, ['__type', 'className']));
 
+    if (data.ACL) {
+      object.data.ACL = ACL.fromJSON(data.ACL);
+    }
     if (data.createdAt) {
       object.data.createdAt = new Date(data.createdAt);
     }
@@ -68,7 +72,7 @@ export class LCObject {
     return object;
   }
 
-  toJSON(options?: EncodeOptions): Record<string, any> {
+  protected _LC_encode(options?: EncodeOptions): Record<string, any> {
     if (options?.pointer) {
       return {
         __type: 'Pointer',
@@ -77,11 +81,19 @@ export class LCObject {
       };
     }
     return {
-      ...this.rawData,
+      ...this._rawData,
       __type: 'Object',
       className: this.className,
       objectId: this.id,
     };
+  }
+
+  protected _LC_getData(): LCObjectData {
+    return getLCObjectData(this.data);
+  }
+
+  toJSON(): LCObjectData {
+    return this._LC_getData();
   }
 
   async get(options?: GetObjectOptions): Promise<LCObject> {
@@ -129,6 +141,66 @@ export class LCObject {
   }
 }
 
+// @ts-ignore
+export interface INTERNAL_LCObject extends LCObject {
+  _rawData: Record<string, any>;
+  _LC_getData(): LCObjectData;
+  _LC_encode(options?: EncodeOptions): Record<string, any>;
+}
+
+function getLCObjectData(data: any): any {
+  if (data) {
+    if (typeof data._LC_getData === 'function') {
+      return data._LC_getData();
+    }
+    if (Array.isArray(data)) {
+      return data.map((value) => getLCObjectData(value));
+    }
+    if (isPlainObject(data)) {
+      return mapValues(data, (value) => getLCObjectData(value));
+    }
+  }
+  return data;
+}
+
+export class LCDate extends Date {
+  protected _LC_encode(): any {
+    return { __type: 'Date', iso: this.toISOString() };
+  }
+}
+
+export interface Encodeable {
+  _LC_encode: (...args: any[]) => any;
+}
+
+export function isEncodeable(value: any): value is Encodeable {
+  return value && typeof value._LC_encode === 'function';
+}
+
+export function LCEncode(data: any, options?: EncodeOptions): any {
+  if (!data) {
+    return data;
+  }
+
+  if (isEncodeable(data)) {
+    return data._LC_encode(options);
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((value) => LCEncode(value, options));
+  }
+
+  if (isPlainObject(data)) {
+    return mapValues(data, (value) => LCEncode(value, options));
+  }
+
+  return data;
+}
+
+export function encodeObjectData(data: Record<string, any>): Record<string, any> {
+  return LCEncode(omitReservedKeys(data), { pointer: true });
+}
+
 export function LCDecode(app: App, data: any): any {
   if (!data) {
     return data;
@@ -141,7 +213,7 @@ export function LCDecode(app: App, data: any): any {
       case 'File':
         return LCObject.fromJSON(app, data, '_File');
       case 'Date':
-        return new Date(data.iso);
+        return new LCDate(data.iso);
       case 'GeoPoint':
         return { longitude: data.longitude, latitude: data.latitude };
       default:
@@ -152,32 +224,4 @@ export function LCDecode(app: App, data: any): any {
     return data.map((value) => LCDecode(app, value));
   }
   return data;
-}
-
-export function LCEncode(data: any, options?: EncodeOptions): any {
-  if (!data) {
-    return data;
-  }
-
-  if (typeof data.toJSON === 'function') {
-    return data.toJSON(options);
-  }
-
-  if (isPlainObject(data)) {
-    return mapValues(data, (value) => LCEncode(value, options));
-  }
-
-  if (Array.isArray(data)) {
-    return data.map((value) => LCEncode(value, options));
-  }
-
-  if (isDate(data)) {
-    return { __type: 'Date', iso: data.toISOString() };
-  }
-
-  return data;
-}
-
-export function encodeObjectData(data: Record<string, any>): Record<string, any> {
-  return LCEncode(omitReservedKeys(data), { pointer: true });
 }

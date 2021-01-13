@@ -1,5 +1,5 @@
 import { KEY_CURRENT_USER } from '../../common/const';
-import type { App, AuthOptions, EncodeOptions, GetObjectOptions, LCObject } from '../../core';
+import type { App, AuthOptions, GetObjectOptions, LCObject, INTERNAL_LCObject } from '../../core';
 
 const KEY_CURRENT_USER_PROMISE = KEY_CURRENT_USER + '-promise';
 
@@ -9,12 +9,31 @@ export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
 }
 
 export class User {
-  rawData: Record<string, any>;
-  data: Record<string, any>;
+  private _object: INTERNAL_LCObject;
 
-  get className(): '_User' {
-    return '_User';
+  constructor(object: LCObject);
+  constructor(app: App, id: string);
+  constructor(arg1: any, arg2?: any) {
+    if (arg2) {
+      this._object = (arg1 as App).database().class('_User').object(arg2) as any;
+    } else {
+      this._object = arg1;
+    }
   }
+
+  get app() {
+    return this._object.app;
+  }
+  get className() {
+    return this._object.className;
+  }
+  get id() {
+    return this._object.id;
+  }
+  get data() {
+    return this._object.data;
+  }
+
   get username(): string {
     return this.data.username;
   }
@@ -43,14 +62,8 @@ export class User {
     return this.data.updatedAt;
   }
 
-  constructor(public readonly app: App, public readonly id: string) {}
-
   static fromJSON(app: App, json: any): User {
-    const obj = app.database().decodeObject(json, '_User');
-    const user = new User(app, obj.id);
-    user.rawData = json;
-    user.data = obj.data;
-    return user;
+    return new User(app.database().decodeObject(json, '_User'));
   }
 
   static getCurrent(app: App): User | null {
@@ -88,7 +101,10 @@ export class User {
 
   static async setCurrentAsync(user: User): Promise<void> {
     user.app.payload[KEY_CURRENT_USER] = user;
-    await user.app.localStorage.setAsync(KEY_CURRENT_USER, JSON.stringify(user));
+    await user.app.localStorage.setAsync(
+      KEY_CURRENT_USER,
+      JSON.stringify(user._object._LC_encode())
+    );
   }
 
   static removeCurrent(app: App): void {
@@ -132,7 +148,7 @@ export class User {
     newPassword: string,
     options?: Omit<AuthOptions, 'sessionToken'>
   ): Promise<void> {
-    const rawData = await this.app.request(
+    const { sessionToken, updatedAt } = (await this.app.request(
       {
         method: 'PUT',
         path: `/1.1/users/${this.id}/updatePassword`,
@@ -145,10 +161,15 @@ export class User {
         ...options,
         sessionToken: this.sessionToken,
       }
-    );
-    Object.assign(this.rawData, rawData);
-    this.data.sessionToken = rawData.sessionToken;
-    this.data.updatedAt = new Date(rawData.updatedAt);
+    )) as {
+      objectId: string;
+      sessionToken: string;
+      updatedAt: string;
+    };
+    this._object._rawData.sessionToken = sessionToken;
+    this._object._rawData.updatedAt = updatedAt;
+    this.data.sessionToken = sessionToken;
+    this.data.updatedAt = new Date(updatedAt);
   }
 
   associateWithAuthData(
@@ -183,12 +204,8 @@ export class User {
   // async associateWithMiniApp(options?: )
 
   async get(options?: Omit<GetObjectOptions, 'sessionToken'>): Promise<this> {
-    const obj = await this.app
-      .database()
-      .class(this.className)
-      .object(this.id)
-      .get({ ...options, sessionToken: this.sessionToken });
-    this._merge(obj);
+    const obj = await this._object.get({ ...options, sessionToken: this.sessionToken });
+    this._merge(obj as any);
     if (this.isCurrent()) {
       await User.setCurrentAsync(this);
     }
@@ -196,16 +213,12 @@ export class User {
   }
 
   async update(data: Record<string, any>, options?: UpdateUserOptions): Promise<this> {
-    const obj = await this.app
-      .database()
-      .class(this.className)
-      .object(this.id)
-      .update(data, {
-        ...options,
-        fetchUpdatedData: true,
-        sessionToken: this.sessionToken,
-      });
-    this._merge(obj);
+    const obj = await this._object.update(data, {
+      ...options,
+      fetchUpdatedData: true,
+      sessionToken: this.sessionToken,
+    });
+    this._merge(obj as any);
     if (this.isCurrent()) {
       await User.setCurrentAsync(this);
     }
@@ -213,38 +226,26 @@ export class User {
   }
 
   async delete(options: Omit<AuthOptions, 'sessionToken'>): Promise<void> {
-    await this.app
-      .database()
-      .class(this.className)
-      .object(this.id)
-      .delete({
-        ...options,
-        sessionToken: this.sessionToken,
-      });
+    await this._object.delete({
+      ...options,
+      sessionToken: this.sessionToken,
+    });
     if (this.isCurrent()) {
       await this.app.localStorage.removeAsync(KEY_CURRENT_USER);
     }
   }
 
-  toJSON(options?: EncodeOptions): Record<string, any> {
-    if (options?.pointer) {
-      return {
-        __type: 'Pointer',
-        className: this.className,
-        objectId: this.id,
-      };
-    }
-    return {
-      ...this.rawData,
-      __type: 'Object',
-      className: this.className,
-      objectId: this.id,
-    };
+  toJSON() {
+    return this._object.toJSON();
   }
 
-  private _merge(obj: LCObject): void {
-    Object.assign(this.rawData, obj.rawData);
+  private _merge(obj: INTERNAL_LCObject): void {
+    Object.assign(this._object._rawData, obj._rawData);
     Object.assign(this.data, obj.data);
+  }
+
+  protected _LC_encode() {
+    return this._object._LC_encode();
   }
 }
 

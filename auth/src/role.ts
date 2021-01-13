@@ -2,8 +2,8 @@ import { ensureArray } from '../../common/utils';
 import type {
   App,
   AuthOptions,
-  EncodeOptions,
   GetObjectOptions,
+  INTERNAL_LCObject,
   LCObject,
   Query,
   UpdateObjectOptions,
@@ -16,12 +16,31 @@ interface RoleSubject {
 }
 
 export class Role {
-  rawData: Record<string, any>;
-  data: Record<string, any>;
+  private _object: INTERNAL_LCObject;
 
-  get className(): '_Role' {
-    return '_Role';
+  constructor(object: LCObject);
+  constructor(app: App, id: string);
+  constructor(arg1: any, arg2?: any) {
+    if (arg2) {
+      this._object = (arg1 as App).database().class('_Role').object(arg2) as any;
+    } else {
+      this._object = arg1;
+    }
   }
+
+  get app() {
+    return this._object.app;
+  }
+  get className() {
+    return this._object.className;
+  }
+  get id() {
+    return this._object.id;
+  }
+  get data() {
+    return this._object.data;
+  }
+
   get name(): string {
     return this.data.name;
   }
@@ -29,17 +48,8 @@ export class Role {
     return `role:${this.name}`;
   }
 
-  constructor(public readonly app: App, public readonly id: string) {}
-
-  static fromLCObject(object: LCObject): Role {
-    const role = new Role(object.app, object.id);
-    role.rawData = object.rawData;
-    role.data = object.data;
-    return role;
-  }
-
   static fromJSON(app: App, data: any): Role {
-    return Role.fromLCObject(app.database().decodeObject(data, '_Role'));
+    return new Role(app.database().decodeObject(data, '_Role'));
   }
 
   add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
@@ -135,37 +145,23 @@ export class Role {
   }
 
   async get(options?: GetObjectOptions): Promise<Role> {
-    const obj = await this.app.database().class(this.className).get(this.id, options);
-    return Role.fromLCObject(obj);
+    return new Role(await this._object.get(options));
   }
 
   async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<Role> {
-    const obj = await this.app
-      .database()
-      .class(this.className)
-      .object(this.id)
-      .update(data, options);
-    return Role.fromLCObject(obj);
+    return new Role(await this._object.update(data, options));
   }
 
   delete(options?: AuthOptions): Promise<void> {
     return this.app.database().class(this.className).object(this.id).delete(options);
   }
 
-  toJSON(options?: EncodeOptions): Record<string, any> {
-    if (options?.pointer) {
-      return {
-        __type: 'Pointer',
-        className: this.className,
-        objectId: this.id,
-      };
-    }
-    return {
-      ...this.rawData,
-      __type: 'Object',
-      className: this.className,
-      objectId: this.id,
-    };
+  toJSON() {
+    return this._object.toJSON();
+  }
+
+  protected _LC_encode() {
+    return this._object._LC_encode();
   }
 }
 

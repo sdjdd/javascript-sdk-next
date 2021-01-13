@@ -76,4 +76,12 @@ export class ACL {
     });
     return json;
   }
+
+  protected _LC_getData() {
+    return this.toJSON();
+  }
+
+  protected _LC_encode() {
+    return this.toJSON();
+  }
 }
