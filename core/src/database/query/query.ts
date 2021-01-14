@@ -35,7 +35,11 @@ export class Query<T> {
     if (isEmpty(this._condition)) {
       return undefined;
     }
-    return rm$eq(this._condition);
+    return this._condition;
+  }
+
+  set condition(value: Condition) {
+    this._condition = value;
   }
 
   get params(): QueryParams {
@@ -255,19 +259,4 @@ class QueryIterator<T> {
       done: cursor === null && results.length === 0,
     };
   }
-}
-
-function rm$eq(cond: Condition) {
-  if ('$and' in cond) {
-    cond.$and = cond.$and.map(rm$eq);
-  } else if ('$or' in cond) {
-    cond.$or = cond.$or.map(rm$eq);
-  } else {
-    Object.entries(cond).forEach(([key, value]) => {
-      if (value.$eq) {
-        cond[key] = value.$eq;
-      }
-    });
-  }
-  return cond;
 }

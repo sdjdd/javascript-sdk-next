@@ -40,10 +40,7 @@ export class EqualConstraint implements Constraint {
     if (this.value === undefined) {
       throw new TypeError('不支持使用 undefined 作为相等约束的比较值');
     }
-    return {
-      ...cond,
-      [key]: { ...cond[key], $eq: encode(this.value) },
-    };
+    return { ...cond, [key]: encode(this.value) };
   }
 }
 
