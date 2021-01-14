@@ -1,12 +1,31 @@
-import { App, AuthOptions, EncodeOptions, LCObject } from '../../core';
+import { App, AuthOptions, EncodeOptions, INTERNAL_LCObject, LCObject } from '../../core';
 
 export class LCFile {
-  rawData: Record<string, any>;
-  data: Record<string, any>;
+  private _object: INTERNAL_LCObject;
 
-  get className(): string {
+  constructor(object: LCObject);
+  constructor(app: App, id: string);
+  constructor(arg1: any, arg2?: any) {
+    if (arg2) {
+      this._object = (arg1 as App).database().class('_File').object(arg2) as any;
+    } else {
+      this._object = arg1;
+    }
+  }
+
+  get app() {
+    return this._object.app;
+  }
+  get className() {
     return '_File';
   }
+  get id() {
+    return this._object.id;
+  }
+  get data() {
+    return this._object.data;
+  }
+
   get name(): string {
     return this.data.name;
   }
@@ -20,17 +39,8 @@ export class LCFile {
     return this.data.mime_type;
   }
 
-  constructor(public readonly app: App, public readonly id: string) {}
-
-  static fromLCObject(object: LCObject): LCFile {
-    const file = new LCFile(object.app, object.id);
-    file.rawData = object.rawData;
-    file.data = object.data;
-    return file;
-  }
-
   static fromJSON(app: App, data: any): LCFile {
-    return LCFile.fromLCObject(app.database().decodeObject(data, '_File'));
+    return new LCFile(app.database().decodeObject(data, '_File'));
   }
 
   thumbnailURL(
@@ -48,19 +58,15 @@ export class LCFile {
     return this.app.database().class(this.className).object(this.id).delete(options);
   }
 
-  toJSON(options?: EncodeOptions): Record<string, any> {
-    if (options?.pointer) {
-      return {
-        __type: 'Pointer',
-        className: this.className,
-        objectId: this.id,
-      };
+  toJSON() {
+    return this._object.toJSON();
+  }
+
+  protected _LC_encode(options?: EncodeOptions) {
+    const encoded = this._object._LC_encode(options);
+    if (encoded.__type === 'Object') {
+      encoded._type = 'File';
     }
-    return {
-      ...this.rawData,
-      __type: 'File',
-      className: this.className,
-      objectId: this.id,
-    };
+    return encoded;
   }
 }

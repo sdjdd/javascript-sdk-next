@@ -84,7 +84,7 @@ export class Storage {
         },
         { ...options, fetchData: true }
       );
-    return LCFile.fromLCObject(obj);
+    return new LCFile(obj);
   }
 
   private _getFileTokens(

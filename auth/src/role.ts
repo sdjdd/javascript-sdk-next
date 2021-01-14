@@ -2,6 +2,7 @@ import { ensureArray } from '../../common/utils';
 import type {
   App,
   AuthOptions,
+  EncodeOptions,
   GetObjectOptions,
   INTERNAL_LCObject,
   LCObject,
@@ -160,8 +161,8 @@ export class Role {
     return this._object.toJSON();
   }
 
-  protected _LC_encode() {
-    return this._object._LC_encode();
+  protected _LC_encode(options?: EncodeOptions) {
+    return this._object._LC_encode(options);
   }
 }
 

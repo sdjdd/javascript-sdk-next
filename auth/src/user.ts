@@ -1,5 +1,12 @@
 import { KEY_CURRENT_USER } from '../../common/const';
-import type { App, AuthOptions, GetObjectOptions, LCObject, INTERNAL_LCObject } from '../../core';
+import type {
+  App,
+  AuthOptions,
+  GetObjectOptions,
+  LCObject,
+  INTERNAL_LCObject,
+  EncodeOptions,
+} from '../../core';
 
 const KEY_CURRENT_USER_PROMISE = KEY_CURRENT_USER + '-promise';
 
@@ -244,8 +251,8 @@ export class User {
     Object.assign(this.data, obj.data);
   }
 
-  protected _LC_encode() {
-    return this._object._LC_encode();
+  protected _LC_encode(options?: EncodeOptions) {
+    return this._object._LC_encode(options);
   }
 }
 
