@@ -1,12 +1,14 @@
 import { use } from './runtime';
 import { App, AppConfig } from './app';
-import { Query } from './database';
+import { Database, Query, LCObject } from './database';
 
 use({
   name: 'core',
   components: {
     App,
+    Database,
     Query,
+    LCObject,
   },
 });
 

@@ -1,4 +1,6 @@
 import { Auth, setHooks } from './auth';
+import { User } from './user';
+import { Role } from './role';
 
 declare module '../../core' {
   interface App {
@@ -7,6 +9,12 @@ declare module '../../core' {
 }
 
 export const name = 'auth';
+
+export const components = {
+  Auth,
+  User,
+  Role,
+};
 
 export function onLoad({ modules }): void {
   const { App } = modules.core.components;
