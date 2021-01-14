@@ -70,7 +70,7 @@ export class Subscription<T> extends EventEmitter<LiveQueryListeners<T>> {
           .catch((error) => app.log.error('live-query', { message: 'reconnect failed', error }));
 
       this._client = await createLiveQueryClient(app, id);
-      this._client.register(this.query);
+      this._client.register(this);
       this._client.on('message', this._onMessage);
       this._client.on('reconnect', this._onReconnect);
       this._state = LiveQueryState.CONNECTED;
@@ -95,7 +95,7 @@ export class Subscription<T> extends EventEmitter<LiveQueryListeners<T>> {
     try {
       this._client?.off('message', this._onMessage);
       this._client?.off('reconnect', this._onReconnect);
-      this._client?.deregister(this.query);
+      this._client?.deregister(this);
       await this.query.app.request(
         {
           method: 'POST',
