@@ -35,6 +35,7 @@ export interface AppConfig {
   serverURL?: string;
   masterKey?: string;
   useMasterKey?: boolean;
+  production?: boolean;
 }
 
 export class App {
@@ -54,6 +55,7 @@ export class App {
   readonly upload = upload;
 
   useMasterKey: boolean;
+  production: boolean;
 
   private _masterKey?: string;
 
@@ -80,6 +82,7 @@ export class App {
     }
     this.serverURL = serverURL;
     this.useMasterKey = Boolean(config.useMasterKey);
+    this.production = Boolean(config.production);
     this.localStorage = new NamespacedStorage(localStorage, appId);
 
     App.hooks.onCreated.forEach((h) => h(this));
@@ -109,6 +112,7 @@ export class App {
         'X-LC-Id': this.appId,
         'X-LC-Key': useMasterKey ? this._masterKey : this.appKey,
         'X-LC-Session': options?.sessionToken,
+        'X-LC-Prod': this.production ? undefined : '0',
       },
     });
 
