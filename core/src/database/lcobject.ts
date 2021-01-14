@@ -1,3 +1,4 @@
+import isDate from 'lodash/isDate';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 import mapValues from 'lodash/mapValues';
@@ -163,12 +164,6 @@ function getLCObjectData(data: any): any {
   return data;
 }
 
-export class LCDate extends Date {
-  protected _LC_encode(): any {
-    return { __type: 'Date', iso: this.toISOString() };
-  }
-}
-
 export interface Encodeable {
   _LC_encode: (...args: any[]) => any;
 }
@@ -184,6 +179,10 @@ export function LCEncode(data: any, options?: EncodeOptions): any {
 
   if (isEncodeable(data)) {
     return data._LC_encode(options);
+  }
+
+  if (isDate(data)) {
+    return { __type: 'Date', iso: data.toISOString() };
   }
 
   if (Array.isArray(data)) {
@@ -213,7 +212,7 @@ export function LCDecode(app: App, data: any): any {
       case 'File':
         return LCObject.fromJSON(app, data, '_File');
       case 'Date':
-        return new LCDate(data.iso);
+        return new Date(data.iso);
       case 'GeoPoint':
         return { longitude: data.longitude, latitude: data.latitude };
       default:
