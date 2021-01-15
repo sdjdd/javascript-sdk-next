@@ -32,9 +32,9 @@ export interface EncodeOptions {
 export type LCObjectData = Record<string, any>;
 
 export class LCObject {
-  data: LCObjectData;
+  data: LCObjectData = {};
 
-  private _rawData: Record<string, any>;
+  private _rawData: Record<string, any> = {};
 
   get createdAt(): Date {
     return this.data.createdAt;

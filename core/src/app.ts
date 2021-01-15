@@ -92,9 +92,9 @@ export class App {
     return new Database(this);
   }
 
-  async request(request: APIRequest, options?: AuthOptions): Promise<any> {
+  async request(request: APIRequest, options: AuthOptions = {}): Promise<any> {
     request = clone(request);
-    options = clone(options) || {};
+    options = clone(options);
     await Promise.all(App.hooks.beforeInvokeAPI.map((h) => h(this, request, options)));
 
     const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
