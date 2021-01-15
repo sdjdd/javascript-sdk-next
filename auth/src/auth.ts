@@ -34,8 +34,8 @@ export interface AuthOptionsWithCaptchaToken extends AuthOptions {
 interface AddRoleData {
   ACL: ACL;
   name: string;
-  users?: UserReference[];
-  roles?: RoleReference[];
+  users?: UserReference[] | UserReference;
+  roles?: RoleReference[] | RoleReference;
 }
 
 export class Auth {
@@ -67,8 +67,8 @@ export class Auth {
           ...data,
           name,
           ACL,
-          users: users?.length ? db.op.addRelation(users) : undefined,
-          roles: roles?.length ? db.op.addRelation(roles) : undefined,
+          users: users ? db.op.addRelation(users) : undefined,
+          roles: roles ? db.op.addRelation(roles) : undefined,
         }),
       },
       options
