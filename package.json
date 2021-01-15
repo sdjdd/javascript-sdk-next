@@ -1,14 +1,14 @@
 {
-  "name": "sdjdd-leancloud-storage",
-  "version": "5.0.0-rc.3",
-  "description": "LeanCloud JavaScript SDK.",
+  "name": "open-leancloud-storage",
+  "version": "0.0.1",
+  "description": "Third part LeanCloud JavaScript SDK.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leancloud/javascript-sdk"
+    "url": "https://github.com/sdjdd/javascript-sdk-next"
   },
   "author": {
-    "name": "LeanCloud",
-    "email": "support@leancloud.rocks"
+    "name": "sdjdd",
+    "email": "i@sdjdd.com"
   },
   "license": "MIT",
   "main": "sdk/index.cjs.js",
