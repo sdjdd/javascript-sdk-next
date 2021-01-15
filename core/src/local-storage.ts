@@ -1,4 +1,4 @@
-import { mustGetAdapter } from './runtime';
+import { log, mustGetAdapter } from './runtime';
 import { SyncStorage } from '@leancloud/adapter-types';
 import { SDKError, ErrorName } from '../../common/error';
 
@@ -13,26 +13,34 @@ function mustGetSyncStorage(): SyncStorage {
 class LocalStorage {
   set(key: string, value: string): void {
     mustGetSyncStorage().setItem(key, value);
+    log.trace('localStorage:set', { key, value });
   }
 
   get(key: string): string {
-    return mustGetSyncStorage().getItem(key);
+    const value = mustGetSyncStorage().getItem(key);
+    log.trace('localStorage:get', { key, value });
+    return value;
   }
 
   remove(key: string): void {
     mustGetSyncStorage().removeItem(key);
+    log.trace('localStorage:remove', { key });
   }
 
   async setAsync(key: string, value: string): Promise<void> {
     await mustGetAdapter('storage').setItem(key, value);
+    log.trace('localStorage:set', { key, value });
   }
 
   async getAsync(key: string): Promise<string> {
-    return await mustGetAdapter('storage').getItem(key);
+    const value = await mustGetAdapter('storage').getItem(key);
+    log.trace('localStorage:get', { key, value });
+    return value;
   }
 
   async removeAsync(key: string): Promise<void> {
     await mustGetAdapter('storage').removeItem(key);
+    log.trace('localStorage:remove', { key });
   }
 }
 
