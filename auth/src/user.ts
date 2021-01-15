@@ -8,8 +8,6 @@ import type {
   EncodeOptions,
 } from '../../core';
 
-const KEY_CURRENT_USER_PROMISE = KEY_CURRENT_USER + '-promise';
-
 export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
   // TODO: 支持按条件更新
   query?: any;
@@ -77,13 +75,8 @@ export class User {
     if (KEY_CURRENT_USER in app.payload) {
       return app.payload[KEY_CURRENT_USER];
     }
-    if (KEY_CURRENT_USER_PROMISE in app.payload) {
-      throw new Error('请使用异步方法获取当前登录用户');
-    }
-    const encodedUser = app.localStorage.get(KEY_CURRENT_USER);
-    app.payload[KEY_CURRENT_USER] = encodedUser
-      ? User.fromJSON(app, JSON.parse(encodedUser))
-      : null;
+    const user_str = app.localStorage.get(KEY_CURRENT_USER);
+    app.payload[KEY_CURRENT_USER] = user_str ? User.fromJSON(app, JSON.parse(user_str)) : null;
     return app.payload[KEY_CURRENT_USER];
   }
 
@@ -91,19 +84,9 @@ export class User {
     if (KEY_CURRENT_USER in app.payload) {
       return app.payload[KEY_CURRENT_USER];
     }
-    if (KEY_CURRENT_USER_PROMISE in app.payload) {
-      return await app.payload[KEY_CURRENT_USER_PROMISE];
-    }
-    app.payload[KEY_CURRENT_USER_PROMISE] = app.localStorage
-      .getAsync(KEY_CURRENT_USER)
-      .then((encodedUser) => {
-        delete app.payload[KEY_CURRENT_USER_PROMISE];
-        app.payload[KEY_CURRENT_USER] = encodedUser
-          ? User.fromJSON(app, JSON.parse(encodedUser))
-          : null;
-        return app.payload[KEY_CURRENT_USER];
-      });
-    return await app.payload[KEY_CURRENT_USER_PROMISE];
+    const user_str = await app.localStorage.getAsync(KEY_CURRENT_USER);
+    app.payload[KEY_CURRENT_USER] = user_str ? User.fromJSON(app, JSON.parse(user_str)) : null;
+    return await app.payload[KEY_CURRENT_USER];
   }
 
   static async setCurrentAsync(user: User): Promise<void> {
