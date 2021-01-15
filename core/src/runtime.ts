@@ -20,9 +20,9 @@ export interface LogItem extends Record<string, any> {
 }
 
 export interface Events {
-  'module:load': (name: string) => void;
-  log: (logItem: LogItem) => void;
   'adapters:set': (adapters: Record<string, any>) => void;
+  log: (logItem: LogItem) => void;
+  'module:load': (name: string) => void;
 }
 
 export class Runtime extends EventEmitter<Events> {
@@ -38,7 +38,7 @@ export function use(module: Module): void {
     throw new Error(`已导入名为 ${name} 的模块`);
   }
 
-  log.trace('module', module);
+  log.trace('load module', module);
 
   runtime.modules[name] = module;
   runtime.emit('module:load', name);
