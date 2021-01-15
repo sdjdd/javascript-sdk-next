@@ -5,6 +5,7 @@ import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
 import type { App, AuthOptions } from '../app';
+import type { Condition } from './query/constraint';
 import { ACL } from './acl';
 
 // TODO: 加上 className
@@ -22,7 +23,9 @@ export interface GetObjectOptions extends AuthOptions {
 
 export interface UpdateObjectOptions extends AuthOptions {
   fetchUpdatedData?: boolean;
-  query?: any; // TODO
+  query?: {
+    condition: Condition;
+  };
 }
 
 export interface EncodeOptions {
@@ -123,6 +126,7 @@ export class LCObject {
         path: `/1.1/classes/${this.className}/${this.id}`,
         query: {
           fetchWhenSave: options?.fetchUpdatedData,
+          where: options?.query?.condition,
         },
         body: encodeObjectData(data),
       },
