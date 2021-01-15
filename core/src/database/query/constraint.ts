@@ -16,6 +16,14 @@ export function isOrCondition(cond: Condition): cond is Condition & { $or: Condi
   return cond && '$or' in cond;
 }
 
+export function isPureOrCondition(cond: Condition): cond is { $or: Condition[] } {
+  return isOrCondition(cond) && Object.keys(cond).length === 1;
+}
+
+export function isPureAndCondition(cond: Condition): cond is { $and: Condition[] } {
+  return isAndCondition(cond) && Object.keys(cond).length === 1;
+}
+
 export function isRawCondition(cond: Condition): boolean {
   return !isOrCondition(cond) && !isAndCondition(cond);
 }
@@ -404,13 +412,17 @@ export class OrConstraint implements Constraint<any[]> {
       }
       or.push(item.applyQueryConstraint({}, key));
     });
-    const newCond = or.length === 1 ? or[0] : { $or: or };
 
+    if (isPureOrCondition(cond)) {
+      return { ...cond, $or: cond.$or.concat(or) };
+    }
+
+    const newCond = or.length === 1 ? or[0] : { $or: or };
     if (isEmpty(cond)) {
       return newCond;
     }
     if (isAndCondition(cond)) {
-      return { ...cond, $and: [...cond.$and, newCond] };
+      return { ...cond, $and: cond.$and.concat(newCond) };
     }
     return { $and: [cond, newCond] };
   }
