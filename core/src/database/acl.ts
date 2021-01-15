@@ -39,8 +39,12 @@ export class ACL {
     throw new TypeError('Invalid ACL Subject');
   }
 
-  allow(subject: ACLSubject, action: ACLAction): this {
-    this._privileges[action].add(ACL.getSubjectKey(subject));
+  allow(subject: ACLSubject, ...actions: ACLAction[]): this;
+  allow(subject: ACLSubject, actions: ACLAction[]): this;
+  allow(subject: ACLSubject, action: ACLAction | ACLAction[], ...actions: ACLAction[]): this {
+    actions.concat(action).forEach((action) => {
+      this._privileges[action].add(ACL.getSubjectKey(subject));
+    });
     return this;
   }
 
@@ -50,8 +54,12 @@ export class ACL {
    * @param subject
    * @param action
    */
-  disallow(subject: ACLSubject, action: ACLAction): this {
-    this._privileges[action].delete(ACL.getSubjectKey(subject));
+  disallow(subject: ACLSubject, ...actions: ACLAction[]): this;
+  disallow(subject: ACLSubject, actions: ACLAction[]): this;
+  disallow(subject: ACLSubject, action: ACLAction | ACLAction[], ...actions: ACLAction[]): this {
+    actions.concat(action).forEach((action) => {
+      this._privileges[action].delete(ACL.getSubjectKey(subject));
+    });
     return this;
   }
 
