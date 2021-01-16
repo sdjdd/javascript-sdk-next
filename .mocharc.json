@@ -1,5 +1,6 @@
 {
   "extension": ["ts"],
   "require": "ts-node/register",
-  "bail": true
+  "bail": true,
+  "timeout": 30000
 }

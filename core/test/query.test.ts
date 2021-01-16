@@ -1,4 +1,5 @@
 import 'should';
+import { v4 as uuid_v4 } from 'uuid';
 import './init';
 import * as LC from '..';
 import { getAppConfig } from './utils';
@@ -41,6 +42,32 @@ describe('查询(Query)', () => {
             .map((o) => o.id)
             .sort()
         );
+    });
+
+    it('小于(<)', async () => {
+      const uuid = uuid_v4();
+      const [obj] = await Promise.all([
+        db.class('Test').add({ uuid, num: 100 }),
+        db.class('Test').add({ uuid, num: 101 }),
+      ]);
+      const objs = await db.query('Test').where('uuid', '==', uuid).where('num', '<', 101).find();
+      objs.length.should.eql(1);
+      objs[0].id.should.eql(obj.id);
+    });
+
+    it('小于等于(<=)', async () => {
+      const uuid = uuid_v4();
+      const [o99, o100] = await Promise.all([
+        db.class('Test').add({ uuid, num: 99 }),
+        db.class('Test').add({ uuid, num: 100 }),
+        db.class('Test').add({ uuid, num: 101 }),
+      ]);
+      const objs = await db.query('Test').where('uuid', '==', uuid).where('num', '<=', 100).find();
+      objs.length.should.eql(2);
+      objs
+        .map((o) => o.id)
+        .sort()
+        .should.eql([o99.id, o100.id].sort());
     });
   });
 });
