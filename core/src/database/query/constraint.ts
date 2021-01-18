@@ -1,7 +1,9 @@
 import isEmpty from 'lodash/isEmpty';
 
-import { GeoPoint, GeoPointLike, geoPoint } from '../../../../common/types';
+import { GeoPoint } from '../geo';
 import { LCEncode } from '../lcobject';
+
+type GeoPointLike = Pick<GeoPoint, 'latitude' | 'longitude'>;
 
 export interface Condition extends Record<string, any> {
   $and?: Condition[];
@@ -317,7 +319,7 @@ export class NearConstraint implements Constraint {
   private _geoPoint: GeoPoint;
 
   constructor(geo: GeoPointLike) {
-    this._geoPoint = geoPoint(geo);
+    this._geoPoint = new GeoPoint(geo);
   }
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
@@ -386,7 +388,7 @@ export class WithinBoxConstraint implements Constraint {
   private _box: [GeoPoint, GeoPoint];
 
   constructor(southwest: GeoPointLike, northeast: GeoPointLike) {
-    this._box = [geoPoint(southwest), geoPoint(northeast)];
+    this._box = [new GeoPoint(southwest), new GeoPoint(northeast)];
   }
 
   applyQueryConstraint(cond: Condition, key: string): Condition {

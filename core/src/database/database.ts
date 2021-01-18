@@ -5,6 +5,7 @@ import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from '.
 import * as operation from './operation';
 import { Pipeline } from './pipeline';
 import { Query, queryCommand, QueryDecoder } from './query';
+import { GeoPoint } from './geo';
 
 export { operation };
 
@@ -32,6 +33,10 @@ export class Database {
       return ACL.fromJSON(data);
     }
     return new ACL();
+  }
+
+  geoPoint(latitude: number, longitude: number): GeoPoint {
+    return new GeoPoint(latitude, longitude);
   }
 
   pipeline(): Pipeline {
