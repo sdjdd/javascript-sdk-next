@@ -27,8 +27,6 @@ export type BeforeInvokeAPI = (
   options: AuthOptions
 ) => void | Promise<void>;
 
-export type OnAppCreated = (app: App) => void;
-
 export interface AppConfig {
   appId: string;
   appKey: string;
@@ -41,7 +39,6 @@ export interface AppConfig {
 export class App {
   static hooks = {
     beforeInvokeAPI: [] as BeforeInvokeAPI[],
-    onCreated: [] as OnAppCreated[],
   };
 
   readonly appId: string;
@@ -93,8 +90,6 @@ export class App {
     this.useMasterKey = Boolean(config.useMasterKey);
     this.production = Boolean(config.production ?? true);
     this.localStorage = new NamespacedStorage(localStorage, appId);
-
-    App.hooks.onCreated.forEach((h) => h(this));
   }
 
   database(): Database {
@@ -134,10 +129,6 @@ export class App {
     }
 
     return body;
-  }
-
-  static onCreated(h: OnAppCreated): void {
-    App.hooks.onCreated.push(h);
   }
 
   static beforeInvokeAPI(h: BeforeInvokeAPI): void {

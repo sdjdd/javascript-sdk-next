@@ -16,7 +16,7 @@ export * from './database';
 export { setAdapters } from './adapters';
 export { App, AppConfig, AuthOptions } from './app';
 export { HTTPRequest, HTTPResponse } from './http';
-export { Runtime } from './runtime';
+export { Module, Runtime } from './runtime';
 export * from './version';
 
 export { use };

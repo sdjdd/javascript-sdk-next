@@ -39,7 +39,17 @@ interface AddRoleData {
   roles?: RoleReference[] | RoleReference;
 }
 
+export interface AuthHooks {
+  afterLogin: ((this: Auth) => void | Promise<void>)[];
+  beforeLogOut: ((this: Auth) => void | Promise<void>)[];
+}
+
 export class Auth {
+  static readonly hooks: AuthHooks = {
+    afterLogin: [],
+    beforeLogOut: [],
+  };
+
   constructor(public readonly app: App) {}
 
   user(id: string): UserReference {
@@ -241,12 +251,9 @@ export class Auth {
     });
   }
 
-  logOut(): void {
-    User.removeCurrent(this.app);
-  }
-
-  logOutAsync(): Promise<void> {
-    return User.removeCurrentAsync(this.app);
+  async logOut(): Promise<void> {
+    await Promise.all(Auth.hooks.beforeLogOut.map((h) => h.call(this)));
+    await User.removeCurrentAsync(this.app);
   }
 
   requestEmailVerify(email: string, options?: AuthOptions): Promise<void> {
@@ -381,6 +388,15 @@ export class Auth {
   private async _decodeAndSetCurrent(data: any): Promise<User> {
     const user = User.fromJSON(this.app, data);
     await User.setCurrentAsync(user);
+    await Promise.all(Auth.hooks.afterLogin.map((h) => h.call(this)));
     return user;
+  }
+
+  static afterLogin(h: AuthHooks['afterLogin'][number]): void {
+    Auth.hooks.afterLogin.push(h);
+  }
+
+  static beforeLogOut(h: AuthHooks['beforeLogOut'][number]): void {
+    Auth.hooks.beforeLogOut.push(h);
   }
 }
