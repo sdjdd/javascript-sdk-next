@@ -2,8 +2,8 @@ import isUndefined from 'lodash/isUndefined';
 import omitBy from 'lodash/omitBy';
 
 import { FormDataPart, HTTPMethod, RequestOptions, Response } from '@leancloud/adapter-types';
-import { getAdapter, log, mustGetAdapter } from './runtime';
-import { version } from './version';
+import { mustGetAdapter } from './adapters';
+import { log } from './log';
 
 export interface HTTPRequest {
   method: HTTPMethod;
@@ -66,7 +66,7 @@ function convertResponse(res: Response): HTTPResponse {
 
 let nextId = 1;
 
-export async function doHTTPRequest(
+export async function request(
   request: HTTPRequest,
   options?: HTTPRequestOptions
 ): Promise<HTTPResponse> {
@@ -109,20 +109,4 @@ export async function upload(
   log.trace('upload:recv', { id, response });
 
   return response;
-}
-
-let userAgent: string;
-export function getUserAgent(): string {
-  if (userAgent) {
-    return userAgent;
-  }
-  userAgent = 'LeanCloud-JS-SDK/' + version;
-  const platformInfo = getAdapter('platformInfo');
-  if (platformInfo) {
-    const { name, version } = platformInfo;
-    if (name) {
-      userAgent += version ? ` (${name}/${version})` : ` (${name})`;
-    }
-  }
-  return userAgent;
 }

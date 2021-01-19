@@ -1,6 +1,8 @@
+import type { Runtime } from '../../core';
 import { Auth, setHooks } from './auth';
 import { User } from './user';
 import { Role } from './role';
+import { setSDKRuntime } from './runtime';
 
 declare module '../../core' {
   interface App {
@@ -16,8 +18,9 @@ export const components = {
   Role,
 };
 
-export function onLoad({ modules }): void {
-  const { App } = modules.core.components;
+export function onLoad(runtime: Runtime): void {
+  setSDKRuntime(runtime);
+  const { App } = runtime.modules.core.components;
   App.prototype.auth = function () {
     return new Auth(this);
   };

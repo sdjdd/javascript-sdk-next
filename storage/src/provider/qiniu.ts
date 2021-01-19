@@ -1,17 +1,16 @@
 import { Provider } from '.';
-import { App, HTTPResponse } from '../../../core';
+import { HTTPResponse } from '../../../core';
+import { SDKRuntime } from '../runtime';
 import { FileTokens, UploadOptions } from '../storage';
 
 export class Qiniu implements Provider {
-  constructor(public readonly app: App) {}
-
   upload(
     name: string,
     data: any,
     tokens: FileTokens,
     options?: UploadOptions
   ): Promise<HTTPResponse> {
-    return this.app.upload(
+    return SDKRuntime.http.upload(
       {
         method: 'POST',
         url: tokens.upload_url,

@@ -17,9 +17,9 @@ declare module '../../core' {
 export const name = 'live-query';
 
 export function onLoad(runtime: Runtime): void {
-  const { modules, adapters } = runtime;
+  const { adapters, event, modules } = runtime;
   setAdapters(adapters);
-  runtime.on('adapters:set', setAdapters);
+  event.on('adapters:set', setAdapters);
 
   const { App, Query } = modules.core.components;
   App.prototype.pause = function () {

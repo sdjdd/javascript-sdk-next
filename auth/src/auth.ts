@@ -2,6 +2,7 @@ import { v4 as uuid_v4 } from 'uuid';
 
 import type { ACL, AddObjectOptions, App, AuthOptions, Query } from '../../core';
 import { Role, RoleReference } from './role';
+import { SDKRuntime } from './runtime';
 import { User, UserReference } from './user';
 
 export function setHooks(appClass: typeof App): void {
@@ -223,7 +224,7 @@ export class Auth {
   }
 
   async loginWithMiniApp(options?: MiniAppAuthOptions): Promise<User> {
-    const getAuthInfo = this.app.getAdapter('getAuthInfo');
+    const getAuthInfo = SDKRuntime.getAdapter('getAuthInfo');
     const { provider, authData } = await getAuthInfo(options);
     return this.loginWithAuthData(provider, authData, options);
   }
@@ -232,7 +233,7 @@ export class Auth {
     unionId: string,
     options?: MiniAppAuthOptions & Pick<LoginWithAuthDataAndUnionIdOptions, 'asMainAccount'>
   ): Promise<User> {
-    const getAuthInfo = this.app.getAdapter('getAuthInfo');
+    const getAuthInfo = SDKRuntime.getAdapter('getAuthInfo');
     const { provider, authData, platform } = await getAuthInfo(options);
     return this.loginWithAuthDataAndUnionId(provider, authData, unionId, {
       ...options,

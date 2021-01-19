@@ -29,7 +29,7 @@ export function disable(modules = false): void {
 export const name = 'debug';
 export function onLoad(runtime: Runtime): void {
   SDKRuntime = runtime;
-  runtime.on('log', (item) => {
+  runtime.event.on('log', (item) => {
     const ns = `LC:${item.label}`;
     if (!logger[ns]) {
       logger[ns] = debug(ns);

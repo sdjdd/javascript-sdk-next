@@ -105,7 +105,7 @@ export class Storage {
 
   private _getFileProvider(name: string): Provider {
     if (name in providers) {
-      return new providers[name](this.app);
+      return providers[name];
     }
     throw new Error(`暂不支持上传文件到 ${name}`);
   }

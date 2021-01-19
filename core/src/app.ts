@@ -1,12 +1,12 @@
-import { Adapters } from '@leancloud/adapter-types';
 import clone from 'lodash/clone';
 import trimStart from 'lodash/trimStart';
 
 import { APIError } from '../../common/error';
 import { Database } from './database';
-import { doHTTPRequest, getUserAgent, HTTPRequest, HTTPRequestOptions, upload } from './http';
+import { request as doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
-import { log, mustGetAdapter } from './runtime';
+import { log } from './log';
+import { getUserAgent } from './userAgent';
 
 export interface AuthOptions extends HTTPRequestOptions {
   useMasterKey?: boolean;
@@ -48,11 +48,20 @@ export class App {
   readonly appKey: string;
   readonly serverURL?: string;
 
+  readonly log = {
+    trace: (label: string, data: Record<string, any>) => {
+      log.trace(label, { appId: this.appId, ...data });
+    },
+    info: (label: string, data: Record<string, any>) => {
+      log.info(label, { appId: this.appId, ...data });
+    },
+    error: (label: string, data: Record<string, any>) => {
+      log.error(label, { appId: this.appId, ...data });
+    },
+  };
+
   readonly payload: Record<string, any> = {};
   readonly localStorage: NamespacedStorage;
-  readonly log = log;
-  readonly httpRequest = doHTTPRequest;
-  readonly upload = upload;
 
   useMasterKey: boolean;
   production: boolean;
@@ -82,7 +91,7 @@ export class App {
     }
     this.serverURL = serverURL;
     this.useMasterKey = Boolean(config.useMasterKey);
-    this.production = Boolean(config.production);
+    this.production = Boolean(config.production ?? true);
     this.localStorage = new NamespacedStorage(localStorage, appId);
 
     App.hooks.onCreated.forEach((h) => h(this));
@@ -125,10 +134,6 @@ export class App {
     }
 
     return body;
-  }
-
-  getAdapter<T extends keyof Adapters>(name: T): Adapters[T] | never {
-    return mustGetAdapter(name);
   }
 
   static onCreated(h: OnAppCreated): void {

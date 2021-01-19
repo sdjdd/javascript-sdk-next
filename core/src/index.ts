@@ -13,9 +13,10 @@ use({
 });
 
 export * from './database';
+export { setAdapters } from './adapters';
 export { App, AppConfig, AuthOptions } from './app';
 export { HTTPRequest, HTTPResponse } from './http';
-export { getModules, setAdapters, Runtime } from './runtime';
+export { Runtime } from './runtime';
 export * from './version';
 
 export { use };

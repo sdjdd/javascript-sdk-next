@@ -1,5 +1,6 @@
-import { log, mustGetAdapter } from './runtime';
 import { SyncStorage } from '@leancloud/adapter-types';
+import { mustGetAdapter } from './adapters';
+import { log } from './log';
 import { SDKError, ErrorName } from '../../common/error';
 
 function mustGetSyncStorage(): SyncStorage {

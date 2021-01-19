@@ -1,4 +1,4 @@
-import { App, HTTPResponse } from '../../../core';
+import { HTTPResponse } from '../../../core';
 import { FileTokens, UploadOptions } from '../storage';
 import { Qiniu } from './qiniu';
 
@@ -11,6 +11,6 @@ export interface Provider {
   ): Promise<HTTPResponse>;
 }
 
-export const providers: Record<string, { new (app: App): Provider }> = {
-  qiniu: Qiniu,
+export const providers: Record<string, Provider> = {
+  qiniu: new Qiniu(),
 };
