@@ -20,7 +20,7 @@ describe('查询(Query)', () => {
 
   describe('查询条件', () => {
     it('等于(==)', async () => {
-      const objs = await db.query('Test').where('num', '==', timestamp).find();
+      const objs = await db.class('Test').where('num', '==', timestamp).find();
       objs
         .map((o) => o.id)
         .sort()
@@ -29,7 +29,7 @@ describe('查询(Query)', () => {
 
     it('不等于(!=)', async () => {
       const objs = await db
-        .query('Test')
+        .class('Test')
         .where('num', '==', timestamp)
         .where('str', '!=', '1')
         .find();
@@ -50,7 +50,7 @@ describe('查询(Query)', () => {
         db.class('Test').add({ uuid, num: 100 }),
         db.class('Test').add({ uuid, num: 101 }),
       ]);
-      const objs = await db.query('Test').where('uuid', '==', uuid).where('num', '<', 101).find();
+      const objs = await db.class('Test').where('uuid', '==', uuid).where('num', '<', 101).find();
       objs.length.should.eql(1);
       objs[0].id.should.eql(obj.id);
     });
@@ -62,7 +62,7 @@ describe('查询(Query)', () => {
         db.class('Test').add({ uuid, num: 100 }),
         db.class('Test').add({ uuid, num: 101 }),
       ]);
-      const objs = await db.query('Test').where('uuid', '==', uuid).where('num', '<=', 100).find();
+      const objs = await db.class('Test').where('uuid', '==', uuid).where('num', '<=', 100).find();
       objs.length.should.eql(2);
       objs
         .map((o) => o.id)

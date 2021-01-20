@@ -65,16 +65,16 @@ function _in(
   if (Array.isArray(value)) {
     return new InConstraint(value);
   }
-  const { className, params, condition } = value;
+  const { className, params } = value;
   const keys = params.keys as string;
   if (keys) {
     if (keys.includes(',')) {
       // TODO: 表述的更加明确一些
       throw new Error('使用子查询时，只能包含一个 key');
     }
-    return new MatchesKeyConstraint(className, keys, condition);
+    return new MatchesKeyConstraint(className, keys, params.where);
   }
-  return new MatchesQueryConstraint(className, condition);
+  return new MatchesQueryConstraint(className, params.where);
 }
 
 function notIn(
@@ -83,15 +83,15 @@ function notIn(
   if (Array.isArray(value)) {
     return new NotInConstraint(value);
   }
-  const { className, params, condition } = value;
+  const { className, params } = value;
   const keys = params.keys as string;
   if (keys) {
     if (keys.includes(',')) {
       throw new Error('使用子查询时，只能包含一个 key');
     }
-    return new NotMatchesKeyConstraint(className, keys, condition);
+    return new NotMatchesKeyConstraint(className, keys, params.where);
   }
-  return new NotMatchesQueryConstraint(className, condition);
+  return new NotMatchesQueryConstraint(className, params.where);
 }
 
 function matches(regexp: string | RegExpLike): MatchesConstraint {

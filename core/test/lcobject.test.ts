@@ -27,11 +27,6 @@ describe('对象(LCObject)', () => {
       objectId = (await db.class('Test').add(data)).id;
     });
 
-    it('通过 Class 获取', async () => {
-      const obj = await db.class('Test').get(objectId);
-      obj.data.should.containEql(data);
-    });
-
     it('通过对象引用获取', async () => {
       const obj = await db.class('Test').object(objectId).get();
       obj.data.should.containEql(data);
@@ -58,7 +53,8 @@ describe('对象(LCObject)', () => {
     await db.class('Test').object(objectId).delete();
     return db
       .class('Test')
-      .get(objectId)
+      .object(objectId)
+      .get()
       .should.rejectedWith(`不存在 objectId 为 ${objectId} 的对象`);
   });
 
@@ -92,7 +88,8 @@ describe('对象(LCObject)', () => {
 
       return db
         .class('Test')
-        .get(objectId)
+        .object(objectId)
+        .get()
         .should.rejectedWith(`不存在 objectId 为 ${objectId} 的对象`);
     });
   });

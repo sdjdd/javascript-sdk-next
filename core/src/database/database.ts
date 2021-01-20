@@ -1,10 +1,17 @@
 import type { App } from '../app';
 import { ACL, ACLPrivilege } from './acl';
 import { Class } from './class';
-import { encodeObjectData, EncodeOptions, LCDecode, LCEncode, LCObject } from './lcobject';
+import {
+  encodeObjectData,
+  EncodeOptions,
+  LCDecode,
+  LCEncode,
+  LCObject,
+  LCObjectDecoder,
+} from './lcobject';
 import * as operation from './operation';
 import { Pipeline } from './pipeline';
-import { Query, queryCommand, QueryDecoder } from './query';
+import { queryCommand } from './query';
 import { GeoPoint } from './geo';
 
 export { operation };
@@ -15,17 +22,13 @@ export class Database {
 
   constructor(public readonly app: App) {}
 
-  class(name: string): Class {
-    return new Class(this.app, name);
-  }
-
-  query(className: string): Query<LCObject>;
-  query<T>(className: string, decoder: QueryDecoder<T>): Query<T>;
-  query<T>(className: string, decoder?: QueryDecoder<T>): Query<T> | Query<LCObject> {
+  class(name: string): Class<LCObject>;
+  class<T>(name: string, decoder: LCObjectDecoder<T>): Class<T>;
+  class<T>(name: string, decoder?: LCObjectDecoder<T>): any {
     if (decoder) {
-      return new Query(this.app, className, decoder);
+      return new Class(this.app, name, decoder);
     }
-    return new Query(this.app, className, LCObject.fromJSON);
+    return new Class(this.app, name, LCObject.fromJSON);
   }
 
   ACL(data?: Record<string, ACLPrivilege>): ACL {
@@ -58,21 +61,4 @@ export class Database {
   decodeObject(data: Record<string, any>, className?: string): LCObject {
     return LCObject.fromJSON(this.app, data, className);
   }
-
-  // TODO: 再考虑下要不要提供这个方法
-  // pointer(className: string, objectId: string): any;
-  // pointer(ptr: { className: string; objectId: string }): any;
-  // pointer(arg1: any, arg2?: string): any {
-  //   if (typeof arg1 === 'string') {
-  //     if (typeof arg2 !== 'string') {
-  //       throw new TypeError('参数 objectId 必须是 string');
-  //     }
-  //     return { __type: 'Pointer', className: arg1, objectId: arg2 };
-  //   }
-  //   const { className, objectId } = arg1;
-  //   if (typeof className !== 'string' || typeof objectId !== 'string') {
-  //     throw new TypeError('参数 className 和 objectId 必须是 string');
-  //   }
-  //   return { __type: 'Pointer', className, objectId };
-  // }
 }

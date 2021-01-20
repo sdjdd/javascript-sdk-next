@@ -29,7 +29,7 @@ export class Storage {
   constructor(public readonly app: App) {}
 
   queryFile(): Query<LCFile> {
-    return this.app.database().query('_File', LCFile.fromJSON);
+    return this.app.database().class('_File', LCFile.fromJSON);
   }
 
   async upload(name: string, data: any, options?: UploadOptions): Promise<LCFile> {

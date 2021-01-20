@@ -2,19 +2,23 @@ import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 
 import type { App, AuthOptions } from '../../app';
-import { HTTPRequest } from '../../http';
+import { LCObjectDecoder } from '../lcobject';
 import { queryCommand, QueryCommand } from './command';
 import { Condition, isConstraint } from './constraint';
 
-export type QueryDecoder<T = any> = (app: App, data: any, className: string) => T;
+export interface QueryParams {
+  order?: string;
+  include?: string;
+  keys?: string;
+  returnACL?: boolean;
+  where?: Condition;
+  skip?: number;
+  limit?: number;
+}
 
-export type QueryParams = HTTPRequest['query'];
-
-export type QueryConstraint = Record<string, any> | Record<string, any>[];
+export type QueryConstraint = Record<string, any>;
 
 export type QueryOrder = 'asc' | 'desc';
-
-export type ForEachCallback<T> = (object: T, index: number) => void | Promise<void>;
 
 export class Query<T> {
   private _order = new Set<string>();
@@ -28,26 +32,11 @@ export class Query<T> {
   constructor(
     public readonly app: App,
     public readonly className: string,
-    protected _decoder: QueryDecoder<T>
+    protected _decoder: LCObjectDecoder<T>
   ) {}
 
-  get condition(): Condition | undefined {
-    if (isEmpty(this._condition)) {
-      return undefined;
-    }
-    return this._condition;
-  }
-
-  set condition(value: Condition) {
-    this._condition = value;
-  }
-
   get params(): QueryParams {
-    const params: QueryParams = {
-      where: this.condition,
-      skip: this._skip,
-      limit: this._limit,
-    };
+    const params: QueryParams = {};
     if (this._order.size) {
       params.order = Array.from(this._order).join(',');
     }
@@ -59,6 +48,15 @@ export class Query<T> {
     }
     if (this._returnACL) {
       params.returnACL = true;
+    }
+    if (!isEmpty(this._condition)) {
+      params.where = this._condition;
+    }
+    if (this._skip !== undefined) {
+      params.skip = this._skip;
+    }
+    if (this._limit !== undefined) {
+      params.limit = this._limit;
     }
     return params;
   }
@@ -81,13 +79,31 @@ export class Query<T> {
     return tempCond;
   }
 
-  where<T extends keyof QueryCommand>(
+  clone(): Query<T> {
+    const query = new Query<T>(this.app, this.className, this._decoder);
+    query._order = new Set(this._order);
+    query._include = new Set(this._include);
+    query._keys = new Set(this._keys);
+    query._condition = this._condition;
+    query._skip = this._skip;
+    query._limit = this._limit;
+    query._returnACL = this._returnACL;
+    return query;
+  }
+
+  where<N extends keyof QueryCommand>(
     key: string,
-    command: T,
-    ...values: Parameters<QueryCommand[T]>
-  ): this;
-  where(cond: QueryConstraint): this;
-  where(cond: string | QueryConstraint, command?: any, ...values: any[]): this {
+    command: N,
+    ...values: Parameters<QueryCommand[N]>
+  ): Query<T>;
+  where(cond: QueryConstraint | QueryConstraint[]): Query<T>;
+  where(
+    cond: string | QueryConstraint | QueryConstraint[],
+    command?: any,
+    ...values: any[]
+  ): Query<T> {
+    const query = this.clone();
+
     if (typeof cond === 'string') {
       if (!command) {
         throw new TypeError('查询命令不能为空');
@@ -95,81 +111,77 @@ export class Query<T> {
       if (!queryCommand[command]) {
         throw new TypeError(`未知的查询命令 ${command}`);
       }
-      return this.where({ [cond]: queryCommand[command](...values) });
+      return query.where({ [cond]: queryCommand[command](...values) });
     }
 
     if (isEmpty(cond)) {
-      return this;
+      return query;
     }
 
     if (Array.isArray(cond)) {
       const or: Condition[] = [];
       cond.forEach((item) => {
-        const tempCond = this._applyConstraint(item);
+        const tempCond = query._applyConstraint(item);
         if (!isEmpty(tempCond)) {
           or.push(tempCond);
         }
       });
       if (or.length) {
-        this._condition = or.length === 1 ? or[0] : { $or: or };
+        query._condition = or.length === 1 ? or[0] : { $or: or };
       }
     } else {
-      this._condition = this._applyConstraint(cond);
+      query._condition = query._applyConstraint(cond);
     }
-    return this;
+    return query;
   }
 
-  select(keys: string[]): this;
-  select(...keys: string[]): this;
-  select(key: string | string[], ...rest: string[]): this {
-    if (Array.isArray(key)) {
-      key.forEach((k) => this._keys.add(k));
-    } else {
-      this._keys.add(key);
-    }
-    rest.forEach((k) => this._keys.add(k));
-    return this;
+  select(keys: string[]): Query<T>;
+  select(...keys: string[]): Query<T>;
+  select(key: string | string[], ...rest: string[]): Query<T> {
+    const query = this.clone();
+    rest.concat(key).forEach((k) => query._keys.add(k));
+    return query;
   }
 
-  include(keys: string[]): this;
-  include(...keys: string[]): this;
-  include(key: string | string[], ...rest: string[]): this {
-    if (Array.isArray(key)) {
-      key.forEach((k) => this._include.add(k));
-    } else {
-      this._include.add(key);
-    }
-    rest.forEach((k) => this._include.add(k));
-    return this;
+  include(keys: string[]): Query<T>;
+  include(...keys: string[]): Query<T>;
+  include(key: string | string[], ...rest: string[]): Query<T> {
+    const query = this.clone();
+    rest.concat(key).forEach((k) => query._include.add(k));
+    return query;
   }
 
   skip(count: number): Query<T> {
-    this._skip = count;
-    return this;
+    const query = this.clone();
+    query._skip = count;
+    return query;
   }
 
   limit(count: number): Query<T> {
-    this._limit = count;
-    return this;
+    const query = this.clone();
+    query._limit = count;
+    return query;
   }
 
   orderBy(key: string, order: QueryOrder = 'asc'): Query<T> {
+    const query = this.clone();
     switch (order) {
       case 'asc':
-        this._order.add(key).delete('-' + key);
+        query._order.add(key).delete('-' + key);
         break;
       case 'desc':
-        this._order.add('-' + key).delete(key);
+        query._order.add('-' + key).delete(key);
         break;
       default:
         throw new TypeError(`未知的查询排序方式 ${order}`);
     }
-    return this;
+    return query;
   }
 
-  returnACL(enable: boolean): this {
-    this._returnACL = enable;
-    return this;
+  returnACL(enable: boolean): Query<T> {
+    const query = this.clone();
+    query._returnACL = enable;
+    return query;
   }
 
   decodeObject(data: any): T {
@@ -177,21 +189,19 @@ export class Query<T> {
   }
 
   async find(options?: AuthOptions): Promise<T[]> {
-    const { results = [] } = await this.app.request(
+    const { results = [] } = (await this.app.request(
       {
         method: 'GET',
         path: `/1.1/classes/${this.className}`,
         query: this.params,
       },
       options
-    );
+    )) as { results: Record<string, any>[] };
     return results.map((result) => this._decoder(this.app, result, this.className));
   }
 
   async first(options?: AuthOptions): Promise<T | null> {
-    const _limit = this._limit;
     const objects = await this.limit(1).find(options);
-    this._limit = _limit;
     return objects.length ? objects[0] : null;
   }
 

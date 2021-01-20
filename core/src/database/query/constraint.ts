@@ -30,8 +30,7 @@ export function isRawCondition(cond: Condition): boolean {
   return !isOrCondition(cond) && !isAndCondition(cond);
 }
 
-export interface Constraint<T = any> {
-  value?: T;
+export interface Constraint {
   applyQueryConstraint(condition: Condition, key: string): Condition;
 }
 
@@ -399,7 +398,7 @@ export class WithinBoxConstraint implements Constraint {
   }
 }
 
-export class OrConstraint implements Constraint<any[]> {
+export class OrConstraint implements Constraint {
   constructor(public readonly value: any[]) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
@@ -430,7 +429,7 @@ export class OrConstraint implements Constraint<any[]> {
   }
 }
 
-export class AndConstraint implements Constraint<any[]> {
+export class AndConstraint implements Constraint {
   constructor(public readonly value: any[]) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {

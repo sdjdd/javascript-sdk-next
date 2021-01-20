@@ -34,11 +34,77 @@ export interface EncodeOptions {
 
 export type LCObjectData = Record<string, any>;
 
+export type LCObjectDecoder<T = any> = (app: App, data: any, className: string) => T;
+
+export class LCObjectReference<T> {
+  constructor(
+    public readonly app: App,
+    public readonly className: string,
+    public readonly id: string,
+    protected _decoder: LCObjectDecoder
+  ) {}
+
+  async get(options?: GetObjectOptions): Promise<T> {
+    const rawData = await this.app.request(
+      {
+        method: 'GET',
+        path: `/1.1/classes/${this.className}/${this.id}`,
+        query: {
+          keys: options?.keys?.join(','),
+          include: options?.include?.join(','),
+          returnACL: options?.returnACL,
+        },
+      },
+      options
+    );
+    if (isEmpty(rawData)) {
+      throw new Error(`不存在 objectId 为 ${this.id} 的对象`);
+    }
+    return this._decoder(this.app, rawData, this.className);
+  }
+
+  async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<T> {
+    const rawData = await this.app.request(
+      {
+        method: 'PUT',
+        path: `/1.1/classes/${this.className}/${this.id}`,
+        query: {
+          fetchWhenSave: options?.fetchUpdatedData,
+          where: options?.query?.condition,
+        },
+        body: encodeObjectData(data),
+      },
+      options
+    );
+    return this._decoder(this.app, rawData, this.className);
+  }
+
+  async delete(options?: AuthOptions): Promise<void> {
+    await this.app.request(
+      {
+        method: 'DELETE',
+        path: `/1.1/classes/${this.className}/${this.id}`,
+      },
+      options
+    );
+  }
+}
+
 export class LCObject {
   data: LCObjectData = {};
 
+  private _ref: LCObjectReference<LCObject>;
   private _rawData: Record<string, any> = {};
 
+  get app() {
+    return this._ref.app;
+  }
+  get className() {
+    return this._ref.className;
+  }
+  get id() {
+    return this._ref.id;
+  }
   get createdAt(): Date {
     return this.data.createdAt;
   }
@@ -46,11 +112,15 @@ export class LCObject {
     return this.data.updatedAt;
   }
 
-  constructor(
-    public readonly app: App,
-    public readonly className: string,
-    public readonly id: string
-  ) {}
+  constructor(ref: LCObjectReference<LCObjectData>);
+  constructor(app: App, className: string, id: string);
+  constructor(arg1: any, className?: string, id?: string) {
+    if (className && id) {
+      this._ref = new LCObjectReference(arg1, className, id, LCObject.fromJSON);
+    } else {
+      this._ref = arg1;
+    }
+  }
 
   static fromJSON(app: App, data: any, className: string = data.className): LCObject {
     const objectId: string = data.objectId;
@@ -100,49 +170,16 @@ export class LCObject {
     return this._LC_getData();
   }
 
-  async get(options?: GetObjectOptions): Promise<LCObject> {
-    const rawData = await this.app.request(
-      {
-        method: 'GET',
-        path: `/1.1/classes/${this.className}/${this.id}`,
-        query: {
-          keys: options?.keys?.join(','),
-          include: options?.include?.join(','),
-          returnACL: options?.returnACL,
-        },
-      },
-      options
-    );
-    if (isEmpty(rawData)) {
-      throw new Error(`不存在 objectId 为 ${this.id} 的对象`);
-    }
-    return LCObject.fromJSON(this.app, rawData, this.className);
+  get(options?: GetObjectOptions): Promise<LCObject> {
+    return this._ref.get(options);
   }
 
-  async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<LCObject> {
-    const rawData = await this.app.request(
-      {
-        method: 'PUT',
-        path: `/1.1/classes/${this.className}/${this.id}`,
-        query: {
-          fetchWhenSave: options?.fetchUpdatedData,
-          where: options?.query?.condition,
-        },
-        body: encodeObjectData(data),
-      },
-      options
-    );
-    return LCObject.fromJSON(this.app, rawData, this.className);
+  update(data: LCObjectData, options?: UpdateObjectOptions): Promise<LCObject> {
+    return this._ref.update(data, options);
   }
 
   delete(options?: AuthOptions): Promise<void> {
-    return this.app.request(
-      {
-        method: 'DELETE',
-        path: `/1.1/classes/${this.className}/${this.id}`,
-      },
-      options
-    );
+    return this._ref.delete(options);
   }
 }
 

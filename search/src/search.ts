@@ -1,9 +1,22 @@
-import type { App, AuthOptions, LCObject, QueryOrder, QueryParams } from '../../core';
+import type { App, AuthOptions, LCObject, QueryOrder } from '../../core';
 import { ensureArray } from '../../common/utils';
 
 export type FullTextSearchSortMode = 'min' | 'max' | 'sum' | 'avg';
 
 export type FullTextSearchOrder = 'asc' | 'desc';
+
+export interface SearchParamse {
+  q: string;
+  clazz?: string;
+  skip?: number;
+  limit?: number;
+  sid?: string;
+  fields?: string;
+  highlights?: string;
+  include?: string;
+  order?: string;
+  sort?: any[];
+}
 
 export interface FullTextSearchSortOptions {
   order?: FullTextSearchOrder;
@@ -38,11 +51,11 @@ export class FullTextSearch {
     this._clazz = className;
   }
 
-  get params(): QueryParams {
+  get params(): SearchParamse {
     if (!this._q) {
       throw new Error('执行全文搜索时必须提供 queryString');
     }
-    const params: QueryParams = {
+    const params: SearchParamse = {
       q: this._q,
       clazz: this._clazz,
       skip: this._skip,
