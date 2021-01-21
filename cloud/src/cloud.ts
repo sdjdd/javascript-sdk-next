@@ -5,10 +5,10 @@ export class Cloud {
   constructor(public readonly app: App) {}
 
   async getServerTime(): Promise<Date> {
-    const { iso } = await this.app.request({
+    const { iso } = (await this.app.request({
       method: 'GET',
       path: '/1.1/date',
-    });
+    })) as { iso: string };
     return new Date(iso);
   }
 
