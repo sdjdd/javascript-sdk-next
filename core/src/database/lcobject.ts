@@ -88,6 +88,18 @@ export class LCObjectReference<T> {
       options
     );
   }
+
+  toJSON() {
+    return this._LC_encode();
+  }
+
+  protected _LC_encode() {
+    return {
+      __type: 'Pointer',
+      className: this.className,
+      objectId: this.id,
+    };
+  }
 }
 
 export class LCObject {
@@ -148,11 +160,7 @@ export class LCObject {
 
   protected _LC_encode(options?: EncodeOptions): Record<string, any> {
     if (options?.pointer) {
-      return {
-        __type: 'Pointer',
-        className: this.className,
-        objectId: this.id,
-      };
+      return this._ref.toJSON();
     }
     return {
       ...this._rawData,
@@ -181,6 +189,11 @@ export class LCObject {
   delete(options?: AuthOptions): Promise<void> {
     return this._ref.delete(options);
   }
+}
+
+// @ts-ignore
+export interface INTERNAL_LCObjectReference<T> extends LCObjectReference<T> {
+  _LC_encode(): Record<string, any>;
 }
 
 // @ts-ignore

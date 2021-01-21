@@ -52,12 +52,12 @@ export class Auth {
 
   constructor(public readonly app: App) {}
 
-  user(id: string): UserReference {
-    return new User(this.app, id);
+  user(id: string) {
+    return this.app.database().class('_User').object(id);
   }
 
   role(id: string): RoleReference {
-    return new Role(this.app, id);
+    return new RoleReference(this.app, id);
   }
 
   async addRole(data: AddRoleData, options?: AddObjectOptions): Promise<Role> {

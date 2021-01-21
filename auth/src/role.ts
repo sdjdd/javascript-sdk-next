@@ -5,7 +5,7 @@ import type {
   EncodeOptions,
   GetObjectOptions,
   INTERNAL_LCObject,
-  LCObject,
+  INTERNAL_LCObjectReference,
   Query,
   UpdateObjectOptions,
 } from '../../core';
@@ -16,41 +16,21 @@ interface RoleSubject {
   id: string;
 }
 
-export class Role {
-  private _object: INTERNAL_LCObject;
+export class RoleReference {
+  private _ref: INTERNAL_LCObjectReference<Role>;
 
-  constructor(object: LCObject);
-  constructor(app: App, id: string);
-  constructor(arg1: any, arg2?: any) {
-    if (arg2) {
-      this._object = (arg1 as App).database().class('_Role').object(arg2) as any;
-    } else {
-      this._object = arg1;
-    }
+  constructor(app: App, id: string) {
+    this._ref = app.database().class('_Role', Role.fromJSON).object(id) as any;
   }
 
   get app() {
-    return this._object.app;
+    return this._ref.app;
   }
   get className() {
-    return this._object.className;
+    return this._ref.className;
   }
   get id() {
-    return this._object.id;
-  }
-  get data() {
-    return this._object.data;
-  }
-
-  get name(): string {
-    return this.data.name;
-  }
-  get ACLKey(): string {
-    return `role:${this.name}`;
-  }
-
-  static fromJSON(app: App, data: any): Role {
-    return new Role(app.database().decodeObject(data, '_Role'));
+    return this._ref.id;
   }
 
   add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
@@ -145,16 +125,92 @@ export class Role {
     return this.queryRole().find(options);
   }
 
-  async get(options?: GetObjectOptions): Promise<Role> {
-    return new Role(await this._object.get(options));
+  get(options?: GetObjectOptions): Promise<Role> {
+    return this._ref.get(options);
   }
 
-  async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<Role> {
-    return new Role(await this._object.update(data, options));
+  update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<Role> {
+    return this._ref.update(data, options);
   }
 
   delete(options?: AuthOptions): Promise<void> {
-    return this.app.database().class(this.className).object(this.id).delete(options);
+    return this._ref.delete(options);
+  }
+
+  toJSON() {
+    return this._LC_encode();
+  }
+
+  protected _LC_encode() {
+    return this._ref._LC_encode();
+  }
+}
+
+export class Role {
+  private _ref: RoleReference;
+  private _object: INTERNAL_LCObject;
+
+  get app() {
+    return this._object.app;
+  }
+  get className() {
+    return this._object.className;
+  }
+  get id() {
+    return this._object.id;
+  }
+  get data() {
+    return this._object.data;
+  }
+
+  get name(): string {
+    return this.data.name;
+  }
+  get ACLKey(): string {
+    return `role:${this.name}`;
+  }
+
+  static fromJSON(app: App, data: any): Role {
+    const role = new Role();
+    role._object = app.database().decodeObject(data, '_Role') as any;
+    role._ref = new RoleReference(app, role.id);
+    return role;
+  }
+
+  add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
+    return this._ref.add(subject, options);
+  }
+
+  remove(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
+    return this._ref.remove(subject, options);
+  }
+
+  queryUser(): Query<User> {
+    return this._ref.queryUser();
+  }
+
+  queryRole(): Query<Role> {
+    return this._ref.queryRole();
+  }
+
+  getUsers(options?: AuthOptions): Promise<User[]> {
+    return this._ref.getUsers(options);
+  }
+
+  getRoles(options?: AuthOptions): Promise<Role[]> {
+    return this._ref.getRoles(options);
+  }
+
+  get(options?: GetObjectOptions): Promise<Role> {
+    return this._ref.get(options);
+  }
+
+  update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<Role> {
+    return this._ref.update(data, options);
+  }
+
+  delete(options?: AuthOptions): Promise<void> {
+    return this._ref.delete(options);
   }
 
   toJSON() {
@@ -165,19 +221,3 @@ export class Role {
     return this._object._LC_encode(options);
   }
 }
-
-export type RoleReference = Pick<
-  Role,
-  | 'app'
-  | 'className'
-  | 'id'
-  | 'get'
-  | 'update'
-  | 'delete'
-  | 'add'
-  | 'remove'
-  | 'queryRole'
-  | 'queryUser'
-  | 'getRoles'
-  | 'getUsers'
->;
