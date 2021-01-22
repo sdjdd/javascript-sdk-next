@@ -7,41 +7,29 @@ import { getAppConfig } from './utils';
 describe('查询(Query)', () => {
   const app = LC.init(getAppConfig());
   const db = app.database();
-  const timestamp = Date.now();
-  let objects: LC.LCObject[];
-
-  before(async () => {
-    objects = await Promise.all([
-      db.class('Test').add({ num: timestamp, str: '1' }),
-      db.class('Test').add({ num: timestamp, str: '2' }),
-      db.class('Test').add({ num: timestamp, str: '3' }),
-    ]);
-  });
 
   describe('查询条件', () => {
     it('等于(==)', async () => {
-      const objs = await db.class('Test').where('num', '==', timestamp).find();
-      objs
-        .map((o) => o.id)
-        .sort()
-        .should.eql(objects.map((o) => o.id).sort());
+      const uuid = uuid_v4();
+      const obj = await db.class('Test').add({ uuid });
+      const objs = await db.class('Test').where('uuid', '==', uuid).find();
+      objs.length.should.eql(1);
+      objs[0].id.should.eql(obj.id);
     });
 
     it('不等于(!=)', async () => {
+      const uuid = uuid_v4();
+      const [obj] = await Promise.all([
+        db.class('Test').add({ uuid, str: 'LeanCloud' }),
+        db.class('Test').add({ uuid, str: 'LeanCl0ud' }),
+      ]);
       const objs = await db
         .class('Test')
-        .where('num', '==', timestamp)
-        .where('str', '!=', '1')
+        .where('uuid', '==', uuid)
+        .where('str', '!=', 'LeanCl0ud')
         .find();
-      objs
-        .map((o) => o.id)
-        .sort()
-        .should.eql(
-          objects
-            .slice(1)
-            .map((o) => o.id)
-            .sort()
-        );
+      objs.length.should.eql(1);
+      objs[0].id.should.eql(obj.id);
     });
 
     it('小于(<)', async () => {
@@ -68,6 +56,32 @@ describe('查询(Query)', () => {
         .map((o) => o.id)
         .sort()
         .should.eql([o99.id, o100.id].sort());
+    });
+
+    it('大于(>)', async () => {
+      const uuid = uuid_v4();
+      const [, obj] = await Promise.all([
+        db.class('Test').add({ uuid, num: 100 }),
+        db.class('Test').add({ uuid, num: 101 }),
+      ]);
+      const objs = await db.class('Test').where('uuid', '==', uuid).where('num', '>', 100).find();
+      objs.length.should.eql(1);
+      objs[0].id.should.eql(obj.id);
+    });
+
+    it('大于等于(>=)', async () => {
+      const uuid = uuid_v4();
+      const [, o100, o101] = await Promise.all([
+        db.class('Test').add({ uuid, num: 99 }),
+        db.class('Test').add({ uuid, num: 100 }),
+        db.class('Test').add({ uuid, num: 101 }),
+      ]);
+      const objs = await db.class('Test').where('uuid', '==', uuid).where('num', '>=', 100).find();
+      objs.length.should.eql(2);
+      objs
+        .map((o) => o.id)
+        .sort()
+        .should.eql([o100.id, o101.id].sort());
     });
   });
 });
