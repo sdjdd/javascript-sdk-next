@@ -58,9 +58,9 @@ function sizeIs(size: number): SizeEqualConstraint {
   return new SizeEqualConstraint(size);
 }
 
-// XXX: 这里直接把类型限制为 Query<unknown> , 可考虑进一步放宽
+// XXX: 这里直接把类型限制为 Query<any> , 可考虑进一步放宽
 function _in(
-  value: any[] | Query<unknown>
+  value: any[] | Query<any>
 ): InConstraint | MatchesKeyConstraint | MatchesQueryConstraint {
   if (Array.isArray(value)) {
     return new InConstraint(value);
@@ -78,7 +78,7 @@ function _in(
 }
 
 function notIn(
-  value: any[] | Query<unknown>
+  value: any[] | Query<any>
 ): NotInConstraint | NotMatchesKeyConstraint | NotMatchesQueryConstraint {
   if (Array.isArray(value)) {
     return new NotInConstraint(value);

@@ -1,6 +1,6 @@
 import { APIError } from '../../../common/error';
 import { App, AuthOptions } from '../app';
-import { encodeObjectData, LCObject, LCObjectData } from './lcobject';
+import { encodeObjectData, LCObject } from './lcobject';
 
 type PipelineRequest =
   | {
@@ -18,14 +18,6 @@ export interface PipelineResult {
   errors: Error[];
 }
 
-interface ActionResult {
-  success?: Record<string, any>;
-  error?: {
-    code: number;
-    error: string;
-  };
-}
-
 const deleteDecoder = () => undefined;
 
 export class Pipeline {
@@ -34,7 +26,7 @@ export class Pipeline {
 
   constructor(public readonly app: App) {}
 
-  private _add(className: string, data: LCObjectData): void {
+  private _add(className: string, data: Record<string, any>): void {
     this._requests.push({
       method: 'POST',
       path: `/1.1/classes/${className}`,
@@ -51,7 +43,7 @@ export class Pipeline {
     this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
   }
 
-  private _update(className: string, objectId: string, data: LCObjectData): void {
+  private _update(className: string, objectId: string, data: Record<string, any>): void {
     this._requests.push({
       method: 'PUT',
       path: `/1.1/classes/${className}/${objectId}`,
@@ -68,7 +60,7 @@ export class Pipeline {
     this._decoders.push(deleteDecoder);
   }
 
-  add(className: string, data: LCObjectData | LCObjectData[]): this {
+  add(className: string, data: Record<string, any> | Record<string, any>[]): this {
     if (Array.isArray(data)) {
       data.forEach((data) => this._add(className, data));
     } else {
@@ -88,12 +80,12 @@ export class Pipeline {
     return this;
   }
 
-  update(className: string, objectId: string, data: LCObjectData): this;
-  update(object: { className: string; id: string }, data: LCObjectData): this;
+  update(className: string, objectId: string, data: Record<string, any>): this;
+  update(object: { className: string; id: string }, data: Record<string, any>): this;
   update(
     arg1: string | { className: string; id: string },
-    arg2?: string | LCObjectData,
-    data?: LCObjectData
+    arg2?: string | Record<string, any>,
+    data?: Record<string, any>
   ): this {
     if (typeof arg1 === 'string') {
       if (typeof arg2 !== 'string') {
@@ -101,7 +93,7 @@ export class Pipeline {
       }
       this._update(arg1, arg2, data);
     } else {
-      this._update(arg1.className, arg1.id, arg2 as LCObjectData);
+      this._update(arg1.className, arg1.id, arg2 as Record<string, any>);
     }
     return this;
   }
@@ -127,7 +119,13 @@ export class Pipeline {
         },
       },
       options
-    )) as ActionResult[];
+    )) as {
+      success?: Record<string, any>;
+      error?: {
+        code: number;
+        error: string;
+      };
+    }[];
 
     const results: any[] = [];
     const errors: APIError[] = [];

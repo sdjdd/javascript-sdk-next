@@ -32,8 +32,6 @@ export interface EncodeOptions {
   pointer?: boolean;
 }
 
-export type LCObjectData = Record<string, any>;
-
 export type LCObjectDecoder<T = any> = (app: App, data: any, className: string) => T;
 
 export class LCObjectReference<T> {
@@ -103,7 +101,7 @@ export class LCObjectReference<T> {
 }
 
 export class LCObject {
-  data: LCObjectData = {};
+  data: Record<string, any> = {};
 
   private _ref: LCObjectReference<LCObject>;
   private _rawData: Record<string, any> = {};
@@ -124,7 +122,7 @@ export class LCObject {
     return this.data.updatedAt;
   }
 
-  constructor(ref: LCObjectReference<LCObjectData>);
+  constructor(ref: LCObjectReference<LCObject>);
   constructor(app: App, className: string, id: string);
   constructor(arg1: any, className?: string, id?: string) {
     if (className && id) {
@@ -170,11 +168,11 @@ export class LCObject {
     };
   }
 
-  protected _LC_getData(): LCObjectData {
+  protected _LC_getData(): Record<string, any> {
     return getLCObjectData(this.data);
   }
 
-  toJSON(): LCObjectData {
+  toJSON(): Record<string, any> {
     return this._LC_getData();
   }
 
@@ -182,7 +180,7 @@ export class LCObject {
     return this._ref.get(options);
   }
 
-  update(data: LCObjectData, options?: UpdateObjectOptions): Promise<LCObject> {
+  update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<LCObject> {
     return this._ref.update(data, options);
   }
 
@@ -199,7 +197,7 @@ export interface INTERNAL_LCObjectReference<T> extends LCObjectReference<T> {
 // @ts-ignore
 export interface INTERNAL_LCObject extends LCObject {
   _rawData: Record<string, any>;
-  _LC_getData(): LCObjectData;
+  _LC_getData(): Record<string, any>;
   _LC_encode(options?: EncodeOptions): Record<string, any>;
 }
 
