@@ -27,6 +27,7 @@ export default [
       'lodash/mapValues',
       'lodash/omit',
       'lodash/omitBy',
+      'lodash/trimEnd',
       'lodash/trimStart',
     ],
   },

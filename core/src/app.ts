@@ -1,7 +1,9 @@
 import clone from 'lodash/clone';
+import trimEnd from 'lodash/trimEnd';
 import trimStart from 'lodash/trimStart';
 
 import { APIError } from '../../common/error';
+import { AppRouter, isCNApp, Service } from './app-router';
 import { Database } from './database';
 import { request as doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
@@ -16,6 +18,7 @@ export interface AuthOptions extends HTTPRequestOptions {
 export interface APIRequest {
   method: HTTPRequest['method'];
   path: string;
+  service?: Service;
   header?: HTTPRequest['header'];
   query?: HTTPRequest['query'];
   body?: any;
@@ -34,6 +37,7 @@ export interface AppConfig {
   masterKey?: string;
   useMasterKey?: boolean;
   production?: boolean;
+  hookKey?: string;
 }
 
 export class App {
@@ -64,6 +68,8 @@ export class App {
   production: boolean;
 
   private _masterKey?: string;
+  private _router?: AppRouter;
+  private _hookKey?: string;
 
   constructor(config: AppConfig) {
     if (!config) {
@@ -77,8 +83,10 @@ export class App {
       throw new Error('初始化 App 时必须提供 appKey');
     }
     if (!serverURL) {
-      // TODO: 实现 app router
-      throw new Error('初始化 App 时必须提供 serverURL');
+      if (isCNApp(this)) {
+        throw new Error('初始化 App 时必须提供 serverURL');
+      }
+      this._router = new AppRouter(this);
     }
 
     this.appId = appId;
@@ -90,6 +98,7 @@ export class App {
     this.useMasterKey = Boolean(config.useMasterKey);
     this.production = Boolean(config.production ?? true);
     this.localStorage = new NamespacedStorage(localStorage, appId);
+    this._hookKey = config.hookKey;
   }
 
   database(): Database {
@@ -106,9 +115,11 @@ export class App {
       throw new Error('useMasterKey 已开启，但 masterKey 为空');
     }
 
+    const url = this.serverURL || (await this._router.getServiceURL(request.service || 'api'));
+
     const { status, body } = await doHTTPRequest({
       ...request,
-      url: this.serverURL + '/' + trimStart(request.path, '/'),
+      url: trimEnd(url, '/ ') + '/' + trimStart(request.path, '/ '),
       header: {
         ...request.header,
         'Content-Type': 'application/json',
@@ -117,6 +128,7 @@ export class App {
         'X-LC-Key': useMasterKey ? this._masterKey : this.appKey,
         'X-LC-Session': options?.sessionToken,
         'X-LC-Prod': this.production ? undefined : '0',
+        'X-LC-Hook-Key': this._hookKey,
       },
     });
 
