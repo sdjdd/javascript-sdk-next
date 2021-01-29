@@ -20,6 +20,7 @@ export class Cloud {
     const { result } = await this.app.request(
       {
         method: 'POST',
+        service: 'engine',
         path: `/1.1/functions/${funcName}`,
         body: this.app.database().encode(param),
       },
@@ -33,6 +34,7 @@ export class Cloud {
     const { result } = await this.app.request(
       {
         method: 'POST',
+        service: 'engine',
         path: `/1.1/call/${funcName}`,
         body: db.encode(param),
       },

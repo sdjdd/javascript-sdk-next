@@ -82,19 +82,21 @@ export class App {
     if (!appKey) {
       throw new Error('初始化 App 时必须提供 appKey');
     }
+    this.appId = appId;
+    this.appKey = appKey;
+
     if (!serverURL) {
       if (isCNApp(this)) {
         throw new Error('初始化 App 时必须提供 serverURL');
       }
       this._router = new AppRouter(this);
     }
+    this.serverURL = serverURL;
 
-    this.appId = appId;
-    this.appKey = appKey;
     if (masterKey) {
       this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
     }
-    this.serverURL = serverURL;
+
     this.useMasterKey = Boolean(config.useMasterKey);
     this.production = Boolean(config.production ?? true);
     this.localStorage = new NamespacedStorage(localStorage, appId);
