@@ -46,9 +46,6 @@ export class EqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (this.value === undefined) {
-      throw new TypeError('不支持使用 undefined 作为相等约束的比较值');
-    }
     return { ...cond, [key]: encode(this.value) };
   }
 }
@@ -57,9 +54,6 @@ export class NotEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (this.value === undefined) {
-      return cond;
-    }
     return {
       ...cond,
       [key]: { ...cond[key], $ne: encode(this.value) },
@@ -71,9 +65,6 @@ export class GreaterThanConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (this.value === undefined) {
-      return cond;
-    }
     return {
       ...cond,
       [key]: { ...cond[key], $gt: encode(this.value) },
@@ -85,9 +76,6 @@ export class GreaterThanOrEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (this.value === undefined) {
-      return cond;
-    }
     return {
       ...cond,
       [key]: { ...cond[key], $gte: encode(this.value) },
@@ -99,9 +87,6 @@ export class LessThanConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (this.value === undefined) {
-      return cond;
-    }
     return {
       ...cond,
       [key]: { ...cond[key], $lt: encode(this.value) },
@@ -113,9 +98,6 @@ export class LessThanOrEqualConstraint implements Constraint {
   constructor(public readonly value: any) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (this.value === undefined) {
-      return cond;
-    }
     return {
       ...cond,
       [key]: { ...cond[key], $lte: encode(this.value) },
@@ -402,7 +384,7 @@ export class OrConstraint implements Constraint {
   constructor(public readonly value: any[]) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (!this.value || this.value.length === 0) {
+    if (this.value.length === 0) {
       return cond;
     }
 
@@ -433,7 +415,7 @@ export class AndConstraint implements Constraint {
   constructor(public readonly value: any[]) {}
 
   applyQueryConstraint(cond: Condition, key: string): Condition {
-    if (!this.value || this.value.length === 0) {
+    if (this.value.length === 0) {
       return cond;
     }
 
