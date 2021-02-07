@@ -1,14 +1,14 @@
-import 'should';
+import * as should from 'should';
 import { v4 as uuid_v4 } from 'uuid';
 import './init';
 import * as LC from '..';
 import { getAppConfig } from './utils';
 
-describe('查询(Query)', () => {
+describe('Query', () => {
   const app = LC.init(getAppConfig());
   const db = app.database();
 
-  describe('查询条件', () => {
+  describe('query condition', () => {
     it('等于(==)', async () => {
       const uuid = uuid_v4();
       const obj = await db.class('Test').add({ uuid });
@@ -82,6 +82,41 @@ describe('查询(Query)', () => {
         .map((o) => o.id)
         .sort()
         .should.eql([o100.id, o101.id].sort());
+    });
+
+    it('limit & skip & first', async () => {
+      const uuid = uuid_v4();
+      const p = db.pipeline();
+      p.add('Test', { uuid }).add('Test', { uuid });
+      const { results } = await p.commit();
+      const ids = results.map((obj) => obj.id);
+
+      let objs = await db.class('Test').where({ uuid }).limit(1).find();
+      objs.length.should.eql(1);
+      ids.includes(objs[0].id);
+
+      objs = await db.class('Test').where({ uuid }).skip(1).find();
+      objs.length.should.eql(1);
+      ids.includes(objs[0].id);
+
+      const obj = await db.class('Test').where({ uuid }).first();
+      should.exists(obj);
+      ids.includes(obj.id);
+    });
+
+    it('orderBy', async () => {
+      const uuid = uuid_v4();
+      const p = db.pipeline();
+      p.add('Test', { uuid, num: 1 }).add('Test', { uuid, num: 2 });
+      await p.commit();
+      const [asc, desc] = await Promise.all([
+        db.class('Test').where({ uuid }).orderBy('num', 'asc').find(),
+        db.class('Test').where({ uuid }).orderBy('num', 'desc').find(),
+      ]);
+      asc.length.should.eql(2);
+      desc.length.should.eql(2);
+      asc[0].data.num.should.lessThan(asc[1].data.num);
+      desc[0].data.num.should.greaterThan(desc[1].data.num);
     });
   });
 });

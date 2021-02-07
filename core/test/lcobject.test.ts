@@ -4,35 +4,30 @@ import './init';
 import * as LC from '..';
 import { getAppConfig } from './utils';
 
-describe('对象(LCObject)', () => {
+describe('LCObject', () => {
   const app = LC.init(getAppConfig());
   const db = app.database();
   const data = {
-    str: 'hello world',
-    num: Date.now(),
-    obj: {
-      slogan: '为开发加速',
-    },
-    arr: [1.1, 2, '3'],
+    str: 'Hello world!',
   };
 
-  it('保存对象到云端', async () => {
+  it('create', async () => {
     const obj = await db.class('Test').add(data, { fetchData: true });
     obj.data.should.containEql(data);
   });
 
-  describe('从云端获取对象', () => {
+  describe('get', () => {
     let objectId: string;
     before(async () => {
       objectId = (await db.class('Test').add(data)).id;
     });
 
-    it('通过对象引用获取', async () => {
+    it('get directly', async () => {
       const obj = await db.class('Test').object(objectId).get();
       obj.data.should.containEql(data);
     });
 
-    it('获取时指定 keys', async () => {
+    it('get with keys', async () => {
       const obj = await db
         .class('Test')
         .object(objectId)
@@ -41,14 +36,14 @@ describe('对象(LCObject)', () => {
     });
   });
 
-  it('更新对象', async () => {
+  it('update', async () => {
     const objectId = (await db.class('Test').add(data)).id;
     const str = 'HELLO WORLD';
     const obj = await db.class('Test').object(objectId).update({ str }, { fetchUpdatedData: true });
     obj.data.str.should.eql(str);
   });
 
-  it('删除对象', async () => {
+  it('delete', async () => {
     const objectId = (await db.class('Test').add(data)).id;
     await db.class('Test').object(objectId).delete();
     return db
@@ -58,15 +53,31 @@ describe('对象(LCObject)', () => {
       .should.rejectedWith(`不存在 objectId 为 ${objectId} 的对象`);
   });
 
-  describe('批量操作', () => {
-    it('批量创建', async () => {
+  it('basic data type', async () => {
+    const data = {
+      str: 'LeanCloud',
+      num: 2021,
+      bool: true,
+      date: new Date(),
+      obj: {
+        str: 'LeanCloud',
+        num: 2021,
+      },
+      arr: ['LeanCloud', 2021],
+    };
+    const obj = await db.class('Test').add(data, { fetchData: true });
+    obj.data.should.containEql(data);
+  });
+
+  describe('pipline', () => {
+    it('create', async () => {
       const { results, errors } = await db.pipeline().add('Test', data).commit();
       errors.should.empty();
       results.length.should.eql(1);
       results.forEach((result) => result.should.instanceof(LC.LCObject));
     });
 
-    it('批量获取', async () => {
+    it('get', async () => {
       let result = await db.pipeline().add('Test', data).commit();
       result.errors.should.empty();
       result.results.length.should.eql(1);
@@ -76,7 +87,7 @@ describe('对象(LCObject)', () => {
       result.results[0].data.should.containEql(data);
     });
 
-    it('批量删除', async () => {
+    it('delete', async () => {
       let result = await db.pipeline().add('Test', data).commit();
       result.errors.should.empty();
       result.results.length.should.eql(1);
@@ -95,11 +106,9 @@ describe('对象(LCObject)', () => {
   });
 
   describe('Pointer', () => {
-    it('保存 Pointer', async () => {
+    it('save pointer', async () => {
       const obj1 = await db.class('Test').add(data);
-      const obj2 = await db
-        .class('Test')
-        .add({ ptr: obj1, str: '测试 Pointer' }, { fetchData: true });
+      const obj2 = await db.class('Test').add({ ptr: obj1 }, { fetchData: true });
       const { ptr } = obj2.data;
       ptr.should.instanceof(LC.LCObject);
       ptr.className.should.eql('Test');
