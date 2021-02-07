@@ -8,8 +8,7 @@ import type { App, AuthOptions } from '../app';
 import type { Condition } from './query/constraint';
 import { ACL } from './acl';
 
-// TODO: 加上 className
-const RESERVED_KEYS = ['objectId', 'createdAt', 'updatedAt'];
+const RESERVED_KEYS = ['className', 'objectId', 'createdAt', 'updatedAt'];
 
 export function omitReservedKeys(data: Record<string, any>): Record<string, any> {
   return omit(data, RESERVED_KEYS);
