@@ -90,7 +90,7 @@ function _in(
     return new InConstraint(value);
   }
   const { className, params } = value;
-  const keys = params.keys as string;
+  const keys = params.keys;
   if (keys) {
     if (keys.includes(',')) {
       // TODO: 表述的更加明确一些
@@ -111,7 +111,7 @@ function notIn(
     return new NotInConstraint(value);
   }
   const { className, params } = value;
-  const keys = params.keys as string;
+  const keys = params.keys;
   if (keys) {
     if (keys.includes(',')) {
       throw new Error('使用子查询时，只能包含一个 key');
@@ -137,6 +137,20 @@ function contains(s?: string): MatchesConstraint | undefined {
     return undefined;
   }
   return matches(quote(s));
+}
+
+function startsWith(s?: string): MatchesConstraint | undefined {
+  if (s === undefined) {
+    return undefined;
+  }
+  return matches('^' + quote(s));
+}
+
+function endsWith(s?: string): MatchesConstraint | undefined {
+  if (s === undefined) {
+    return undefined;
+  }
+  return matches(quote(s) + '$');
 }
 
 function containsAll(values?: any[]): ContainsAllConstraint | undefined {
@@ -183,6 +197,10 @@ export const queryCommand = {
   'not-in': notIn,
   matches,
   contains,
+  startsWith,
+  'starts-with': startsWith,
+  endsWith,
+  'ends-with': endsWith,
   containsAll,
   'contains-all': containsAll,
   // TODO: 补充地理位置查询命令

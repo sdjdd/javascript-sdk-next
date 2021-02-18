@@ -84,6 +84,28 @@ describe('Query', () => {
         .should.eql([o100.id, o101.id].sort());
     });
 
+    it('startsWith', async () => {
+      const uuid = uuid_v4();
+      const [, obj] = await Promise.all([
+        db.class('Test').add({ uuid, str: 'HelloWorld!' }),
+        db.class('Test').add({ uuid, str: '_prefix_HelloWorld!' }),
+      ]);
+      const objs = await db.class('Test').where('str', 'starts-with', '_prefix_').find();
+      objs.length.should.eql(1);
+      objs[0].id.should.eql(obj.id);
+    });
+
+    it('endsWith', async () => {
+      const uuid = uuid_v4();
+      const [, obj] = await Promise.all([
+        db.class('Test').add({ uuid, str: 'HelloWorld!' }),
+        db.class('Test').add({ uuid, str: 'HelloWorld!_suffix_' }),
+      ]);
+      const objs = await db.class('Test').where('str', 'ends-with', '_suffix_').find();
+      objs.length.should.eql(1);
+      objs[0].id.should.eql(obj.id);
+    });
+
     it('limit & skip & first', async () => {
       const uuid = uuid_v4();
       const p = db.pipeline();
