@@ -14,6 +14,28 @@ export function omitReservedKeys(data: Record<string, any>): Record<string, any>
   return omit(data, RESERVED_KEYS);
 }
 
+export const hookNames = [
+  'beforeSave',
+  'afterSave',
+  'beforeUpdate',
+  'afterUpdate',
+  'beforeDelete',
+  'beforeDelete',
+] as const;
+
+export type HookName = typeof hookNames[number];
+
+export function assertCanIgnoreHooks(app: App, options?: AuthOptions): void | never {
+  if (!app.hookKey) {
+    if (!app.masterKey) {
+      throw new Error('Cannot ignore hooks when both hookKey and masterKey is not set');
+    }
+    if (options?.useMasterKey === false || (!options?.useMasterKey && !app.useMasterKey)) {
+      throw new Error('Cannot ignore hooks when useMasterKey is false');
+    }
+  }
+}
+
 export interface GetObjectOptions extends AuthOptions {
   keys?: string[];
   include?: string[];
@@ -25,6 +47,11 @@ export interface UpdateObjectOptions extends AuthOptions {
   query?: {
     condition: Condition;
   };
+  ignoreHooks?: HookName[];
+}
+
+export interface DeleteObjectOptions extends AuthOptions {
+  ignoreHooks?: HookName[];
 }
 
 export interface EncodeOptions {
@@ -61,6 +88,12 @@ export class LCObjectReference<T> {
   }
 
   async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<T> {
+    const body = encodeObjectData(data);
+    if (options?.ignoreHooks?.length) {
+      assertCanIgnoreHooks(this.app, options);
+      body.__ignore_hooks = options.ignoreHooks;
+    }
+
     const rawData = await this.app.request(
       {
         method: 'PUT',
@@ -69,18 +102,27 @@ export class LCObjectReference<T> {
           fetchWhenSave: options?.fetchUpdatedData,
           where: options?.query?.condition,
         },
-        body: encodeObjectData(data),
+        body,
       },
       options
     );
     return this._decoder(this.app, rawData, this.className);
   }
 
-  async delete(options?: AuthOptions): Promise<void> {
+  async delete(options?: DeleteObjectOptions): Promise<void> {
+    if (options?.ignoreHooks?.length) {
+      assertCanIgnoreHooks(this.app, options);
+    }
+
     await this.app.request(
       {
         method: 'DELETE',
         path: `/1.1/classes/${this.className}/${this.id}`,
+        body: options?.ignoreHooks?.length
+          ? {
+              __ignore_hooks: options.ignoreHooks,
+            }
+          : undefined,
       },
       options
     );
@@ -183,7 +225,7 @@ export class LCObject {
     return this._ref.update(data, options);
   }
 
-  delete(options?: AuthOptions): Promise<void> {
+  delete(options?: DeleteObjectOptions): Promise<void> {
     return this._ref.delete(options);
   }
 }

@@ -2,6 +2,7 @@ import { ensureArray } from '../../common/utils';
 import type {
   App,
   AuthOptions,
+  DeleteObjectOptions,
   EncodeOptions,
   GetObjectOptions,
   INTERNAL_LCObject,
@@ -133,7 +134,7 @@ export class RoleReference {
     return this._ref.update(data, options);
   }
 
-  delete(options?: AuthOptions): Promise<void> {
+  delete(options?: DeleteObjectOptions): Promise<void> {
     return this._ref.delete(options);
   }
 
@@ -209,7 +210,7 @@ export class Role {
     return this._ref.update(data, options);
   }
 
-  delete(options?: AuthOptions): Promise<void> {
+  delete(options?: DeleteObjectOptions): Promise<void> {
     return this._ref.delete(options);
   }
 

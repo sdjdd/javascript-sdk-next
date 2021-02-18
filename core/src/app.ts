@@ -47,6 +47,8 @@ export class App {
 
   readonly appId: string;
   readonly appKey: string;
+  readonly hookKey?: string;
+  readonly masterKey?: string;
   readonly serverURL?: string;
 
   readonly log = {
@@ -67,9 +69,7 @@ export class App {
   useMasterKey: boolean;
   production: boolean;
 
-  private _masterKey?: string;
   private _router?: AppRouter;
-  private _hookKey?: string;
 
   constructor(config: AppConfig) {
     if (!config) {
@@ -94,13 +94,13 @@ export class App {
     this.serverURL = serverURL;
 
     if (masterKey) {
-      this._masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
+      this.masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
     }
 
     this.useMasterKey = Boolean(config.useMasterKey);
     this.production = Boolean(config.production ?? true);
     this.localStorage = new NamespacedStorage(localStorage, appId);
-    this._hookKey = config.hookKey;
+    this.hookKey = config.hookKey;
   }
 
   database(): Database {
@@ -113,7 +113,7 @@ export class App {
     await Promise.all(App.hooks.beforeInvokeAPI.map((h) => h(this, request, options)));
 
     const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
-    if (useMasterKey && !this._masterKey) {
+    if (useMasterKey && !this.masterKey) {
       throw new Error('useMasterKey 已开启，但 masterKey 为空');
     }
 
@@ -127,10 +127,10 @@ export class App {
         'Content-Type': 'application/json',
         'X-LC-UA': getUserAgent(),
         'X-LC-Id': this.appId,
-        'X-LC-Key': useMasterKey ? this._masterKey : this.appKey,
+        'X-LC-Key': useMasterKey ? this.masterKey : this.appKey,
         'X-LC-Session': options?.sessionToken,
         'X-LC-Prod': this.production ? undefined : '0',
-        'X-LC-Hook-Key': this._hookKey,
+        'X-LC-Hook-Key': this.hookKey,
       },
     });
 

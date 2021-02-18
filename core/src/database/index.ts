@@ -10,4 +10,5 @@ export {
   EncodeOptions,
   GetObjectOptions,
   UpdateObjectOptions,
+  DeleteObjectOptions,
 } from './lcobject';

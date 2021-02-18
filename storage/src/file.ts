@@ -1,4 +1,4 @@
-import { App, AuthOptions, EncodeOptions, INTERNAL_LCObject, LCObject } from '../../core';
+import { App, DeleteObjectOptions, EncodeOptions, INTERNAL_LCObject, LCObject } from '../../core';
 
 export class LCFile {
   private _object: INTERNAL_LCObject;
@@ -54,7 +54,7 @@ export class LCFile {
     return this.url + `?imageView/${mode}/w/${width}/h/${height}/q/${quality}/format/${format}`;
   }
 
-  delete(options?: AuthOptions): Promise<void> {
+  delete(options?: DeleteObjectOptions): Promise<void> {
     return this.app.database().class(this.className).object(this.id).delete(options);
   }
 
@@ -65,7 +65,7 @@ export class LCFile {
   protected _LC_encode(options?: EncodeOptions) {
     const encoded = this._object._LC_encode(options);
     if (encoded.__type === 'Object') {
-      encoded._type = 'File';
+      encoded.__type = 'File';
     }
     return encoded;
   }

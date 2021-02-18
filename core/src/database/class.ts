@@ -1,10 +1,11 @@
 import type { AuthOptions } from '../app';
 
-import { encodeObjectData, LCObjectReference } from './lcobject';
+import { assertCanIgnoreHooks, encodeObjectData, HookName, LCObjectReference } from './lcobject';
 import { Query } from './query';
 
 export interface AddObjectOptions extends AuthOptions {
   fetchData?: boolean;
+  ignoreHooks?: HookName[];
 }
 
 export class Class<T> extends Query<T> {
@@ -13,6 +14,12 @@ export class Class<T> extends Query<T> {
   }
 
   async add(data: Record<string, any>, options?: AddObjectOptions): Promise<T> {
+    const body = encodeObjectData(data);
+    if (options?.ignoreHooks?.length) {
+      assertCanIgnoreHooks(this.app, options);
+      body.__ignore_hooks = options.ignoreHooks;
+    }
+
     const rawData = await this.app.request(
       {
         method: 'POST',
@@ -20,7 +27,7 @@ export class Class<T> extends Query<T> {
         query: {
           fetchWhenSave: options?.fetchData,
         },
-        body: encodeObjectData(data),
+        body,
       },
       options
     );

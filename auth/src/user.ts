@@ -2,16 +2,15 @@ import { KEY_CURRENT_USER } from '../../common/const';
 import type {
   App,
   AuthOptions,
-  GetObjectOptions,
-  LCObject,
-  INTERNAL_LCObject,
+  DeleteObjectOptions,
   EncodeOptions,
+  GetObjectOptions,
+  INTERNAL_LCObject,
+  LCObject,
+  UpdateObjectOptions,
 } from '../../core';
 
-export interface UpdateUserOptions extends Omit<AuthOptions, 'sessionToken'> {
-  // TODO: 支持按条件更新
-  query?: any;
-}
+export type UpdateUserOptions = Omit<UpdateObjectOptions, 'sessionToken'>;
 
 export class User {
   private _object: INTERNAL_LCObject;
@@ -202,7 +201,10 @@ export class User {
     return this;
   }
 
-  async update(data: Record<string, any>, options?: UpdateUserOptions): Promise<this> {
+  async update(
+    data: Record<string, any>,
+    options?: Omit<UpdateUserOptions, 'fetchUpdatedData'>
+  ): Promise<this> {
     const obj = await this._object.update(data, {
       ...options,
       fetchUpdatedData: true,
@@ -215,7 +217,7 @@ export class User {
     return this;
   }
 
-  async delete(options: Omit<AuthOptions, 'sessionToken'>): Promise<void> {
+  async delete(options: Omit<DeleteObjectOptions, 'sessionToken'>): Promise<void> {
     await this._object.delete({
       ...options,
       sessionToken: this.sessionToken,
