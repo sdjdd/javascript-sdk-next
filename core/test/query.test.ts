@@ -90,7 +90,11 @@ describe('Query', () => {
         db.class('Test').add({ uuid, str: 'HelloWorld!' }),
         db.class('Test').add({ uuid, str: '_prefix_HelloWorld!' }),
       ]);
-      const objs = await db.class('Test').where('str', 'starts-with', '_prefix_').find();
+      const objs = await db
+        .class('Test')
+        .where('uuid', '==', uuid)
+        .where('str', 'starts-with', '_prefix_')
+        .find();
       objs.length.should.eql(1);
       objs[0].id.should.eql(obj.id);
     });
@@ -101,9 +105,34 @@ describe('Query', () => {
         db.class('Test').add({ uuid, str: 'HelloWorld!' }),
         db.class('Test').add({ uuid, str: 'HelloWorld!_suffix_' }),
       ]);
-      const objs = await db.class('Test').where('str', 'ends-with', '_suffix_').find();
+      const objs = await db
+        .class('Test')
+        .where('uuid', '==', uuid)
+        .where('str', 'ends-with', '_suffix_')
+        .find();
       objs.length.should.eql(1);
       objs[0].id.should.eql(obj.id);
+    });
+
+    describe('in', () => {
+      it('Array contain any element', async () => {
+        const uuid = uuid_v4();
+        const [obj1, obj2] = await Promise.all([
+          db.class('Test').add({ uuid, arr: [1, 2, 3] }),
+          db.class('Test').add({ uuid, arr: [4, 5, 6] }),
+          db.class('Test').add({ uuid, arr: [7, 8, 9] }),
+        ]);
+        const objs = await db
+          .class('Test')
+          .where('uuid', '==', uuid)
+          .where('arr', 'in', [3, 5])
+          .find();
+        objs.length.should.eql(2);
+        objs
+          .map((o) => o.id)
+          .sort()
+          .should.eql([obj1.id, obj2.id].sort());
+      });
     });
 
     it('limit & skip & first', async () => {
