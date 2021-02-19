@@ -34,7 +34,7 @@ export class RoleReference {
     return this._ref.id;
   }
 
-  add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
+  add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
     const users: RoleSubject[] = [];
     const roles: RoleSubject[] = [];
     ensureArray(subject).forEach((sub) => {
@@ -43,7 +43,7 @@ export class RoleReference {
           users.push(sub);
           break;
         case '_Role':
-          users.push(sub);
+          roles.push(sub);
           break;
         default:
           throw new TypeError('仅能向角色中添加用户或另一角色');
@@ -51,20 +51,16 @@ export class RoleReference {
     });
 
     const { addRelation } = this.app.database().op;
-    return this.app.request(
+    return this.update(
       {
-        method: 'PUT',
-        path: `/1.1/roles/${this.id}`,
-        body: {
-          users: users.length ? addRelation(users) : undefined,
-          roles: roles.length ? addRelation(roles) : undefined,
-        },
+        users: users.length ? addRelation(users) : undefined,
+        roles: roles.length ? addRelation(roles) : undefined,
       },
       options
     );
   }
 
-  remove(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
+  remove(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
     const users: RoleSubject[] = [];
     const roles: RoleSubject[] = [];
     ensureArray(subject).forEach((sub) => {
@@ -73,7 +69,7 @@ export class RoleReference {
           users.push(sub);
           break;
         case '_Role':
-          users.push(sub);
+          roles.push(sub);
           break;
         default:
           throw new TypeError('仅能从角色中移除用户或另一角色');
@@ -81,14 +77,10 @@ export class RoleReference {
     });
 
     const { removeRelation } = this.app.database().op;
-    return this.app.request(
+    return this.update(
       {
-        method: 'PUT',
-        path: `/1.1/roles/${this.id}`,
-        body: {
-          users: users.length ? removeRelation(users) : undefined,
-          roles: roles.length ? removeRelation(roles) : undefined,
-        },
+        users: users.length ? removeRelation(users) : undefined,
+        roles: roles.length ? removeRelation(roles) : undefined,
       },
       options
     );
@@ -178,11 +170,11 @@ export class Role {
     return role;
   }
 
-  add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
+  add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
     return this._ref.add(subject, options);
   }
 
-  remove(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<void> {
+  remove(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
     return this._ref.remove(subject, options);
   }
 
