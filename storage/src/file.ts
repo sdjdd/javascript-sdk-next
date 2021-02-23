@@ -3,14 +3,8 @@ import { App, DeleteObjectOptions, EncodeOptions, INTERNAL_LCObject, LCObject } 
 export class LCFile {
   private _object: INTERNAL_LCObject;
 
-  constructor(object: LCObject);
-  constructor(app: App, id: string);
-  constructor(arg1: any, arg2?: any) {
-    if (arg2) {
-      this._object = (arg1 as App).database().class('_File').object(arg2) as any;
-    } else {
-      this._object = arg1;
-    }
+  constructor(object: LCObject) {
+    this._object = object as any;
   }
 
   get app() {
