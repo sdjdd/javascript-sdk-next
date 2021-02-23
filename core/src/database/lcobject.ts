@@ -5,7 +5,7 @@ import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
 import type { App, AuthOptions } from '../app';
-import type { Condition } from './query/constraint';
+import type { Query } from './query';
 import { ACL } from './acl';
 
 const RESERVED_KEYS = ['className', 'objectId', 'createdAt', 'updatedAt'];
@@ -44,9 +44,7 @@ export interface GetObjectOptions extends AuthOptions {
 
 export interface UpdateObjectOptions extends AuthOptions {
   fetchUpdatedData?: boolean;
-  query?: {
-    condition: Condition;
-  };
+  query?: Query<any>;
   ignoreHooks?: HookName[];
 }
 
@@ -100,7 +98,7 @@ export class LCObjectReference<T> {
         path: `/1.1/classes/${this.className}/${this.id}`,
         query: {
           fetchWhenSave: options?.fetchUpdatedData,
-          where: options?.query?.condition,
+          where: options?.query?.params.where,
         },
         body,
       },
