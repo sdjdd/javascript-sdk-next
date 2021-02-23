@@ -5,8 +5,8 @@ import type {
   DeleteObjectOptions,
   EncodeOptions,
   GetObjectOptions,
-  INTERNAL_LCObject,
-  INTERNAL_LCObjectReference,
+  LCObject,
+  LCObjectReference,
   Query,
   UpdateObjectOptions,
 } from '../../core';
@@ -18,10 +18,10 @@ interface RoleSubject {
 }
 
 export class RoleReference {
-  private _ref: INTERNAL_LCObjectReference<Role>;
+  private _ref: LCObjectReference<Role>;
 
   constructor(app: App, id: string) {
-    this._ref = app.database().class('_Role', Role.fromJSON).object(id) as any;
+    this._ref = app.database().class('_Role', Role.fromJSON).object(id);
   }
 
   get app() {
@@ -131,17 +131,17 @@ export class RoleReference {
   }
 
   toJSON() {
-    return this._LC_encode();
+    return this._ref.toJSON();
   }
 
   protected _LC_encode() {
-    return this._ref._LC_encode();
+    return this.toJSON();
   }
 }
 
 export class Role {
   private _ref: RoleReference;
-  private _object: INTERNAL_LCObject;
+  private _object: LCObject;
 
   get app() {
     return this._object.app;
@@ -211,6 +211,11 @@ export class Role {
   }
 
   protected _LC_encode(options?: EncodeOptions) {
-    return this._object._LC_encode(options);
+    // @ts-ignore
+    const encoded = this._object._LC_encode(options);
+    // hide relations
+    delete encoded.users;
+    delete encoded.roles;
+    return encoded;
   }
 }

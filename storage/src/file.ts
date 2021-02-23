@@ -1,11 +1,7 @@
-import { App, DeleteObjectOptions, EncodeOptions, INTERNAL_LCObject, LCObject } from '../../core';
+import { App, DeleteObjectOptions, EncodeOptions, LCObject } from '../../core';
 
 export class LCFile {
-  private _object: INTERNAL_LCObject;
-
-  constructor(object: LCObject) {
-    this._object = object as any;
-  }
+  constructor(private _object: LCObject) {}
 
   get app() {
     return this._object.app;
@@ -57,6 +53,7 @@ export class LCFile {
   }
 
   protected _LC_encode(options?: EncodeOptions) {
+    // @ts-ignore
     const encoded = this._object._LC_encode(options);
     if (encoded.__type === 'Object') {
       encoded.__type = 'File';

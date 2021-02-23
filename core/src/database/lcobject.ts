@@ -230,18 +230,6 @@ export class LCObject {
   }
 }
 
-// @ts-ignore
-export interface INTERNAL_LCObjectReference<T> extends LCObjectReference<T> {
-  _LC_encode(): Record<string, any>;
-}
-
-// @ts-ignore
-export interface INTERNAL_LCObject extends LCObject {
-  _rawData: Record<string, any>;
-  _LC_getData(): Record<string, any>;
-  _LC_encode(options?: EncodeOptions): Record<string, any>;
-}
-
 function getLCObjectData(data: any): any {
   if (data) {
     if (typeof data._LC_getData === 'function') {
@@ -257,21 +245,16 @@ function getLCObjectData(data: any): any {
   return data;
 }
 
-export interface Encodeable {
-  _LC_encode: (...args: any[]) => any;
-}
-
-export function isEncodeable(value: any): value is Encodeable {
-  return value && typeof value._LC_encode === 'function';
-}
-
 export function LCEncode(data: any, options?: EncodeOptions): any {
   if (!data) {
     return data;
   }
 
-  if (isEncodeable(data)) {
-    return data._LC_encode(options);
+  if (data._LC_encode) {
+    if (typeof data._LC_encode === 'function') {
+      return data._LC_encode(options);
+    }
+    return LCEncode(data._LC_encode, options);
   }
 
   if (isDate(data)) {

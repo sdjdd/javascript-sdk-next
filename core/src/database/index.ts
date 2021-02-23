@@ -5,8 +5,6 @@ export * from './database';
 export {
   LCObject,
   LCObjectReference,
-  INTERNAL_LCObject,
-  INTERNAL_LCObjectReference,
   EncodeOptions,
   GetObjectOptions,
   UpdateObjectOptions,

@@ -5,7 +5,6 @@ import type {
   DeleteObjectOptions,
   EncodeOptions,
   GetObjectOptions,
-  INTERNAL_LCObject,
   LCObject,
   UpdateObjectOptions,
 } from '../../core';
@@ -13,17 +12,7 @@ import type {
 export type UpdateUserOptions = Omit<UpdateObjectOptions, 'sessionToken'>;
 
 export class User {
-  private _object: INTERNAL_LCObject;
-
-  constructor(object: LCObject);
-  constructor(app: App, id: string);
-  constructor(arg1: any, arg2?: any) {
-    if (arg2) {
-      this._object = (arg1 as App).database().class('_User').object(arg2) as any;
-    } else {
-      this._object = arg1;
-    }
-  }
+  constructor(private _object: LCObject) {}
 
   get app() {
     return this._object.app;
@@ -92,6 +81,7 @@ export class User {
     user.app.payload[KEY_CURRENT_USER] = user;
     await user.app.localStorage.setAsync(
       KEY_CURRENT_USER,
+      // @ts-ignore
       JSON.stringify(user._object._LC_encode())
     );
   }
@@ -155,7 +145,9 @@ export class User {
       sessionToken: string;
       updatedAt: string;
     };
+    // @ts-ignore
     this._object._rawData.sessionToken = sessionToken;
+    // @ts-ignore
     this._object._rawData.updatedAt = updatedAt;
     this.data.sessionToken = sessionToken;
     this.data.updatedAt = new Date(updatedAt);
@@ -231,12 +223,14 @@ export class User {
     return this._object.toJSON();
   }
 
-  private _merge(obj: INTERNAL_LCObject): void {
+  private _merge(obj: LCObject): void {
+    // @ts-ignore
     Object.assign(this._object._rawData, obj._rawData);
     Object.assign(this.data, obj.data);
   }
 
   protected _LC_encode(options?: EncodeOptions) {
+    // @ts-ignore
     return this._object._LC_encode(options);
   }
 }
