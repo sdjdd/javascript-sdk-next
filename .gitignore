@@ -1,6 +1,7 @@
 node_modules
 dist
 /tools/repl/.history
+/browser/*.min.js
 
 # temp
 /env.js
