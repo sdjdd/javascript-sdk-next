@@ -25,37 +25,35 @@ function setAuthHooks(authClass: typeof Auth): void {
   });
 }
 
-export const name = 'live-query';
+export const liveQueryModule = {
+  name: 'liveQuery',
+  components: { debug },
+  onLoad: (runtime: Runtime) => {
+    const { adapters, event, modules } = runtime;
+    setAdapters(adapters);
+    event.on('adapters:set', setAdapters);
 
-export function onLoad(runtime: Runtime): void {
-  const { adapters, event, modules } = runtime;
-  setAdapters(adapters);
-  event.on('adapters:set', setAdapters);
-
-  const { App, Query } = modules.core.components;
-  App.prototype.pause = function () {
-    this.payload.realtime?.pause();
-  };
-  App.prototype.resume = function () {
-    this.payload.realtime?.resume();
-  };
-  Query.prototype.subscribe = function (options) {
-    return new Subscription(this, options).subscribe();
-  };
-
-  if (modules.auth) {
-    setAuthHooks(modules.auth.components.Auth);
-  } else {
-    const listener = (module: Module) => {
-      if (module.name === 'auth') {
-        event.off('module:load', listener);
-        setAuthHooks(module.components.Auth);
-      }
+    const { App, Query } = modules.core.components;
+    App.prototype.pause = function () {
+      this.payload.realtime?.pause();
     };
-    event.on('module:load', listener);
-  }
-}
+    App.prototype.resume = function () {
+      this.payload.realtime?.resume();
+    };
+    Query.prototype.subscribe = function (options) {
+      return new Subscription(this, options).subscribe();
+    };
 
-export const components = {
-  debug,
+    if (modules.auth) {
+      setAuthHooks(modules.auth.components.Auth);
+    } else {
+      const listener = (module: Module) => {
+        if (module.name === 'auth') {
+          event.off('module:load', listener);
+          setAuthHooks(module.components.Auth);
+        }
+      };
+      event.on('module:load', listener);
+    }
+  },
 };

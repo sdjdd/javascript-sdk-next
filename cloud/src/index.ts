@@ -1,3 +1,4 @@
+import type { Runtime } from '../../core';
 import { Cloud } from './cloud';
 
 declare module '../../core' {
@@ -6,12 +7,14 @@ declare module '../../core' {
   }
 }
 
-export const name = 'cloud';
-export function onLoad({ modules }): void {
-  const { App } = modules.core.components;
-  App.prototype.cloud = function () {
-    return new Cloud(this);
-  };
-}
-
 export * from './cloud';
+export const cloudModule = {
+  name: 'cloud',
+  components: { Cloud },
+  onLoad: ({ modules }: Runtime) => {
+    const { App } = modules.core.components;
+    App.prototype.cloud = function () {
+      return new Cloud(this);
+    };
+  },
+};

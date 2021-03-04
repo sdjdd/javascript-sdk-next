@@ -1,3 +1,4 @@
+import type { Runtime } from '../../core';
 import { FullTextSearch } from './search';
 
 declare module '../../core' {
@@ -6,12 +7,14 @@ declare module '../../core' {
   }
 }
 
-export const name = 'search';
-export function onLoad({ modules }): void {
-  const { Database } = modules.core.components;
-  Database.prototype.search = function (className?: string) {
-    return new FullTextSearch(this.app, className);
-  };
-}
-
 export * from './search';
+export const searchModule = {
+  name: 'search',
+  components: { Search: FullTextSearch },
+  onLoad: ({ modules }: Runtime) => {
+    const { Database } = modules.core.components;
+    Database.prototype.search = function (className?: string) {
+      return new FullTextSearch(this.app, className);
+    };
+  },
+};

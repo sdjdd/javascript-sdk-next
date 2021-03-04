@@ -10,21 +10,16 @@ declare module '../../core' {
   }
 }
 
-export const name = 'storage';
-
-export const components = {
-  providers,
-  Storage,
-  LCFile,
-};
-
-export function onLoad(runtime: Runtime): void {
-  setSDKRuntime(runtime);
-  const { App } = runtime.modules.core.components;
-  App.prototype.storage = function () {
-    return new Storage(this);
-  };
-}
-
 export * from './storage';
 export * from './provider';
+export const storageModule = {
+  name: 'storage',
+  components: { providers, Storage, LCFile },
+  onLoad: (runtime: Runtime) => {
+    setSDKRuntime(runtime);
+    const { App } = runtime.modules.core.components;
+    App.prototype.storage = function () {
+      return new Storage(this);
+    };
+  },
+};

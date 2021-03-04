@@ -1,12 +1,12 @@
 const LC = require('../..');
 const adapters = require('@leancloud/platform-adapters-node');
-const debug = require('../../debug');
+const { debugModule } = require('../../debug');
 const env = require('../../env');
 
 LC.setAdapters(adapters);
-LC.use(debug);
+LC.use(debugModule);
 
-debug.enable('LC:*');
+debugModule.enable('LC:*');
 
 const app = LC.init(env.cn_n1);
 

@@ -10,22 +10,17 @@ declare module '../../core' {
   }
 }
 
-export const name = 'auth';
-
-export const components = {
-  Auth,
-  User,
-  Role,
-};
-
-export function onLoad(runtime: Runtime): void {
-  setSDKRuntime(runtime);
-  const { App } = runtime.modules.core.components;
-  App.prototype.auth = function () {
-    return new Auth(this);
-  };
-  setHooks(App);
-}
-
 export { Auth };
 export * from './user';
+export const authModule = {
+  name: 'auth',
+  components: { Auth, User, Role },
+  onLoad: (runtime: Runtime) => {
+    setSDKRuntime(runtime);
+    const { App } = runtime.modules.core.components;
+    App.prototype.auth = function () {
+      return new Auth(this);
+    };
+    setHooks(App);
+  },
+};

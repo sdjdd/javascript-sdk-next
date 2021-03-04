@@ -11,7 +11,7 @@ import {
 } from './lcobject';
 import * as operation from './operation';
 import { Pipeline } from './pipeline';
-import { queryCommand } from './query';
+import { Query, queryCommand } from './query';
 import { GeoPoint } from './geo';
 
 export { operation };
@@ -22,9 +22,18 @@ export class Database {
 
   constructor(public readonly app: App) {}
 
+  query(className: string): Query<LCObject>;
+  query<T>(className: string, decoder: LCObjectDecoder<T>): Query<T>;
+  query<T>(className: string, decoder?: LCObjectDecoder<T>): Query<LCObject> | Query<T> {
+    if (decoder) {
+      return new Query(this.app, className, decoder);
+    }
+    return new Query(this.app, className, LCObject.fromJSON);
+  }
+
   class(name: string): Class<LCObject>;
   class<T>(name: string, decoder: LCObjectDecoder<T>): Class<T>;
-  class<T>(name: string, decoder?: LCObjectDecoder<T>): any {
+  class<T>(name: string, decoder?: LCObjectDecoder<T>): Class<LCObject> | Class<T> {
     if (decoder) {
       return new Class(this.app, name, decoder);
     }
