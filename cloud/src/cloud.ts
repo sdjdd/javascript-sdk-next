@@ -16,6 +16,17 @@ export interface PushOptions extends AuthOptions {
   notificationChannel?: string;
 }
 
+export interface SMSOptions extends AuthOptions {
+  smsType?: 'voice' | 'sms';
+  ttl?: number;
+  name?: string;
+  op?: string;
+  template?: string;
+  sign?: string;
+  validateToken?: string;
+  variables?: Record<string, string>;
+}
+
 export class Cloud {
   constructor(public readonly app: App) {}
 
@@ -82,6 +93,42 @@ export class Cloud {
           flow_control: options?.flowControl,
           _notificationChannel: options?.notificationChannel,
         },
+      },
+      options
+    );
+  }
+
+  async requestSMSCode(mobilePhoneNumber: string, options?: SMSOptions): Promise<void> {
+    await this.app.request(
+      {
+        method: 'POST',
+        path: '/1.1/requestSmsCode',
+        body: {
+          ...options?.variables,
+          mobilePhoneNumber,
+          smsType: options?.smsType,
+          ttl: options?.ttl,
+          name: options?.name,
+          op: options?.op,
+          template: options?.template,
+          sign: options?.sign,
+          validate_token: options?.validateToken,
+        },
+      },
+      options
+    );
+  }
+
+  async verifySMSCode(
+    mobilePhoneNumber: string,
+    smsCode: string,
+    options?: AuthOptions
+  ): Promise<void> {
+    await this.app.request(
+      {
+        method: 'POST',
+        path: `/1.1/verifySmsCode/${smsCode}`,
+        body: { mobilePhoneNumber },
       },
       options
     );
