@@ -24,7 +24,7 @@
     "build:storage": "rm -rf storage/dist && rollup -c storage/rollup.config.js",
     "build:live-query": "rm -rf live-query/dist && rollup -c live-query/rollup.config.js",
     "build:cdn": "rm -rf browser/*.min.js && rollup -c cdn.rollup.config.js",
-    "build": "npm run build:core && npm run build:auth && npm run build:search && npm run build:debug && npm run build:storage && npm run build:cloud && npm run build:live-query",
+    "build": "npm run build:core && npm run build:auth && npm run build:search && npm run build:debug && npm run build:storage && npm run build:cloud && npm run build:live-query && npm run build:cdn",
     "test:core": "mocha core/test/**/*.test.ts",
     "repl": "node tools/repl"
   },
