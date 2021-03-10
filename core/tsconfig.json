@@ -5,7 +5,8 @@
     "declaration": true,
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "removeComments": true
   },
   "include": [
     "src/**/*"

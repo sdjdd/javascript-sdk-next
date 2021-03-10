@@ -127,7 +127,7 @@ function subscribe(
         query: {
           className,
           where: params.where || {},
-          // TODO: 有问题, 待查明: https://github.com/leancloud/javascript-sdk/issues/637
+          // XXX: 有问题, 待查明: https://github.com/leancloud/javascript-sdk/issues/637
           // keys: (params.keys as string)?.split(','),
           returnACL: params.returnACL || undefined,
         },

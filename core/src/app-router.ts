@@ -15,7 +15,7 @@ interface ServerURLs {
 
 export type Service = 'api' | 'engine' | 'push';
 
-export function isCNApp(app: { appId: string }): boolean {
+export function isCNApp(app: App): boolean {
   return app.appId.slice(-9) !== '-MdYXbMMI';
 }
 

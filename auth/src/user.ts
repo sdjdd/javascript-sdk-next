@@ -59,9 +59,12 @@ export class User {
     return new User(app.database().decodeObject(json, '_User'));
   }
 
-  static getCurrent(app: App): User | null {
+  static getCurrent(app: App, cachedOnly = false): User | null {
     if (KEY_CURRENT_USER in app.payload) {
       return app.payload[KEY_CURRENT_USER];
+    }
+    if (cachedOnly) {
+      return null;
     }
     const user_str = app.localStorage.get(KEY_CURRENT_USER);
     app.payload[KEY_CURRENT_USER] = user_str ? User.fromJSON(app, JSON.parse(user_str)) : null;

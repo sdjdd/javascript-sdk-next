@@ -26,11 +26,11 @@ export const hookNames = [
 export type HookName = typeof hookNames[number];
 
 export function assertCanIgnoreHooks(app: App, options?: AuthOptions): void | never {
-  if (!app.hookKey) {
-    if (!app.masterKey) {
+  if (!app.config.hookKey) {
+    if (!app.config.masterKey) {
       throw new Error('Cannot ignore hooks when both hookKey and masterKey is not set');
     }
-    if (options?.useMasterKey === false || (!options?.useMasterKey && !app.useMasterKey)) {
+    if (options?.useMasterKey === false || (!options?.useMasterKey && !app.config.useMasterKey)) {
       throw new Error('Cannot ignore hooks when useMasterKey is false');
     }
   }

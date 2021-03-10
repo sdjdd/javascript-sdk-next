@@ -1,6 +1,13 @@
 import type { App, AuthOptions, Query } from '../../core';
 import { Captcha, RequestCaptchaOptions } from './captcha';
 
+export interface RPCOptions extends AuthOptions {
+  /**
+   * default is `true`.
+   */
+  production?: boolean;
+}
+
 export interface PushOptions extends AuthOptions {
   query?: Query<any>;
   channels?: string[];
@@ -42,12 +49,18 @@ export class Cloud {
     return new Captcha(this.app).refresh(options);
   }
 
-  async run(funcName: string, param?: any, options?: AuthOptions): Promise<any> {
+  async run(funcName: string, param: any = {}, options?: RPCOptions): Promise<any> {
     const { result } = await this.app.request(
       {
         method: 'POST',
         service: 'engine',
         path: `/1.1/functions/${funcName}`,
+        header:
+          options?.production === undefined
+            ? undefined
+            : {
+                'X-LC-Prod': options.production ? undefined : '0',
+              },
         body: this.app.database().encode(param),
       },
       options
@@ -55,13 +68,19 @@ export class Cloud {
     return result;
   }
 
-  async rpc(funcName: string, param?: any, options?: AuthOptions): Promise<any> {
+  async rpc(funcName: string, param: any = {}, options?: RPCOptions): Promise<any> {
     const db = this.app.database();
     const { result } = await this.app.request(
       {
         method: 'POST',
         service: 'engine',
         path: `/1.1/call/${funcName}`,
+        header:
+          options?.production === undefined
+            ? undefined
+            : {
+                'X-LC-Prod': options.production ? undefined : '0',
+              },
         body: db.encode(param),
       },
       options

@@ -50,6 +50,10 @@ export class Auth {
     beforeLogOut: [],
   };
 
+  get currentUser(): User | null {
+    return this.getCurrentUser();
+  }
+
   constructor(public readonly app: App) {}
 
   user(id: string) {
@@ -96,11 +100,11 @@ export class Auth {
     return this.app.database().class('_Role', Role.fromJSON);
   }
 
-  currentUser(): User | null {
-    return User.getCurrent(this.app);
+  getCurrentUser(cachedOnly = false): User | null {
+    return User.getCurrent(this.app, cachedOnly);
   }
 
-  currentUserAsync(): Promise<User | null> {
+  getCurrentUserAsync(): Promise<User | null> {
     return User.getCurrentAsync(this.app);
   }
 

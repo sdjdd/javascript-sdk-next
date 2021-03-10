@@ -45,11 +45,7 @@ export class App {
     beforeInvokeAPI: [] as BeforeInvokeAPI[],
   };
 
-  readonly appId: string;
-  readonly appKey: string;
-  readonly hookKey?: string;
-  readonly masterKey?: string;
-  readonly serverURL?: string;
+  readonly config: AppConfig;
 
   readonly log = {
     trace: (label: string, data: Record<string, any>) => {
@@ -66,41 +62,41 @@ export class App {
   readonly payload: Record<string, any> = {};
   readonly localStorage: NamespacedStorage;
 
-  useMasterKey: boolean;
-  production: boolean;
-
   private _router?: AppRouter;
+
+  get appId() {
+    return this.config.appId;
+  }
+  get appKey() {
+    return this.config.appKey;
+  }
+  get serverURL() {
+    return this.config.serverURL;
+  }
 
   constructor(config: AppConfig) {
     if (!config) {
-      throw new Error('请提供必要的信息来初始化 App');
+      throw new Error('Missing App config');
     }
-    const { appId, appKey, masterKey, serverURL } = config;
-    if (!appId) {
-      throw new Error('初始化 App 时必须提供 appId');
-    }
-    if (!appKey) {
-      throw new Error('初始化 App 时必须提供 appKey');
-    }
-    this.appId = appId;
-    this.appKey = appKey;
+    this.config = config;
 
-    if (!serverURL) {
+    if (!this.config.appId) {
+      throw new Error('The appId must be provided');
+    }
+    if (!this.config.appKey) {
+      throw new Error('The appKey must be provided');
+    }
+    if (!this.config.serverURL) {
       if (isCNApp(this)) {
-        throw new Error('初始化 App 时必须提供 serverURL');
+        throw new Error('The serverURL must be provided for CN App');
       }
       this._router = new AppRouter(this);
     }
-    this.serverURL = serverURL;
-
-    if (masterKey) {
-      this.masterKey = masterKey.endsWith(',master') ? masterKey : masterKey + ',master';
+    if (this.config.production === undefined) {
+      this.config.production = true;
     }
 
-    this.useMasterKey = Boolean(config.useMasterKey);
-    this.production = Boolean(config.production ?? true);
-    this.localStorage = new NamespacedStorage(localStorage, appId);
-    this.hookKey = config.hookKey;
+    this.localStorage = new NamespacedStorage(localStorage, this.config.appId);
   }
 
   database(): Database {
@@ -112,9 +108,9 @@ export class App {
     options = clone(options);
     await Promise.all(App.hooks.beforeInvokeAPI.map((h) => h(this, request, options)));
 
-    const useMasterKey = options?.useMasterKey ?? this.useMasterKey;
-    if (useMasterKey && !this.masterKey) {
-      throw new Error('useMasterKey 已开启，但 masterKey 为空');
+    const useMasterKey = options?.useMasterKey ?? this.config.useMasterKey;
+    if (useMasterKey && !this.config.masterKey) {
+      throw new Error('The useMasterKey option is on，but masterKey is not set');
     }
 
     const url = this.serverURL || (await this._router.getServiceURL(request.service || 'api'));
@@ -123,14 +119,14 @@ export class App {
       ...request,
       url: trimEnd(url, '/ ') + '/' + trimStart(request.path, '/ '),
       header: {
+        'X-LC-Prod': this.config.production ? undefined : '0',
         ...request.header,
         'Content-Type': 'application/json',
         'X-LC-UA': getUserAgent(),
         'X-LC-Id': this.appId,
-        'X-LC-Key': useMasterKey ? this.masterKey : this.appKey,
+        'X-LC-Key': useMasterKey ? this.config.masterKey + ',master' : this.appKey,
         'X-LC-Session': options?.sessionToken,
-        'X-LC-Prod': this.production ? undefined : '0',
-        'X-LC-Hook-Key': this.hookKey,
+        'X-LC-Hook-Key': this.config.hookKey,
       },
     });
 

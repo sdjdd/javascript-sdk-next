@@ -4,7 +4,7 @@ export enum ErrorName {
 }
 
 export const DEFAULT_ERROR_MESSAGE = {
-  [ErrorName.ASYNC_STORAGE]: '当前平台提供了异步的数据存储功能，请使用异步方法执行当前操作',
+  [ErrorName.ASYNC_STORAGE]: '当前平台提供了异步的数据存储功能，请使用异步方法执行该操作',
 };
 
 export class SDKError extends Error {
@@ -15,6 +15,7 @@ export class SDKError extends Error {
   }
 }
 
+// TODO: 考虑下是否增加 HTTP Status
 export class APIError extends Error {
   constructor(public code: number, public error: string) {
     super(`code: ${code}, error: ${error}`);
