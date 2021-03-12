@@ -115,20 +115,23 @@ export class App {
 
     const url = this.serverURL || (await this._router.getServiceURL(request.service || 'api'));
 
-    const { status, body } = await doHTTPRequest({
-      ...request,
-      url: trimEnd(url, '/ ') + '/' + trimStart(request.path, '/ '),
-      header: {
-        'X-LC-Prod': this.config.production ? undefined : '0',
-        ...request.header,
-        'Content-Type': 'application/json',
-        'X-LC-UA': getUserAgent(),
-        'X-LC-Id': this.appId,
-        'X-LC-Key': useMasterKey ? this.config.masterKey + ',master' : this.appKey,
-        'X-LC-Session': options?.sessionToken,
-        'X-LC-Hook-Key': this.config.hookKey,
+    const { status, body } = await doHTTPRequest(
+      {
+        ...request,
+        url: trimEnd(url, '/ ') + '/' + trimStart(request.path, '/ '),
+        header: {
+          'X-LC-Prod': this.config.production ? undefined : '0',
+          ...request.header,
+          'Content-Type': 'application/json',
+          'X-LC-UA': getUserAgent(),
+          'X-LC-Id': this.appId,
+          'X-LC-Key': useMasterKey ? this.config.masterKey + ',master' : this.appKey,
+          'X-LC-Session': options?.sessionToken,
+          'X-LC-Hook-Key': this.config.hookKey,
+        },
       },
-    });
+      options
+    );
 
     if (status >= 400) {
       const { code, error } = body;

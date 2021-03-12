@@ -100,10 +100,11 @@ export async function upload(
   log.trace('upload:send', { id, request });
 
   const response = await upload(url, request.file, {
-    ...options,
     method: request.method,
     headers: request.header,
     data: request.form,
+    signal: options?.abortSignal,
+    onprogress: options?.onProgress,
   }).then(convertResponse);
 
   log.trace('upload:recv', { id, response });
