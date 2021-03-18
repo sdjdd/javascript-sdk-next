@@ -39,7 +39,7 @@ export function isConstraint(value: any): value is Constraint {
 }
 
 function encode(value: any): any {
-  return LCEncode(value, { pointer: true });
+  return LCEncode(value, { preferPointer: true });
 }
 
 export class EqualConstraint implements Constraint {

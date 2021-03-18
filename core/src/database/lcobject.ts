@@ -53,17 +53,17 @@ export interface DeleteObjectOptions extends AuthOptions {
 }
 
 export interface EncodeOptions {
-  pointer?: boolean;
+  preferPointer?: boolean;
 }
 
 export type LCObjectDecoder<T = any> = (app: App, data: any, className: string) => T;
 
-export class LCObjectReference<T> {
+export class LCObjectReference<T = unknown> {
   constructor(
     public readonly app: App,
     public readonly className: string,
     public readonly id: string,
-    protected _decoder: LCObjectDecoder
+    protected _decoder: LCObjectDecoder<T>
   ) {}
 
   async get(options?: GetObjectOptions): Promise<T> {
@@ -196,7 +196,7 @@ export class LCObject {
   }
 
   protected _LC_encode(options?: EncodeOptions): Record<string, any> {
-    if (options?.pointer) {
+    if (options?.preferPointer) {
       return this._ref.toJSON();
     }
     return {
@@ -271,7 +271,7 @@ export function LCEncode(data: any, options?: EncodeOptions): any {
 }
 
 export function encodeObjectData(data: Record<string, any>): Record<string, any> {
-  return LCEncode(omitReservedKeys(data), { pointer: true });
+  return LCEncode(omitReservedKeys(data), { preferPointer: true });
 }
 
 export function LCDecode(app: App, data: any): any {
@@ -299,10 +299,13 @@ export function LCDecode(app: App, data: any): any {
   return data;
 }
 
-export function isLCObjectRef<T>(value: T): value is LCObjectReference<any> & T {
-  return value && (value instanceof LCObjectReference || (value as any)._isLCObjectRef === true);
-}
-
 export function isLCObject<T>(value: T): value is LCObject & T {
   return value && (value instanceof LCObject || (value as any)._isLCObject === true);
+}
+
+export function isLCObjectRef<T>(value: T): value is LCObjectReference & T {
+  return (
+    isLCObject(value) ||
+    (value && (value instanceof LCObjectReference || (value as any)._isLCObjectRef === true))
+  );
 }

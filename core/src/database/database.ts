@@ -2,12 +2,12 @@ import type { App } from '../app';
 import { ACL, ACLPrivilege } from './acl';
 import { Class } from './class';
 import {
-  encodeObjectData,
   EncodeOptions,
   LCDecode,
   LCEncode,
   LCObject,
   LCObjectDecoder,
+  encodeObjectData,
 } from './lcobject';
 import * as operation from './operation';
 import { Pipeline } from './pipeline';
