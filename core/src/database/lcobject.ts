@@ -20,7 +20,7 @@ export const hookNames = [
   'beforeUpdate',
   'afterUpdate',
   'beforeDelete',
-  'beforeDelete',
+  'afterDelete',
 ] as const;
 
 export type HookName = typeof hookNames[number];
