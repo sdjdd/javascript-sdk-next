@@ -298,3 +298,11 @@ export function LCDecode(app: App, data: any): any {
   }
   return data;
 }
+
+export function isLCObjectRef<T>(value: T): value is LCObjectReference<any> & T {
+  return value instanceof LCObjectReference || (value as any)._isLCObjectRef === true;
+}
+
+export function isLCObject<T>(value: T): value is LCObject & T {
+  return value instanceof LCObject || (value as any)._isLCObject === true;
+}

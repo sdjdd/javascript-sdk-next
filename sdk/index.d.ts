@@ -1,7 +1,7 @@
 export * from '../core';
 
-import '../auth';
-import '../search';
-import '../cloud';
-import '../storage';
-import '../live-query';
+export * from '../auth';
+export * from '../search';
+export * from '../cloud';
+export * from '../storage';
+export * from '../live-query';

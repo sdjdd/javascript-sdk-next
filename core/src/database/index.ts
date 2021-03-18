@@ -9,4 +9,6 @@ export {
   GetObjectOptions,
   UpdateObjectOptions,
   DeleteObjectOptions,
+  isLCObject,
+  isLCObjectRef,
 } from './lcobject';

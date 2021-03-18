@@ -11,6 +11,7 @@ import type {
 
 export type UpdateUserOptions = Omit<UpdateObjectOptions, 'sessionToken'>;
 
+// TODO: 实现 UserReference
 export class User {
   constructor(private _object: LCObject) {}
 
@@ -236,6 +237,8 @@ export class User {
     // @ts-ignore
     return this._object._LC_encode(options);
   }
+
+  protected _isLCObject = true;
 }
 
 export type UserReference = Pick<User, 'app' | 'className' | 'id' | 'get' | 'update' | 'delete'>;

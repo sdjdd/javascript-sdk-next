@@ -137,6 +137,8 @@ export class RoleReference {
   protected _LC_encode() {
     return this.toJSON();
   }
+
+  protected _isLCObjectRef = true;
 }
 
 export class Role {
@@ -218,4 +220,6 @@ export class Role {
     delete encoded.roles;
     return encoded;
   }
+
+  protected _isLCObject = true;
 }

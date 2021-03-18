@@ -60,4 +60,6 @@ export class LCFile {
     }
     return encoded;
   }
+
+  protected _isLCObject = true;
 }
