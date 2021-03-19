@@ -11,7 +11,6 @@ import type {
 
 export type UpdateUserOptions = Omit<UpdateObjectOptions, 'sessionToken'>;
 
-// TODO: 实现 UserReference
 export class User {
   constructor(private _object: LCObject) {}
 
@@ -157,6 +156,26 @@ export class User {
     this.data.updatedAt = new Date(updatedAt);
   }
 
+  async refreshSessionToken(options?: Omit<AuthOptions, 'sessionToken'>): Promise<string> {
+    const { sessionToken, updatedAt } = await this.app.request(
+      {
+        method: 'PUT',
+        path: `/1.1/users/${this.id}/refreshSessionToken`,
+      },
+      {
+        ...options,
+        sessionToken: this.sessionToken,
+      }
+    );
+    // @ts-ignore
+    this._object._rawData.sessionToken = sessionToken;
+    // @ts-ignore
+    this._object._rawData.updatedAt = updatedAt;
+    this.data.sessionToken = sessionToken;
+    this.data.updatedAt = new Date(updatedAt);
+    return sessionToken;
+  }
+
   associateWithAuthData(
     platform: string,
     authDataItem: Record<string, any>,
@@ -240,5 +259,3 @@ export class User {
 
   protected _isLCObject = true;
 }
-
-export type UserReference = Pick<User, 'app' | 'className' | 'id' | 'get' | 'update' | 'delete'>;

@@ -3,7 +3,7 @@ import { v4 as uuid_v4 } from 'uuid';
 import type { ACL, AddObjectOptions, App, AuthOptions, Query } from '../../core';
 import { Role, RoleReference } from './role';
 import { SDKRuntime } from './runtime';
-import { User, UserReference } from './user';
+import { User } from './user';
 
 export function setHooks(appClass: typeof App): void {
   appClass.beforeInvokeAPI(async (app, request, options) => {
@@ -33,10 +33,10 @@ export interface AuthOptionsWithCaptchaToken extends AuthOptions {
 }
 
 interface AddRoleData {
-  ACL: ACL;
+  ACL: ACL | Record<string, { read?: true; write?: true }>;
   name: string;
-  users?: UserReference[] | UserReference;
-  roles?: RoleReference[] | RoleReference;
+  users?: User[] | User;
+  roles?: RoleReference[] | RoleReference | Role[] | Role;
 }
 
 export interface AuthHooks {
@@ -309,7 +309,7 @@ export class Auth {
     return this.app.request(
       {
         method: 'POST',
-        path: '/1.1/requestPasswordResetBySmsCode',
+        path: '/1.1/requestPasswordReset',
         body: { email },
       },
       options
@@ -387,6 +387,31 @@ export class Auth {
       },
       options
     );
+  }
+
+  async refreshUserSessionToken(
+    userId: string,
+    options?: Omit<AuthOptions, 'useMasterKey'>
+  ): Promise<string> {
+    if (!this.app.config.masterKey) {
+      throw new Error("The masterKey is required when refresh user's sessionToken");
+    }
+    const { sessionToken } = await this.app.request(
+      {
+        method: 'PUT',
+        path: `/1.1/users/${userId}/refreshSessionToken`,
+      },
+      {
+        ...options,
+        useMasterKey: true,
+      }
+    );
+    // TODO: 考虑下要不要自动更新当前用户的 sessionToken 而不是登出
+    const currentUser = await this.getCurrentUserAsync();
+    if (currentUser?.id === userId) {
+      await this.logOut();
+    }
+    return sessionToken;
   }
 
   private async _decodeAndSetCurrent(data: any): Promise<User> {
