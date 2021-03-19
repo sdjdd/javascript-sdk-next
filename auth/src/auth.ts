@@ -3,7 +3,7 @@ import { v4 as uuid_v4 } from 'uuid';
 import type { ACL, AddObjectOptions, App, AuthOptions, Query } from '../../core';
 import { Role, RoleReference } from './role';
 import { SDKRuntime } from './runtime';
-import { User } from './user';
+import { User, UserReference } from './user';
 
 export function setHooks(appClass: typeof App): void {
   appClass.beforeInvokeAPI(async (app, request, options) => {
@@ -35,7 +35,7 @@ export interface AuthOptionsWithCaptchaToken extends AuthOptions {
 interface AddRoleData {
   ACL: ACL | Record<string, { read?: true; write?: true }>;
   name: string;
-  users?: User[] | User;
+  users?: UserReference[] | UserReference | User[] | User;
   roles?: RoleReference[] | RoleReference | Role[] | Role;
 }
 
@@ -56,8 +56,8 @@ export class Auth {
 
   constructor(public readonly app: App) {}
 
-  user(id: string) {
-    return this.app.database().class('_User').object(id);
+  user(id: string): UserReference {
+    return new UserReference(this.app, id);
   }
 
   role(id: string): RoleReference {
@@ -67,7 +67,7 @@ export class Auth {
   async addRole(data: AddRoleData, options?: AddObjectOptions): Promise<Role> {
     const { ACL, name, users, roles } = data;
     if (!data.ACL || !data.name) {
-      throw new Error('创建角色时必须提供 name 和 ACL');
+      throw new Error('The role name and ACL is required');
     }
 
     const db = this.app.database();
@@ -387,31 +387,6 @@ export class Auth {
       },
       options
     );
-  }
-
-  async refreshUserSessionToken(
-    userId: string,
-    options?: Omit<AuthOptions, 'useMasterKey'>
-  ): Promise<string> {
-    if (!this.app.config.masterKey) {
-      throw new Error("The masterKey is required when refresh user's sessionToken");
-    }
-    const { sessionToken } = await this.app.request(
-      {
-        method: 'PUT',
-        path: `/1.1/users/${userId}/refreshSessionToken`,
-      },
-      {
-        ...options,
-        useMasterKey: true,
-      }
-    );
-    // TODO: 考虑下要不要自动更新当前用户的 sessionToken 而不是登出
-    const currentUser = await this.getCurrentUserAsync();
-    if (currentUser?.id === userId) {
-      await this.logOut();
-    }
-    return sessionToken;
   }
 
   private async _decodeAndSetCurrent(data: any): Promise<User> {

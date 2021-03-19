@@ -15,7 +15,7 @@ use({
 export * from './database';
 export { setAdapters } from './adapters';
 export { App, AppConfig, AuthOptions } from './app';
-export { HTTPRequest, HTTPResponse } from './http';
+export { HTTPRequest, HTTPRequestOptions, HTTPResponse } from './http';
 export { Module, Runtime } from './runtime';
 export * from './version';
 

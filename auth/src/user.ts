@@ -5,11 +5,66 @@ import type {
   DeleteObjectOptions,
   EncodeOptions,
   GetObjectOptions,
+  HTTPRequestOptions,
   LCObject,
+  LCObjectReference,
   UpdateObjectOptions,
 } from '../../core';
 
 export type UpdateUserOptions = Omit<UpdateObjectOptions, 'sessionToken'>;
+
+export class UserReference {
+  private _ref: LCObjectReference;
+
+  constructor(app: App, id: string) {
+    this._ref = app.database().class('_User').object(id);
+  }
+
+  get app(): App {
+    return this._ref.app;
+  }
+  get className(): string {
+    return this._ref.className;
+  }
+  get id(): string {
+    return this._ref.id;
+  }
+
+  async refreshSessionToken(options?: HTTPRequestOptions): Promise<string> {
+    if (!this.app.config.masterKey) {
+      throw new Error('The masterKey is required when refresh user sessionToken by reference');
+    }
+    const { sessionToken } = await this.app.request(
+      {
+        method: 'PUT',
+        path: `/1.1/users/${this.id}/refreshSessionToken`,
+      },
+      {
+        ...options,
+        useMasterKey: true,
+        sessionToken: undefined,
+      }
+    );
+    // TODO: 如果刷新的是当前登录用户的 sessionToken, 应该如何处理?
+    return sessionToken;
+  }
+
+  async dissociateAuthData(platform: string, options: HTTPRequestOptions): Promise<void> {
+    const db = this.app.database();
+    await this.update({ [`authData.${platform}`]: db.op.unset() }, options);
+  }
+
+  async update(data: Record<string, any>, options?: HTTPRequestOptions): Promise<void> {
+    if (!this.app.config.masterKey) {
+      throw new Error('The masterKey is required when update user by reference');
+    }
+    await this._ref.update(data, {
+      ...options,
+      useMasterKey: true,
+      sessionToken: undefined,
+    });
+  }
+}
 
 export class User {
   constructor(private _object: LCObject) {}

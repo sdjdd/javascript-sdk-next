@@ -14,6 +14,10 @@ export class GeoPoint {
     }
   }
 
+  toJSON() {
+    return this._LC_encode();
+  }
+
   protected _LC_encode() {
     return {
       __type: 'GeoPoint',
