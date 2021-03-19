@@ -49,12 +49,18 @@ export class UserReference {
     return sessionToken;
   }
 
-  async dissociateAuthData(platform: string, options: HTTPRequestOptions): Promise<void> {
+  async dissociateAuthData(
+    platform: string,
+    options?: Omit<UpdateUserOptions, 'useMasterKey'>
+  ): Promise<void> {
     const db = this.app.database();
     await this.update({ [`authData.${platform}`]: db.op.unset() }, options);
   }
 
-  async update(data: Record<string, any>, options?: HTTPRequestOptions): Promise<void> {
+  async update(
+    data: Record<string, any>,
+    options?: Omit<UpdateUserOptions, 'useMasterKey'>
+  ): Promise<void> {
     if (!this.app.config.masterKey) {
       throw new Error('The masterKey is required when update user by reference');
     }

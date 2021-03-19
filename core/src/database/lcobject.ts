@@ -7,6 +7,7 @@ import omit from 'lodash/omit';
 import type { App, AuthOptions } from '../app';
 import type { Query } from './query';
 import { ACL } from './acl';
+import { GeoPoint } from './geo';
 
 const RESERVED_KEYS = ['className', 'objectId', 'createdAt', 'updatedAt'];
 
@@ -288,7 +289,7 @@ export function LCDecode(app: App, data: any): any {
       case 'Date':
         return new Date(data.iso);
       case 'GeoPoint':
-        return { longitude: data.longitude, latitude: data.latitude };
+        return new GeoPoint(data);
       default:
         return mapValues(data, (value) => LCDecode(app, value));
     }

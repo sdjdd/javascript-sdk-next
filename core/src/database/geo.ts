@@ -1,6 +1,6 @@
 export class GeoPoint {
-  public readonly latitude: number;
-  public readonly longitude: number;
+  public latitude: number;
+  public longitude: number;
 
   constructor(latitude: number, longitude: number);
   constructor(point: { latitude: number; longitude: number });
@@ -11,6 +11,12 @@ export class GeoPoint {
     } else {
       this.latitude = point.latitude;
       this.longitude = point.longitude;
+    }
+    if (typeof this.latitude !== 'number') {
+      throw new Error('The latitude must be a number');
+    }
+    if (typeof this.longitude !== 'number') {
+      throw new Error('The longitude must be a number');
     }
   }
 
