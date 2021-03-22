@@ -4,6 +4,7 @@ export * from './class';
 export * from './database';
 export { GeoPoint } from './geo';
 export {
+  LCEncode as encode,
   LCObject,
   LCObjectReference,
   EncodeOptions,
