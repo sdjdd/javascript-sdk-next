@@ -1,6 +1,6 @@
 {
   "name": "open-leancloud-storage",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "Third part LeanCloud JavaScript SDK.",
   "repository": {
     "type": "git",
