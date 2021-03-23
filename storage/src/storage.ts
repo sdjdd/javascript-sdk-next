@@ -42,8 +42,8 @@ export class Storage {
     }
 
     const tokens = await this._getFileTokens(name, { ...options, metaData });
-    const provider = this._getFileProvider(tokens.provider);
     try {
+      const provider = this._getFileProvider(tokens.provider);
       await provider.upload(name, data, tokens, options);
       await this._invokeFileCallback(tokens.token, true);
     } catch (e) {
