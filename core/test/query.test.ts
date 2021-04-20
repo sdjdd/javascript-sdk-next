@@ -170,4 +170,15 @@ describe('Query', () => {
       desc[0].data.num.should.greaterThan(desc[1].data.num);
     });
   });
+
+  describe('#findWithCount', () => {
+    it('should return both count and results', async () => {
+      const uuid = uuid_v4();
+      const object = await db.class('Test').add({ uuid });
+      const { count, results } = await db.query('Test').where({ uuid }).findWithCount();
+      count.should.eql(1);
+      results.length.should.eql(1);
+      results[0].id.should.eql(object.id);
+    });
+  });
 });

@@ -217,6 +217,21 @@ export class Query<T> {
     return count;
   }
 
+  async findWithCount(options?: AuthOptions): Promise<{ count: number; results: T[] }> {
+    const { count, results } = (await this.app.request(
+      {
+        method: 'GET',
+        path: `/1.1/classes/${this.className}`,
+        query: { ...this.params, count: 1 },
+      },
+      options
+    )) as { count: number; results: Record<string, any>[] };
+    return {
+      count,
+      results: results.map((data) => this.decodeObject(data)),
+    };
+  }
+
   scan(options?: Omit<AuthOptions, 'useMasterKey'>): QueryIterator<T> {
     return new QueryIterator(this, options);
   }
