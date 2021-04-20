@@ -217,6 +217,18 @@ export class Query<T> {
     return count;
   }
 
+  async findAndCount(options?: AuthOptions): Promise<[T[], number]> {
+    const { count, results } = (await this.app.request(
+      {
+        method: 'GET',
+        path: `/1.1/classes/${this.className}`,
+        query: { ...this.params, count: 1 },
+      },
+      options
+    )) as { count: number; results: Record<string, any>[] };
+    return [results.map((data) => this.decodeObject(data)), count];
+  }
+
   scan(options?: Omit<AuthOptions, 'useMasterKey'>): QueryIterator<T> {
     return new QueryIterator(this, options);
   }
