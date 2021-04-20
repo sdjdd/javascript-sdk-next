@@ -171,11 +171,11 @@ describe('Query', () => {
     });
   });
 
-  describe('#findWithCount', () => {
+  describe('#findAndCount', () => {
     it('should return both count and results', async () => {
       const uuid = uuid_v4();
       const object = await db.class('Test').add({ uuid });
-      const { count, results } = await db.query('Test').where({ uuid }).findWithCount();
+      const [results, count] = await db.query('Test').where({ uuid }).findAndCount();
       count.should.eql(1);
       results.length.should.eql(1);
       results[0].id.should.eql(object.id);
