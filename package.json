@@ -61,6 +61,7 @@
     "typescript": "^4.2.3"
   },
   "files": [
+    "**/*/package.json",
     "auth/dist/",
     "browser/",
     "cloud/dist/",
