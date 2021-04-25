@@ -4,7 +4,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
-import type { App, AuthOptions } from '../app';
+import type { APIRequest, App, AuthOptions } from '../app';
 import type { Query } from './query';
 import { ACL } from './acl';
 import { GeoPoint } from './geo';
@@ -14,17 +14,6 @@ const RESERVED_KEYS = ['className', 'objectId', 'createdAt', 'updatedAt'];
 export function omitReservedKeys(data: Record<string, any>): Record<string, any> {
   return omit(data, RESERVED_KEYS);
 }
-
-export const hookNames = [
-  'beforeSave',
-  'afterSave',
-  'beforeUpdate',
-  'afterUpdate',
-  'beforeDelete',
-  'afterDelete',
-] as const;
-
-export type HookName = typeof hookNames[number];
 
 export function assertCanIgnoreHooks(app: App, options?: AuthOptions): void | never {
   if (!app.config.hookKey) {
@@ -37,21 +26,23 @@ export function assertCanIgnoreHooks(app: App, options?: AuthOptions): void | ne
   }
 }
 
+export interface IgnoreHookOptions {
+  ignoreBeforeHook?: boolean;
+  ignoreAfterHook?: boolean;
+}
+
 export interface GetObjectOptions extends AuthOptions {
   keys?: string[];
   include?: string[];
   returnACL?: boolean;
 }
 
-export interface UpdateObjectOptions extends AuthOptions {
+export interface UpdateObjectOptions extends AuthOptions, IgnoreHookOptions {
   fetchUpdatedData?: boolean;
   query?: Query<any>;
-  ignoreHooks?: HookName[];
 }
 
-export interface DeleteObjectOptions extends AuthOptions {
-  ignoreHooks?: HookName[];
-}
+export interface DeleteObjectOptions extends AuthOptions, IgnoreHookOptions {}
 
 export interface EncodeOptions {
   preferPointer?: boolean;
@@ -87,44 +78,21 @@ export class LCObjectReference<T = unknown> {
   }
 
   async update(data: Record<string, any>, options?: UpdateObjectOptions): Promise<T> {
-    const body = encodeObjectData(data);
-    if (options?.ignoreHooks?.length) {
+    if (options?.ignoreBeforeHook || options?.ignoreAfterHook) {
       assertCanIgnoreHooks(this.app, options);
-      body.__ignore_hooks = options.ignoreHooks;
     }
-
     const rawData = await this.app.request(
-      {
-        method: 'PUT',
-        path: `/1.1/classes/${this.className}/${this.id}`,
-        query: {
-          fetchWhenSave: options?.fetchUpdatedData,
-          where: options?.query?.params.where,
-        },
-        body,
-      },
+      makeUpdateObjectRequest(this.className, this.id, data, options),
       options
     );
     return this._decoder(this.app, rawData, this.className);
   }
 
   async delete(options?: DeleteObjectOptions): Promise<void> {
-    if (options?.ignoreHooks?.length) {
+    if (options?.ignoreBeforeHook || options?.ignoreAfterHook) {
       assertCanIgnoreHooks(this.app, options);
     }
-
-    await this.app.request(
-      {
-        method: 'DELETE',
-        path: `/1.1/classes/${this.className}/${this.id}`,
-        body: options?.ignoreHooks?.length
-          ? {
-              __ignore_hooks: options.ignoreHooks,
-            }
-          : undefined,
-      },
-      options
-    );
+    await this.app.request(makeDeleteObjectRequest(this.className, this.id, options), options);
   }
 
   toJSON() {
@@ -309,4 +277,53 @@ export function isLCObjectRef<T>(value: T): value is LCObjectReference & T {
     isLCObject(value) ||
     (value && (value instanceof LCObjectReference || (value as any)._isLCObjectRef === true))
   );
+}
+
+export function makeUpdateObjectRequest(
+  className: string,
+  objectId: string,
+  data: Record<string, any>,
+  options?: UpdateObjectOptions
+): APIRequest & { method: 'PUT' } {
+  const body = encodeObjectData(data);
+  if (options?.ignoreBeforeHook || options?.ignoreAfterHook) {
+    body.__ignore_hooks = [];
+    if (options.ignoreBeforeHook) {
+      body.__ignore_hooks.push('beforeUpdate');
+    }
+    if (options.ignoreAfterHook) {
+      body.__ignore_hooks.push('afterUpdate');
+    }
+  }
+  return {
+    method: 'PUT',
+    path: `/1.1/classes/${className}/${objectId}`,
+    query: {
+      fetchWhenSave: options?.fetchUpdatedData,
+      where: options?.query?.params.where,
+    },
+    body,
+  };
+}
+
+export function makeDeleteObjectRequest(
+  className: string,
+  objectId: string,
+  options?: DeleteObjectOptions
+): APIRequest & { method: 'DELETE' } {
+  let body: { __ignore_hooks: string[] } | undefined;
+  if (options?.ignoreBeforeHook || options?.ignoreAfterHook) {
+    body = { __ignore_hooks: [] };
+    if (options?.ignoreBeforeHook) {
+      body.__ignore_hooks.push('beforeDelete');
+    }
+    if (options?.ignoreAfterHook) {
+      body.__ignore_hooks.push('afterDelete');
+    }
+  }
+  return {
+    method: 'DELETE',
+    path: `/1.1/classes/${className}/${objectId}`,
+    body,
+  };
 }

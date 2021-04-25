@@ -1,6 +1,13 @@
 import { APIError } from '../../../common/error';
 import { App, AuthOptions } from '../app';
-import { encodeObjectData, LCObject } from './lcobject';
+import {
+  IgnoreHookOptions,
+  LCObject,
+  assertCanIgnoreHooks,
+  makeUpdateObjectRequest,
+  makeDeleteObjectRequest,
+} from './lcobject';
+import { makeAddObjectRequest } from './class';
 
 type PipelineRequest =
   | {
@@ -9,8 +16,13 @@ type PipelineRequest =
       body: Record<string, any>;
     }
   | {
-      method: 'GET' | 'DELETE';
+      method: 'GET';
       path: string;
+    }
+  | {
+      method: 'DELETE';
+      path: string;
+      body?: Record<string, any>;
     };
 
 export interface PipelineResult {
@@ -23,17 +35,9 @@ const deleteDecoder = () => undefined;
 export class Pipeline {
   private _requests: PipelineRequest[] = [];
   private _decoders: ((data: Record<string, any>) => any)[] = [];
+  private _ignoreHooks = false;
 
   constructor(public readonly app: App) {}
-
-  private _add(className: string, data: Record<string, any>): void {
-    this._requests.push({
-      method: 'POST',
-      path: `/1.1/classes/${className}`,
-      body: encodeObjectData(data),
-    });
-    this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
-  }
 
   private _get(className: string, objectId: string): void {
     this._requests.push({
@@ -43,29 +47,30 @@ export class Pipeline {
     this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
   }
 
-  private _update(className: string, objectId: string, data: Record<string, any>): void {
-    this._requests.push({
-      method: 'PUT',
-      path: `/1.1/classes/${className}/${objectId}`,
-      body: encodeObjectData(data),
-    });
+  private _update(
+    className: string,
+    objectId: string,
+    data: Record<string, any>,
+    options?: IgnoreHookOptions
+  ): void {
+    this._ignoreHooks ||= options?.ignoreBeforeHook || options?.ignoreAfterHook;
+    const { method, path, body } = makeUpdateObjectRequest(className, objectId, data, options);
+    this._requests.push({ method, path, body });
     this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
   }
 
-  private _delete(className: string, objectId: string): void {
-    this._requests.push({
-      method: 'DELETE',
-      path: `/1.1/classes/${className}/${objectId}`,
-    });
+  private _delete(className: string, objectId: string, options?: IgnoreHookOptions): void {
+    this._ignoreHooks ||= options?.ignoreBeforeHook || options?.ignoreAfterHook;
+    const { method, path, body } = makeDeleteObjectRequest(className, objectId, options);
+    this._requests.push({ method, path, body });
     this._decoders.push(deleteDecoder);
   }
 
-  add(className: string, data: Record<string, any> | Record<string, any>[]): this {
-    if (Array.isArray(data)) {
-      data.forEach((data) => this._add(className, data));
-    } else {
-      this._add(className, data);
-    }
+  add(className: string, data: Record<string, any>, options?: IgnoreHookOptions): this {
+    this._ignoreHooks ||= options?.ignoreBeforeHook || options?.ignoreAfterHook;
+    const { method, path, body } = makeAddObjectRequest(className, data, options);
+    this._requests.push({ method, path, body });
+    this._decoders.push((data) => LCObject.fromJSON(this.app, data, className));
     return this;
   }
 
@@ -80,36 +85,62 @@ export class Pipeline {
     return this;
   }
 
-  update(className: string, objectId: string, data: Record<string, any>): this;
-  update(object: { className: string; id: string }, data: Record<string, any>): this;
+  update(
+    className: string,
+    objectId: string,
+    data: Record<string, any>,
+    options?: IgnoreHookOptions
+  ): this;
+  update(
+    object: { className: string; id: string },
+    data: Record<string, any>,
+    options?: IgnoreHookOptions
+  ): this;
   update(
     arg1: string | { className: string; id: string },
     arg2?: string | Record<string, any>,
-    data?: Record<string, any>
+    arg3?: Record<string, any> | IgnoreHookOptions,
+    options?: IgnoreHookOptions
   ): this {
     if (typeof arg1 === 'string') {
       if (typeof arg2 !== 'string') {
-        throw new TypeError('objectId 必须是 string');
+        throw new TypeError('The objectId must be a string');
       }
-      this._update(arg1, arg2, data);
+      this._update(arg1, arg2, arg3, options);
     } else {
-      this._update(arg1.className, arg1.id, arg2 as Record<string, any>);
+      if (typeof arg2 === 'string') {
+        throw new TypeError('The data must be an object');
+      }
+      this._update(arg1.className, arg1.id, arg2, arg3);
     }
     return this;
   }
 
-  delete(className: string, objectId: string): this;
-  delete(object: { className: string; id: string }): this;
-  delete(arg1: string | { className: string; id: string }, objectId?: string): this {
+  delete(className: string, objectId: string, options?: IgnoreHookOptions): this;
+  delete(object: { className: string; id: string }, options?: IgnoreHookOptions): this;
+  delete(
+    arg1: string | { className: string; id: string },
+    arg2?: string | IgnoreHookOptions,
+    options?: IgnoreHookOptions
+  ): this {
     if (typeof arg1 === 'string') {
-      this._delete(arg1, objectId);
+      if (typeof arg2 !== 'string') {
+        throw new TypeError('The objectId must be a string');
+      }
+      this._delete(arg1, arg2, options);
     } else {
-      this._delete(arg1.className, arg1.id);
+      if (typeof arg2 === 'string') {
+        throw new TypeError('The options must be an object');
+      }
+      this._delete(arg1.className, arg1.id, arg2);
     }
     return this;
   }
 
   async commit(options?: AuthOptions): Promise<PipelineResult> {
+    if (this._ignoreHooks) {
+      assertCanIgnoreHooks(this.app, options);
+    }
     const actionResults = (await this.app.request(
       {
         method: 'POST',

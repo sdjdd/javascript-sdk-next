@@ -1,11 +1,40 @@
-import type { AuthOptions } from '../app';
+import type { APIRequest, AuthOptions } from '../app';
 
-import { assertCanIgnoreHooks, encodeObjectData, HookName, LCObjectReference } from './lcobject';
+import {
+  assertCanIgnoreHooks,
+  encodeObjectData,
+  IgnoreHookOptions,
+  LCObjectReference,
+} from './lcobject';
 import { Query } from './query';
 
-export interface AddObjectOptions extends AuthOptions {
+export interface AddObjectOptions extends AuthOptions, IgnoreHookOptions {
   fetchData?: boolean;
-  ignoreHooks?: HookName[];
+}
+
+export function makeAddObjectRequest(
+  className: string,
+  data: Record<string, any>,
+  options?: AddObjectOptions
+): APIRequest & { method: 'POST' } {
+  const body = encodeObjectData(data);
+  if (options?.ignoreBeforeHook || options?.ignoreAfterHook) {
+    body.__ignore_hooks = [];
+    if (options.ignoreBeforeHook) {
+      body.__ignore_hooks.push('beforeSave');
+    }
+    if (options.ignoreAfterHook) {
+      body.__ignore_hooks.push('afterSave');
+    }
+  }
+  return {
+    method: 'POST',
+    path: '/1.1/classes/' + className,
+    query: {
+      fetchWhenSave: options?.fetchData,
+    },
+    body,
+  };
 }
 
 export class Class<T> extends Query<T> {
@@ -14,21 +43,11 @@ export class Class<T> extends Query<T> {
   }
 
   async add(data: Record<string, any>, options?: AddObjectOptions): Promise<T> {
-    const body = encodeObjectData(data);
-    if (options?.ignoreHooks?.length) {
+    if (options?.ignoreBeforeHook || options?.ignoreAfterHook) {
       assertCanIgnoreHooks(this.app, options);
-      body.__ignore_hooks = options.ignoreHooks;
     }
-
     const rawData = await this.app.request(
-      {
-        method: 'POST',
-        path: `/1.1/classes/${this.className}`,
-        query: {
-          fetchWhenSave: options?.fetchData,
-        },
-        body,
-      },
+      makeAddObjectRequest(this.className, data, options),
       options
     );
     return this._decoder(this.app, rawData, this.className);
