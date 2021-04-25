@@ -11,11 +11,6 @@ describe('LCObject', () => {
     str: 'Hello world!',
   };
 
-  it('create', async () => {
-    const obj = await db.class('Test').add(data, { fetchData: true });
-    obj.data.should.containEql(data);
-  });
-
   describe('get', () => {
     let objectId: string;
     before(async () => {
@@ -36,11 +31,16 @@ describe('LCObject', () => {
     });
   });
 
-  it('update', async () => {
-    const objectId = (await db.class('Test').add(data)).id;
-    const str = 'HELLO WORLD';
-    const obj = await db.class('Test').object(objectId).update({ str }, { fetchUpdatedData: true });
-    obj.data.str.should.eql(str);
+  describe('update', () => {
+    it('should update object', async () => {
+      const objectId = (await db.class('Test').add(data)).id;
+      const str = 'HELLO WORLD';
+      const obj = await db
+        .class('Test')
+        .object(objectId)
+        .update({ str }, { fetchUpdatedData: true });
+      obj.data.str.should.eql(str);
+    });
   });
 
   it('delete', async () => {
