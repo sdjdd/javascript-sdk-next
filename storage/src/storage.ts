@@ -33,7 +33,12 @@ export class Storage {
   }
 
   async upload(name: string, data: any, options?: UploadOptions): Promise<LCFile> {
-    data = parseFileData(data);
+    if (data.blob) {
+      // React Native
+      data = { ...data.blob, name, type: options?.mime ?? data.blob.type };
+    } else {
+      data = parseFileData(data);
+    }
     const metaData = { ...options?.metaData };
 
     metaData.owner = (await getCurrentUserID(this.app)) || 'unknown';
@@ -172,10 +177,6 @@ function parseFileData(data: any): any {
       return Buffer.from(base64, 'base64');
     }
     throw new Error('当前平台不支持使用 base64 编码的字符串构建文件');
-  }
-
-  if (data.blob) {
-    return data.blob;
   }
 
   return data;
