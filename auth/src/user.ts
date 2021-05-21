@@ -70,6 +70,15 @@ export class UserReference {
       sessionToken: undefined,
     });
   }
+
+  protected _LC_encode() {
+    // @ts-ignore
+    return this._ref._LC_encode();
+  }
+
+  toJSON() {
+    return this._LC_encode();
+  }
 }
 
 export class User {
