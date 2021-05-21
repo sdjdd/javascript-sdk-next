@@ -20,7 +20,7 @@ export type QueryConstraint = Record<string, any>;
 
 export type QueryOrder = 'asc' | 'desc';
 
-export class Query<T> {
+export class Query<T = unknown> {
   private _order = new Set<string>();
   private _include = new Set<string>();
   private _keys = new Set<string>();
