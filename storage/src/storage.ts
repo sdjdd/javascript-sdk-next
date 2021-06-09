@@ -153,7 +153,9 @@ function parseFileData(data: any): any {
     if (typeof Buffer !== 'undefined') {
       return Buffer.from(data, 'utf-8');
     }
-    throw new Error('当前平台不支持使用 utf-8 编码的字符串构建文件');
+    throw new Error(
+      'The current platform does not support building file using UTF-8 encoded strings'
+    );
   }
 
   if (Array.isArray(data)) {
@@ -165,7 +167,7 @@ function parseFileData(data: any): any {
     if (typeof Buffer !== 'undefined') {
       return Buffer.from(u8arr);
     }
-    throw new Error('当前平台不支持使用字节数组构建文件');
+    throw new Error('The current platform does not support building file using a byte array');
   }
 
   if (typeof data.base64 === 'string') {
@@ -176,7 +178,9 @@ function parseFileData(data: any): any {
     if (typeof Buffer !== 'undefined') {
       return Buffer.from(base64, 'base64');
     }
-    throw new Error('当前平台不支持使用 base64 编码的字符串构建文件');
+    throw new Error(
+      'The current platform does not support building file using base64 encoded strings'
+    );
   }
 
   return data;
