@@ -57,9 +57,16 @@ export class Storage {
     }
 
     return LCFile.fromJSON(this.app, {
-      ...tokens,
       name,
       metaData,
+      objectId: tokens.objectId,
+      bucket: tokens.bucket,
+      key: tokens.key,
+      mime_type: tokens.mime_type,
+      provider: tokens.provider,
+      url: tokens.url,
+      createdAt: tokens.createdAt,
+      updatedAt: tokens.createdAt,
     });
   }
 
@@ -112,11 +119,11 @@ export class Storage {
     if (name in providers) {
       return providers[name];
     }
-    throw new Error(`暂不支持上传文件到 ${name}`);
+    throw new Error(`Uploading files to ${name} is not supported`);
   }
 
-  private _invokeFileCallback(token: string, success: boolean): Promise<void> {
-    return this.app.request({
+  private async _invokeFileCallback(token: string, success: boolean): Promise<void> {
+    await this.app.request({
       method: 'POST',
       path: '/1.1/fileCallback',
       body: { token, result: success },

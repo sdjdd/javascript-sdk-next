@@ -1,16 +1,16 @@
-import { Provider } from '.';
-import { HTTPResponse } from '../../../core';
+import type { HTTPRequestOptions } from '../../../core';
 import { SDKRuntime } from '../runtime';
-import { FileTokens, UploadOptions } from '../storage';
+import type { FileTokens } from '../storage';
+import type { Provider } from '.';
 
 export class S3 implements Provider {
-  upload(
-    _name: string,
+  async upload(
+    name: string,
     data: any,
     tokens: FileTokens,
-    options?: UploadOptions
-  ): Promise<HTTPResponse> {
-    return SDKRuntime.http.request(
+    options?: HTTPRequestOptions & { header: Record<string, string> }
+  ): Promise<void> {
+    await SDKRuntime.http.request(
       {
         method: 'PUT',
         url: tokens.upload_url,

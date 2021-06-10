@@ -17,4 +17,5 @@ module.exports = {
   db: app.database(),
   auth: app.auth(),
   cloud: app.cloud(),
+  storage: app.storage(),
 };
