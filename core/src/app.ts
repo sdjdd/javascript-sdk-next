@@ -8,7 +8,7 @@ import { Database } from './database';
 import { request as doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';
 import { localStorage, NamespacedStorage } from './local-storage';
 import { log } from './log';
-import { getUserAgent } from './userAgent';
+import { getUserAgent } from './user-agent';
 
 export interface AuthOptions extends HTTPRequestOptions {
   useMasterKey?: boolean;
