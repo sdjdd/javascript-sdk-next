@@ -1,6 +1,7 @@
-import { KEY_SERVER_URLS } from '../../common/const';
 import type { App } from './app';
 import { request } from './http';
+
+const KEY_SERVER_URLS = 'server_urls';
 
 interface ServerURLs {
   stats_server: string;

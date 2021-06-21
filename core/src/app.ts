@@ -2,7 +2,7 @@ import clone from 'lodash/clone';
 import trimEnd from 'lodash/trimEnd';
 import trimStart from 'lodash/trimStart';
 
-import { APIError } from '../../common/error';
+import { APIError } from './errors';
 import { AppRouter, isCNApp, Service } from './app-router';
 import { Database } from './database';
 import { request as doHTTPRequest, HTTPRequest, HTTPRequestOptions } from './http';

@@ -1,4 +1,4 @@
-import { ensureArray, pointer } from '../../../common/utils';
+import castArray from 'lodash/castArray';
 
 interface LCObjectLike {
   className: string;
@@ -23,15 +23,15 @@ export function decrement(amount = 1): Operation {
 }
 
 export function add(objects: any | any[]): Operation {
-  return { __op: 'Add', objects: ensureArray(objects) };
+  return { __op: 'Add', objects: castArray(objects) };
 }
 
 export function addUnique(objects: any | any[]): Operation {
-  return { __op: 'AddUnique', objects: ensureArray(objects) };
+  return { __op: 'AddUnique', objects: castArray(objects) };
 }
 
 export function remove(objects: any | any[]): Operation {
-  return { __op: 'Remove', objects: ensureArray(objects) };
+  return { __op: 'Remove', objects: castArray(objects) };
 }
 
 export function bitAnd(value: number): Operation {
@@ -46,10 +46,14 @@ export function bitXor(value: number): Operation {
   return { __op: 'BitXor', value };
 }
 
+function Pointer({ className, id }: { className: string; id: string }) {
+  return { __type: 'Pointer', className, objectId: id };
+}
+
 export function addRelation(objects: LCObjectLike | LCObjectLike[]): Operation {
-  return { __op: 'AddRelation', objects: ensureArray(objects).map(pointer) };
+  return { __op: 'AddRelation', objects: castArray(objects).map(Pointer) };
 }
 
 export function removeRelation(objects: LCObjectLike | LCObjectLike[]): Operation {
-  return { __op: 'RemoveRelation', objects: ensureArray(objects).map(pointer) };
+  return { __op: 'RemoveRelation', objects: castArray(objects).map(Pointer) };
 }

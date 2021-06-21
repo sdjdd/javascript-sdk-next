@@ -1,5 +1,5 @@
-import { APIError } from '../../../common/error';
 import { App, AuthOptions } from '../app';
+import { APIError } from '../errors';
 import {
   IgnoreHookOptions,
   LCObject,
