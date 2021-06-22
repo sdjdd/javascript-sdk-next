@@ -1,4 +1,4 @@
-import b64ab from 'base64-arraybuffer';
+import { decode as base64ToArrayBuffer } from 'base64-arraybuffer';
 
 import type { ACL, App, AuthOptions, Query } from '../../core';
 import { Provider, providers } from './provider';
@@ -179,7 +179,7 @@ function parseFileData(data: any): any {
   if (typeof data.base64 === 'string') {
     const base64 = base64InDataURLs(data.base64);
     if (typeof Blob !== 'undefined') {
-      return new Blob([b64ab.decode(base64)]);
+      return new Blob([base64ToArrayBuffer(base64)]);
     }
     if (typeof Buffer !== 'undefined') {
       return Buffer.from(base64, 'base64');
