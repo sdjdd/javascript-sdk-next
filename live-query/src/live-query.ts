@@ -2,8 +2,9 @@ import EventEmitter from 'eventemitter3';
 import { Realtime } from 'leancloud-realtime/core';
 import { LiveQueryPlugin } from 'leancloud-realtime-plugin-live-query';
 
-import { KEY_SUBSCRIPTION_ID } from '../../common/const';
 import { App, AuthOptions, Query } from '../../core';
+
+export const KEY_SUBSCRIPTION_ID = 'subscription_id';
 
 export interface LiveQueryListeners<T> {
   create(object: T): void;

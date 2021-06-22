@@ -1,9 +1,8 @@
 import { setAdapters, debug } from 'leancloud-realtime/core';
 
 import type { Auth } from '../../auth';
-import { KEY_SUBSCRIPTION_ID } from '../../common/const';
 import type { AuthOptions, Module, Runtime } from '../../core';
-import { Subscription } from './live-query';
+import { KEY_SUBSCRIPTION_ID, Subscription } from './live-query';
 
 declare module '../../core' {
   interface App {
