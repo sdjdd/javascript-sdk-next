@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3';
-import realtime from 'leancloud-realtime/core';
-import liveQueryPlugin from 'leancloud-realtime-plugin-live-query';
+import { Realtime } from 'leancloud-realtime/core';
+import { LiveQueryPlugin } from 'leancloud-realtime-plugin-live-query';
 
 import { App, AuthOptions, Query } from '../../core';
 
@@ -141,11 +141,11 @@ function subscribe(
 function getRealtimeInstance(app: App): any {
   if (!app.payload.realtime) {
     app.log.trace('live-query', { message: 'create realtime instance', app });
-    app.payload.realtime = new realtime.Realtime({
+    app.payload.realtime = new Realtime({
       appId: app.appId,
       appKey: app.appKey,
       server: app.serverURL,
-      plugins: [liveQueryPlugin.LiveQueryPlugin],
+      plugins: [LiveQueryPlugin],
     });
   }
   return app.payload.realtime;

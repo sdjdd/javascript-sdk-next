@@ -1,4 +1,4 @@
-import realtime from 'leancloud-realtime/core';
+import { setAdapters, debug } from 'leancloud-realtime/core';
 
 import type { Auth } from '../../auth';
 import type { AuthOptions, Module, Runtime } from '../../core';
@@ -26,13 +26,11 @@ function setAuthHooks(authClass: typeof Auth): void {
 
 export const liveQueryModule = {
   name: 'liveQuery',
-  components: {
-    debug: realtime.debug,
-  },
+  components: { debug },
   onLoad: (runtime: Runtime) => {
     const { adapters, event, modules } = runtime;
-    realtime.setAdapters(adapters);
-    event.on('adapters:set', realtime.setAdapters);
+    setAdapters(adapters);
+    event.on('adapters:set', setAdapters);
 
     const { App, Query } = modules.core.components;
     App.prototype.pause = function () {
