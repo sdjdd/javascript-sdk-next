@@ -2,12 +2,12 @@ import ts from '@wessberg/rollup-plugin-ts';
 
 export default [
   {
-    input: 'debug/src/index.ts',
+    input: './src/index.ts',
     output: {
-      dir: 'debug/dist',
+      dir: './dist',
       format: 'cjs',
     },
-    plugins: [ts({ tsconfig: 'debug/tsconfig.json' })],
+    plugins: [ts()],
     external: ['debug'],
   },
 ];
