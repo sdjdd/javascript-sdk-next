@@ -3,22 +3,23 @@ import json from '@rollup/plugin-json';
 
 export default [
   {
-    input: 'core/src/index.ts',
+    input: './src/index.ts',
     output: [
       {
-        dir: 'core/dist',
+        dir: './dist',
         format: 'cjs',
-        entryFileNames: 'index.cjs.js',
+        entryFileNames: 'index.js',
       },
       {
-        dir: 'core/dist',
+        dir: './dist',
         format: 'esm',
-        entryFileNames: 'index.esm.js',
+        entryFileNames: 'index.mjs',
       },
     ],
-    plugins: [ts({ tsconfig: 'core/tsconfig.json' }), json()],
+    plugins: [ts(), json()],
     external: [
       'eventemitter3',
+      'lodash/castArray',
       'lodash/clone',
       'lodash/isDate',
       'lodash/isEmpty',

@@ -16,7 +16,7 @@
   "browser": "browser/index.js",
   "types": "sdk/index.d.ts",
   "scripts": {
-    "build:core": "rm -rf core/dist && rollup -c core/rollup.config.js",
+    "build:core": "cd core && npm run clear && rollup -c",
     "build:auth": "rm -rf auth/dist && rollup -c auth/rollup.config.js",
     "build:search": "rm -rf search/dist && rollup -c search/rollup.config.js",
     "build:debug": "rm -rf debug/dist && rollup -c debug/rollup.config.js",
