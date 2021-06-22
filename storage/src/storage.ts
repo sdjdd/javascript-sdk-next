@@ -1,6 +1,5 @@
 import { decode as base64ToArrayBuffer } from 'base64-arraybuffer';
 
-import { KEY_CURRENT_USER } from '../../common/const';
 import type { ACL, App, AuthOptions, Query } from '../../core';
 import { Provider, providers } from './provider';
 import { LCFile } from './file';
@@ -132,10 +131,10 @@ export class Storage {
 }
 
 async function getCurrentUserID(app: App): Promise<string | null> {
-  if (app.payload[KEY_CURRENT_USER]) {
-    return app.payload[KEY_CURRENT_USER].id;
+  if (app.payload['current_user']) {
+    return app.payload['current_user'].id;
   }
-  const user_str = await app.localStorage.getAsync(KEY_CURRENT_USER);
+  const user_str = await app.localStorage.getAsync('current_user');
   if (user_str) {
     return JSON.parse(user_str).objectId;
   }
