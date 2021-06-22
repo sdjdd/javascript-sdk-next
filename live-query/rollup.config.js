@@ -3,20 +3,20 @@ import cjs from '@rollup/plugin-commonjs';
 
 export default [
   {
-    input: 'live-query/src/index.ts',
+    input: './src/index.ts',
     output: [
       {
-        dir: 'live-query/dist',
+        dir: './dist',
         format: 'cjs',
-        entryFileNames: 'index.cjs.js',
+        entryFileNames: 'index.js',
       },
       {
-        dir: 'live-query/dist',
+        dir: './dist',
         format: 'esm',
-        entryFileNames: 'index.esm.js',
+        entryFileNames: 'index.mjs',
       },
     ],
-    plugins: [ts({ tsconfig: 'live-query/tsconfig.json' }), cjs()],
+    plugins: [ts(), cjs()],
     external: ['eventemitter3', 'leancloud-realtime/core', 'leancloud-realtime-plugin-live-query'],
   },
 ];
