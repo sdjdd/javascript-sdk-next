@@ -17,9 +17,9 @@
   "scripts": {
     "build:core": "cd core && npm run clean && rollup -c",
     "build:auth": "cd auth && npm run clean && rollup -c",
+    "build:cloud": "cd cloud && npm run clean && rollup -c",
     "build:search": "rm -rf search/dist && rollup -c search/rollup.config.js",
     "build:debug": "rm -rf debug/dist && rollup -c debug/rollup.config.js",
-    "build:cloud": "rm -rf cloud/dist && rollup -c cloud/rollup.config.js",
     "build:storage": "rm -rf storage/dist && rollup -c storage/rollup.config.js",
     "build:live-query": "rm -rf live-query/dist && rollup -c live-query/rollup.config.js",
     "build:cdn": "rm -rf browser/*.min.js && rollup -c cdn.rollup.config.js",
