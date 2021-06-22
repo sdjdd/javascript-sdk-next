@@ -16,5 +16,6 @@ export default [
       },
     ],
     plugins: [ts()],
+    external: ['lodash/castArray'],
   },
 ];
