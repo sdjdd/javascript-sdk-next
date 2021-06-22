@@ -71,6 +71,7 @@
     "live-query/dist",
     "node/",
     "search/dist/",
-    "storage/dist/"
+    "storage/dist/",
+    "index.d.ts"
   ]
 }
