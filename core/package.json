@@ -1,10 +1,7 @@
 {
   "main": "./dist/index.js",
+  "browser": "./browser/index.js",
   "module": "./dist/index.mjs",
-  "browser": {
-    "./dist/index.js": "./browser/index.js",
-    "./dist/index.mjs": "./browser/index.mjs"
-  },
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf ./dist"

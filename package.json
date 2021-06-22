@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "main": "./node/index.js",
-  "browser": "./browser/index.mjs",
+  "browser": "./browser/index.js",
   "types": "./index.d.ts",
   "scripts": {
     "build:core": "cd core && npm run clean && rollup -c",
