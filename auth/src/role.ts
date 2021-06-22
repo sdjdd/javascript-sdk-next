@@ -1,4 +1,5 @@
-import { ensureArray } from '../../common/utils';
+import castArray from 'lodash/castArray';
+
 import type {
   App,
   AuthOptions,
@@ -34,19 +35,19 @@ export class RoleReference {
     return this._ref.id;
   }
 
-  add(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
+  add(subjects: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
     const users: RoleSubject[] = [];
     const roles: RoleSubject[] = [];
-    ensureArray(subject).forEach((sub) => {
-      switch (sub.className) {
+    castArray(subjects).forEach((subject) => {
+      switch (subject.className) {
         case '_User':
-          users.push(sub);
+          users.push(subject);
           break;
         case '_Role':
-          roles.push(sub);
+          roles.push(subject);
           break;
         default:
-          throw new TypeError('仅能向角色中添加用户或另一角色');
+          throw new TypeError('Can only add a user or another role to a role');
       }
     });
 
@@ -60,19 +61,19 @@ export class RoleReference {
     );
   }
 
-  remove(subject: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
+  remove(subjects: RoleSubject | RoleSubject[], options?: AuthOptions): Promise<Role> {
     const users: RoleSubject[] = [];
     const roles: RoleSubject[] = [];
-    ensureArray(subject).forEach((sub) => {
-      switch (sub.className) {
+    castArray(subjects).forEach((subject) => {
+      switch (subject.className) {
         case '_User':
-          users.push(sub);
+          users.push(subject);
           break;
         case '_Role':
-          roles.push(sub);
+          roles.push(subject);
           break;
         default:
-          throw new TypeError('仅能从角色中移除用户或另一角色');
+          throw new TypeError('Can only remove a user or another role from a role');
       }
     });
 

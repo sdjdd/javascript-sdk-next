@@ -16,6 +16,6 @@ export default [
       },
     ],
     plugins: [ts()],
-    external: ['uuid'],
+    external: ['lodash/castArray', 'uuid'],
   },
 ];

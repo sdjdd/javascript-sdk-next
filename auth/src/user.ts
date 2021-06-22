@@ -1,4 +1,3 @@
-import { KEY_CURRENT_USER } from '../../common/const';
 import type {
   App,
   AuthOptions,
@@ -10,6 +9,8 @@ import type {
   LCObjectReference,
   UpdateObjectOptions,
 } from '../../core';
+
+const KEY_CURRENT_USER = 'current_user';
 
 export type UpdateUserOptions = Omit<UpdateObjectOptions, 'sessionToken'>;
 
