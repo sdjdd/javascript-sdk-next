@@ -66,7 +66,7 @@
     "browser/",
     "cloud/dist/",
     "core/dist/",
-    "core/browser.mjs",
+    "core/browser/",
     "debug/dist/",
     "live-query/dist",
     "node/",
