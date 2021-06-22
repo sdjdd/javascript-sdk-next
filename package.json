@@ -11,10 +11,9 @@
     "email": "i@sdjdd.com"
   },
   "license": "MIT",
-  "main": "sdk/index.cjs.js",
-  "module": "sdk/index.esm.js",
-  "browser": "browser/index.js",
-  "types": "sdk/index.d.ts",
+  "main": "./node/index.js",
+  "browser": "./browser/index.mjs",
+  "types": "./index.d.ts",
   "scripts": {
     "build:core": "cd core && npm run clear && rollup -c",
     "build:auth": "rm -rf auth/dist && rollup -c auth/rollup.config.js",
