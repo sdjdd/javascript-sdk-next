@@ -1,5 +1,6 @@
+import castArray from 'lodash/castArray';
+
 import type { App, AuthOptions, LCObject, QueryOrder } from '../../core';
-import { ensureArray } from '../../common/utils';
 
 export type FullTextSearchSortMode = 'min' | 'max' | 'sum' | 'avg';
 
@@ -102,22 +103,22 @@ export class FullTextSearch {
 
   fields(fields: string[]): this;
   fields(...fields: string[]): this;
-  fields(field: string | string[], ...rest: string[]): this {
-    this._fields = ensureArray(field).concat(rest);
+  fields(fields: string | string[], ...rest: string[]): this {
+    this._fields = castArray(fields).concat(rest);
     return this;
   }
 
   include(keys: string[]): this;
   include(...keys: string[]): this;
-  include(key: string | string[], ...rest: string[]): this {
-    this._include = ensureArray(key).concat(rest);
+  include(keys: string | string[], ...rest: string[]): this {
+    this._include = castArray(keys).concat(rest);
     return this;
   }
 
   highlights(keys: string[]): this;
   highlights(...keys: string[]): this;
-  highlights(key: string | string[], ...rest: string[]): this {
-    this._highlights = ensureArray(key).concat(rest);
+  highlights(keys: string | string[], ...rest: string[]): this {
+    this._highlights = castArray(keys).concat(rest);
     return this;
   }
 

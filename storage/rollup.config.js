@@ -16,6 +16,6 @@ export default [
       },
     ],
     plugins: [ts({ tsconfig: 'storage/tsconfig.json' })],
-    external: ['base64-arraybuffer'],
+    external: ['base64-arraybuffer', 'lodash/castArray'],
   },
 ];
