@@ -4,6 +4,6 @@
   "browser": "./browser.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clear": "rm -rf dist"
+    "clean": "rm -rf dist"
   }
 }

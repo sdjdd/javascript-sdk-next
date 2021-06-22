@@ -2,20 +2,20 @@ import ts from '@wessberg/rollup-plugin-ts';
 
 export default [
   {
-    input: 'auth/src/index.ts',
+    input: './src/index.ts',
     output: [
       {
-        dir: 'auth/dist',
+        dir: './dist',
         format: 'cjs',
-        entryFileNames: 'index.cjs.js',
+        entryFileNames: 'index.js',
       },
       {
-        dir: 'auth/dist',
+        dir: './dist',
         format: 'esm',
-        entryFileNames: 'index.esm.js',
+        entryFileNames: 'index.mjs',
       },
     ],
-    plugins: [ts({ tsconfig: 'auth/tsconfig.json' })],
+    plugins: [ts()],
     external: ['uuid'],
   },
 ];

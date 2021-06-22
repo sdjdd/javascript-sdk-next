@@ -28,7 +28,7 @@ export default [
     plugins,
   },
   {
-    input: './auth/dist/index.esm.js',
+    input: './auth/dist/index.mjs',
     output: [
       {
         file: './browser/auth.min.js',
