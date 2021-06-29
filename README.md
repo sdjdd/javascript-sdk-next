@@ -7,5 +7,5 @@
 1. 修改 package.json 中的版本号
 2. 编译 SDK
 3. 运行单元测试
-4. `npm publish --dry-run` 确认即将发布的 package 中包含所需的文件
+4. `npm publish --dry-run` 确认即将发布的 package 版本正确且包含所需的文件
 5. 发布
