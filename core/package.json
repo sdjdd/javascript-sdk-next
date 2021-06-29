@@ -1,7 +1,10 @@
 {
-  "main": "./dist/index.js",
-  "browser": "./browser/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./lib/core.js",
+  "module": "./lib/core.mjs",
+  "browser": {
+    "./lib/core.js": "./lib/browser.js",
+    "./lib/core.mjs": "./lib/browser.mjs"
+  },
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf ./dist"

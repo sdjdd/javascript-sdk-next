@@ -1,4 +1,4 @@
-const LC = require('../core');
+const LC = require('../core/lib/browser.js');
 const { authModule } = require('../auth');
 const { cloudModule } = require('../cloud');
 const { liveQueryModule } = require('../live-query');
