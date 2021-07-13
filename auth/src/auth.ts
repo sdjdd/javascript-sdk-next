@@ -204,7 +204,7 @@ export class Auth {
       await this.app.request(
         {
           method: 'POST',
-          path: '/users',
+          path: '/1.1/users',
           query: {
             failOnNotExist: options?.failOnNotExist,
           },
