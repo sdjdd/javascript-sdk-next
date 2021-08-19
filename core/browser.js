@@ -1,6 +1,6 @@
 const adapters = require('@leancloud/platform-adapters-browser');
 
-const LC = require('../dist/index.js');
+const LC = require('./dist/index.js');
 
 LC.setAdapters(adapters);
 

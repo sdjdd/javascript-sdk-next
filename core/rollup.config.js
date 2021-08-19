@@ -4,18 +4,10 @@ import json from '@rollup/plugin-json';
 export default [
   {
     input: './src/index.ts',
-    output: [
-      {
-        dir: './dist',
-        format: 'cjs',
-        entryFileNames: 'index.js',
-      },
-      {
-        dir: './dist',
-        format: 'esm',
-        entryFileNames: 'index.mjs',
-      },
-    ],
+    output: {
+      file: './dist/index.js',
+      format: 'cjs',
+    },
     plugins: [ts(), json()],
     external: [
       'eventemitter3',

@@ -4,7 +4,7 @@ export default [
   {
     input: './src/index.ts',
     output: {
-      dir: './dist',
+      file: './dist/index.js',
       format: 'cjs',
     },
     plugins: [ts()],
