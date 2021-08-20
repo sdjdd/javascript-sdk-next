@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2020"],
+    "target": "ES2015",
+    "module": "ES2015",
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "tslib": ["node_modules/tslib/tslib.d.ts"]
+    },
+    "moduleResolution": "Node"
+  }
+}

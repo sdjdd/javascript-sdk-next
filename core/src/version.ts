@@ -1,1 +1,2 @@
-export { version } from '../../package.json';
+// eslint-disable-next-line @typescript-eslint/no-inferrable-types
+export const version: string = '__buildVersion';

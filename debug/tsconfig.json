@@ -1,12 +1,4 @@
 {
-  "compilerOptions": {
-    "lib": ["ES2020"],
-    "target": "ES2015",
-    "declaration": true,
-    "moduleResolution": "Node",
-    "removeComments": true
-  },
-  "include": [
-    "src/**/*"
-  ]
+  "extends": "../tsconfig.json",
+  "include": ["src"]
 }
