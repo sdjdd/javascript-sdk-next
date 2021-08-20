@@ -6,7 +6,7 @@ import { SDKRuntime } from '../../runtime';
 import { makeDataIterator } from '../../data-iterator';
 import { CHUNK_SIZE, ShardUploader } from './shard-uploader';
 
-export const SHARD_THRESHOLD = 1024 * 1025 * 64;
+export const SHARD_THRESHOLD = 1024 * 1024 * 64;
 
 export class Qiniu implements Provider {
   async upload(
