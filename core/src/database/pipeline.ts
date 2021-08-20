@@ -138,6 +138,10 @@ export class Pipeline {
   }
 
   async commit(options?: AuthOptions): Promise<PipelineResult> {
+    if (this._requests.length === 0) {
+      return { results: [], errors: [] };
+    }
+
     if (this._ignoreHooks) {
       assertCanIgnoreHooks(this.app, options);
     }

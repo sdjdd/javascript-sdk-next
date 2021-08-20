@@ -76,6 +76,10 @@ export class Database {
   }
 
   async destroyAll(objects: { className: string; id: string }[], options?: DeleteObjectOptions) {
+    if (objects.length === 0) {
+      return;
+    }
+
     const idsByClassName: Record<string, string[]> = {};
     objects.forEach(({ className, id }) => {
       if (className in idsByClassName) {
