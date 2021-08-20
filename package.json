@@ -21,9 +21,9 @@
     "build:debug": "cd debug && npm run clean && rollup -c",
     "build:live-query": "cd live-query && npm run clean && rollup -c",
     "build:search": "cd search && npm run clean && rollup -c",
-    "build:storage": "cd storage && npm run clean && rollup -c",
+    "build:storage": "cd storage && npm run build",
     "build:cdn": "rm -rf browser/*.min.js && rollup -c cdn.rollup.config.js",
-    "build": "npm run build:core && npm run build:auth && npm run build:search && npm run build:debug && npm run build:storage && npm run build:cloud && npm run build:live-query",
+    "build": "npm run build:core && npm run build:auth && npm run build:cloud && npm run build:debug && npm run build:live-query && npm run build:search && npm run build:storage",
     "test:core": "TS_NODE_PROJECT=core/tsconfig.json mocha core/test/**/*.test.ts",
     "repl": "node tools/repl"
   },
@@ -44,7 +44,6 @@
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^19.0.0",
-    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@rollup/plugin-replace": "^3.0.0",
     "@types/lodash": "^4.14.170",

@@ -1,7 +1,12 @@
 {
   "main": "./dist/index.js",
+  "browser": {
+    "./dist/data-iterator/node.js": "./dist/data-iterator/browser.js"
+  },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist",
+    "compile": "tsc -p .",
+    "build": "npm run clean && npm run compile"
   }
 }

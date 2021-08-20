@@ -1,9 +1,10 @@
 import type { HTTPRequestOptions } from '../../../../core';
-import { SDKRuntime } from '../../runtime';
 import type { FileTokens } from '../../storage';
 import type { Provider } from '..';
-import { isBlob, isBuffer, isStream } from '../../utils/data-type';
-import { ShardUploader, BlobIterator, BufferIterator, StreamIterator } from './shard-uploader';
+
+import { SDKRuntime } from '../../runtime';
+import { makeDataIterator } from '../../data-iterator';
+import { CHUNK_SIZE, ShardUploader } from './shard-uploader';
 
 export const SHARD_THRESHOLD = 1024 * 1025 * 64;
 
@@ -14,14 +15,9 @@ export class Qiniu implements Provider {
     tokens: FileTokens,
     options?: HTTPRequestOptions & { header: Record<string, string> }
   ): Promise<void> {
-    if (isBlob(data) && data.size >= SHARD_THRESHOLD) {
-      return new ShardUploader(tokens, new BlobIterator(data)).upload(name, options);
-    }
-    if (isBuffer(data) && data.length >= SHARD_THRESHOLD) {
-      return new ShardUploader(tokens, new BufferIterator(data)).upload(name, options);
-    }
-    if (isStream(data)) {
-      return new ShardUploader(tokens, new StreamIterator(data)).upload(name, options);
+    const dataIterator = makeDataIterator(data, CHUNK_SIZE, SHARD_THRESHOLD);
+    if (dataIterator) {
+      return new ShardUploader(tokens, dataIterator).upload(name, options);
     }
     await SDKRuntime.http.upload(
       {

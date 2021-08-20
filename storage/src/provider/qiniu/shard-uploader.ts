@@ -1,8 +1,8 @@
-import type { Readable } from 'stream';
-
 import type { HTTPRequest, HTTPRequestOptions } from '../../../../core';
-import { SDKRuntime } from '../../runtime';
 import type { FileTokens } from '../../storage';
+import type { DataIterator } from '../../data-iterator';
+
+import { SDKRuntime } from '../../runtime';
 import { utoh } from '../../utils/base64';
 
 export const CHUNK_SIZE = 1024 * 1024 * 16;
@@ -10,90 +10,6 @@ export const CHUNK_SIZE = 1024 * 1024 * 16;
 export interface Part {
   partNumber: number;
   etag: string;
-}
-
-export abstract class DataIterator {
-  protected _offset = 0;
-
-  constructor(readonly data: any, readonly size?: number) {}
-
-  abstract next(): Promise<{ done: boolean; value?: any }>;
-
-  [Symbol.asyncIterator]() {
-    return this;
-  }
-}
-
-export class BlobIterator extends DataIterator {
-  constructor(readonly data: Blob) {
-    super(data, data.size);
-  }
-
-  async next(): Promise<{ done: boolean; value?: Blob }> {
-    if (this._offset >= this.size) {
-      return { done: true };
-    }
-    const chunk = this.data.slice(this._offset, this._offset + CHUNK_SIZE);
-    this._offset += chunk.size;
-    return { done: false, value: chunk };
-  }
-}
-
-export class BufferIterator extends DataIterator {
-  constructor(readonly data: Buffer) {
-    super(data, data.length);
-  }
-
-  async next(): Promise<{ done: boolean; value?: Buffer }> {
-    if (this._offset >= this.size) {
-      return { done: true };
-    }
-    const chunk = this.data.slice(this._offset, this._offset + CHUNK_SIZE);
-    this._offset += chunk.length;
-    return { done: false, value: chunk };
-  }
-}
-
-export class StreamIterator extends DataIterator {
-  constructor(readonly data: Readable) {
-    super(data);
-  }
-
-  private _read(size?: number): Buffer | null {
-    const chunk = this.data.read(size);
-    if (chunk) {
-      this._offset += chunk.length;
-    }
-    return chunk;
-  }
-
-  async next(): Promise<{ done: boolean; value?: Buffer }> {
-    if (this.data.readableEnded) {
-      return { done: true };
-    }
-    if (this.data.readableLength >= CHUNK_SIZE) {
-      return { done: false, value: this._read(CHUNK_SIZE) };
-    }
-    return new Promise((resolve, reject) => {
-      const onReadable = () => {
-        const chunk = this._read(CHUNK_SIZE);
-        if (chunk !== null) {
-          resolve({ done: false, value: chunk });
-          removeListeners();
-        }
-      };
-      const onError = (error: Error) => {
-        reject(error);
-        removeListeners();
-      };
-      const removeListeners = () => {
-        this.data.off('readable', onReadable);
-        this.data.off('error', onError);
-      };
-      this.data.on('readable', onReadable);
-      this.data.on('error', onError);
-    });
-  }
 }
 
 export class ShardUploader {
