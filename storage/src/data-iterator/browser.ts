@@ -11,7 +11,9 @@ class BlobIterator extends DataIterator<Blob> {
     }
     const chunk = this.data.slice(this.offset, this.offset + this.chunkSize);
     this.offset += chunk.size;
-    return { done: false, value: await chunk.arrayBuffer() };
+    // XXX: 适配 Safari 13
+    const value = await new Response(chunk).arrayBuffer();
+    return { done: false, value };
   }
 }
 
