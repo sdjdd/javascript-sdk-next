@@ -21,9 +21,10 @@
     "build:debug": "cd debug && npm run clean && rollup -c",
     "build:live-query": "cd live-query && npm run clean && rollup -c",
     "build:search": "cd search && npm run clean && rollup -c",
+    "build:leaderboard": "cd leaderboard && npm run clean && rollup -c",
     "build:storage": "cd storage && npm run build",
     "build:cdn": "rm -rf browser/*.min.js && rollup -c cdn.rollup.config.js",
-    "build": "npm run build:core && npm run build:auth && npm run build:cloud && npm run build:debug && npm run build:live-query && npm run build:search && npm run build:storage",
+    "build": "npm run build:core && npm run build:auth && npm run build:cloud && npm run build:debug && npm run build:live-query && npm run build:search && npm run build:storage && npm run build:leaderboard",
     "test:core": "TS_NODE_PROJECT=core/tsconfig.json mocha core/test/**/*.test.ts",
     "repl": "node tools/repl"
   },
