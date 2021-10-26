@@ -74,6 +74,7 @@
     "node/",
     "search/dist/",
     "storage/dist/",
+    "leaderboard/dist/",
     "index.d.ts"
   ]
 }
