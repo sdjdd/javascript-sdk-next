@@ -6,7 +6,7 @@ type ManageAuthOptions = Omit<AuthOptions, 'useMasterKey'>;
 interface PageParams {
   limit?: number;
   skip?: number;
-  count?: number;
+  count?: 1;
 }
 
 interface CountParams {
@@ -431,7 +431,10 @@ export class Leaderboard extends LeaderboardManager implements Partial<Leaderboa
     return this;
   }
 
-  async getArchives(props: Omit<GetArchivesProps, 'statisticName'>, options?: ManageAuthOptions) {
+  async getArchives<T extends CountedParams<Omit<GetArchivesProps, 'statisticName'>>>(
+    props: T = {} as T,
+    options?: ManageAuthOptions
+  ) {
     return super.getLeaderboardArchives({ ...props, statisticName: this.statisticName }, options);
   }
 
@@ -440,7 +443,8 @@ export class Leaderboard extends LeaderboardManager implements Partial<Leaderboa
   }
 
   async getResults<T extends CountedParams<Omit<GetResultsProps, 'statisticName' | 'type'>>>(
-    props?: T
+    props: T = {} as T,
+    options?: ManageAuthOptions
   ) {
     if (!this.memberType) {
       await this.getInfo();
@@ -449,6 +453,9 @@ export class Leaderboard extends LeaderboardManager implements Partial<Leaderboa
       throw new Error(`${this.statisticName} 未定义 memberType`);
     }
     const type = getRankTypeByMemberType(this.memberType) as any;
-    return super.getLeaderboardResults({ ...props, statisticName: this.statisticName, type });
+    return super.getLeaderboardResults(
+      { ...props, statisticName: this.statisticName, type },
+      options
+    );
   }
 }
