@@ -82,7 +82,7 @@ interface GetResultsProps {
   includeKeys?: UrlQuery;
   includeStatistics?: UrlQuery;
   version?: number;
-  objectId?: string;
+  reference?: string;
 }
 interface Rank extends Statistic {
   rank: number;
@@ -241,14 +241,14 @@ export class LeaderboardManager {
     props: T,
     options?: AuthOptions
   ) {
-    const { statisticName, type, objectId, selectKeys, includeKeys, includeStatistics, ...rest } =
+    const { statisticName, type, reference, selectKeys, includeKeys, includeStatistics, ...rest } =
       props;
 
     return this.app.request(
       {
         method: 'GET',
         path: `/1.1/leaderboard/leaderboards/${type}/${statisticName}/ranks${
-          objectId ? `/${objectId}` : ''
+          reference ? `/${reference}` : ''
         }`,
         query: {
           ...rest,
@@ -444,7 +444,7 @@ export class Leaderboard extends LeaderboardManager implements Partial<Leaderboa
 
   async getResults<T extends CountedParams<Omit<GetResultsProps, 'statisticName' | 'type'>>>(
     props: T = {} as T,
-    options?: ManageAuthOptions
+    options?: AuthOptions
   ) {
     if (!this.memberType) {
       await this.getInfo();
