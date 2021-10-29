@@ -26,6 +26,7 @@
     "build:cdn": "rm -rf browser/*.min.js && rollup -c cdn.rollup.config.js",
     "build": "npm run build:core && npm run build:auth && npm run build:cloud && npm run build:debug && npm run build:live-query && npm run build:search && npm run build:storage && npm run build:leaderboard",
     "test:core": "TS_NODE_PROJECT=core/tsconfig.json mocha core/test/**/*.test.ts",
+    "test:leaderboard": "TS_NODE_PROJECT=core/tsconfig.json mocha leaderboard/test/**/*.test.ts",
     "repl": "node tools/repl"
   },
   "keywords": [],
