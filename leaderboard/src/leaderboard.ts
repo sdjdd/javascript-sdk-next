@@ -288,7 +288,7 @@ export class LeaderboardManager {
     );
   }
 
-  async getUserStatistics(statisticNames?: UrlQuery, options?: AuthOptions) {
+  async getCurrentUserStatistics(statisticNames?: UrlQuery, options?: AuthOptions) {
     const user = this.getLoginUser();
     return this.getStatistics(
       { type: 'user', objectId: user.id, statisticNames },
@@ -339,7 +339,7 @@ export class LeaderboardManager {
     );
   }
 
-  async deleteUserStatistics(statisticNames: UrlQuery, option?: AuthOptions) {
+  async deleteCurrentUserStatistics(statisticNames: UrlQuery, option?: AuthOptions) {
     const user = this.getLoginUser();
     return this.app
       .request(
@@ -370,7 +370,7 @@ export class LeaderboardManager {
     );
   }
 
-  async updateUserStatistics(
+  async updateCurrentUserStatistics(
     statistics: Statistic[],
     option?: AuthOptions
   ): Promise<{ results: StatisticResult[] }> {
