@@ -1,16 +1,16 @@
 import 'should';
-import { v4 as uuid } from 'uuid';
 import * as should from 'should';
 import * as LC from '../..';
 import { appConfig } from './utils';
 
 const app = LC.init(appConfig);
-const name = uuid();
+const name = `test_${Date.now()}`;
+console.log(name);
 const memberType = '_User';
 
 describe('leaderboard', () => {
   after(() => {
-    app.leaderboard(name).delete();
+    app.leaderboard(name).destroy();
   });
 
   it('create', async () => {
@@ -28,32 +28,39 @@ describe('leaderboard', () => {
     }
   });
 
+  it('get attributes', async () => {
+    const instance = app.leaderboard(name);
+    const info = await instance.getAttributes();
+    info.statisticName.should.equal(name);
+    instance.statisticName.should.equal(name);
+    instance.memberType.should.is.String();
+  });
+
+  it('get archive', async () => {
+    const { count, results } = await app.leaderboard(name).getArchives({ count: 1 });
+    count.should.equal(0);
+    results.should.is.Array();
+  });
+
   it('update', async () => {
     const updateStrategy = 'sum';
+    const versionChangeInterval = 'day';
+    const data = await app
+      .leaderboard()
+      .updateLeaderBoard(name, { updateStrategy, versionChangeInterval });
+    data.updateStrategy.should.equal(updateStrategy);
+    data.versionChangeInterval.should.equal(versionChangeInterval);
     const instance = await app.leaderboard(name).update({ updateStrategy });
     instance.updateStrategy.should.equal(updateStrategy);
   });
 
   it('reset', async () => {
-    return await app.leaderboard(name).reset();
-  });
-
-  it('get info', async () => {
-    const score = app.leaderboard('score');
-    const info = await score.getInfo();
-    info.statisticName.should.equal('score');
-    score.memberType.should.is.String();
-  });
-
-  it('get archive', async () => {
-    const res = (await app.leaderboard(name).getArchives()) as any;
-    should.not.exist(res.count);
-    const { count, results } = await app.leaderboard(name).getArchives({ count: 1 });
-    count.should.is.Number();
-    results.should.is.Array();
+    await app.leaderboard(name).reset();
+    const { count } = await app.leaderboard(name).getArchives({ count: 1 });
+    count.should.equal(1);
   });
 
   it('delete', async () => {
-    return app.leaderboard(name).delete();
+    return app.leaderboard(name).destroy();
   });
 });

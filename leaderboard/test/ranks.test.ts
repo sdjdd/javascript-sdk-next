@@ -5,26 +5,27 @@ import * as LC from '../..';
 import { appConfig } from './utils';
 
 const statisticName = 'score';
+const objectId = '5b38544f2f301e00359f16d9';
 
 const app = LC.init(appConfig);
 const score = app.leaderboard(statisticName);
 
 describe('ranks', () => {
   it('get ranks', async () => {
-    const maxResultsCount = 1;
+    const limit = 1;
     const { results, count } = await score.getResults(
       {
         count: 1,
-        maxResultsCount,
+        limit,
       },
       { useMasterKey: false }
     );
 
     count.should.is.Number();
-    results.length.should.equalOneOf(0, maxResultsCount);
+    results.length.should.equalOneOf(0, limit);
   });
 
-  it('get nonexistent ranks', async () => {
+  it('get non-existent ranks', async () => {
     const name = uuid();
     try {
       await app.leaderboard(name).getResults();
@@ -35,13 +36,26 @@ describe('ranks', () => {
   });
 
   it('get user rank', async () => {
+    const limit = 3;
     const { results } = await app.leaderboard('score').getResults({
-      maxResultsCount: 1,
-      objectId: '5b3853909f54540035868fe2',
+      skip: 1,
+      limit,
+      selectKeys: ['username'],
     });
-    results.length.should.equalOneOf(1, 0);
     if (results.length > 0) {
-      results[0].rank.should.is.Number();
+      results.length.should.equalOneOf(3, 0);
+      results[0].rank.should.equal(1);
+    }
+  });
+
+  it('get around', async () => {
+    const { results } = await app.leaderboard('score').getResults({
+      limit: 1,
+      around: objectId,
+    });
+    if (results.length) {
+      results.length.should.equal(1);
+      results[0].user.objectId.should.equal(objectId);
     }
   });
 });

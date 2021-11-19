@@ -1,5 +1,4 @@
 import 'should';
-import 'should';
 import * as LC from '../..';
 import { appConfig } from './utils';
 
@@ -23,11 +22,11 @@ describe('statistics', () => {
     newCount.should.equal(count - 1);
   });
 
-  it('update ', async () => {
+  it('update', async () => {
     const { results } = await app.leaderboard().updateStatistics({
       type: 'user',
       objectId: userId,
-      statistics: [{ statisticName, statisticValue }],
+      statistics: { [statisticName]: statisticValue },
     });
     results[0].statisticValue === statisticValue;
   });
@@ -43,23 +42,21 @@ describe('statistics', () => {
       },
       { useMasterKey: false }
     );
-    if (!data) {
-      return;
-    }
     data.statisticName.should.equal(statisticName);
     data.statisticValue.should.equal(statisticValue);
   });
 
-  it('get multiple', async () => {
-    const { results } = await score.getMultipleStatistics(
+  it('get group statistics', async () => {
+    const { results } = await score.getStatisticsByMembers(
       {
         type: 'user',
         statisticName: 'score',
-        target: [userId, userId],
+        members: [userId, userId],
       },
       { useMasterKey: false }
     );
     results.length.should.equal(2);
     results[0].statisticName.should.equal('score');
+    results[0].user.objectId.should.equal(userId);
   });
 });
