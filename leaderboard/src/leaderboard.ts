@@ -1,5 +1,4 @@
 import type { App, AuthOptions } from '../../core';
-import { User } from '../../auth/dist';
 import { getRankTypeByMemberType, leaderboardTypeToPlural } from './utils';
 
 type ManageAuthOptions = Omit<AuthOptions, 'useMasterKey'>;
@@ -120,8 +119,13 @@ export class LeaderboardManager {
     return this.app.database().decode(data);
   }
 
-  private getCurrentUser() {
-    const user = User.getCurrent(this.app, true);
+  private async getCurrentUser() {
+    const app: any = this.app;
+    if (typeof app.auth !== 'function') {
+      throw new Error('Auth module is required');
+    }
+    const auth = app.auth();
+    const user = await auth.getCurrentUserAsync();
     if (!user) {
       throw new Error('Please log in.');
     }
@@ -358,7 +362,7 @@ export class LeaderboardManager {
   }
 
   async getCurrentUserStatistics(statisticNames?: string[], options?: AuthOptions) {
-    const user = this.getCurrentUser();
+    const user = await this.getCurrentUser();
     return this.getStatistics(
       { type: 'user', objectId: user.id, statisticNames },
       { ...options, sessionToken: user.sessionToken }
@@ -366,7 +370,7 @@ export class LeaderboardManager {
   }
 
   async deleteCurrentUserStatistics(statisticNames: string[], option?: AuthOptions) {
-    const user = this.getCurrentUser();
+    const user = await this.getCurrentUser();
     return this.app
       .request(
         {
@@ -383,7 +387,7 @@ export class LeaderboardManager {
     statistics: Statistics,
     option?: AuthOptions
   ): Promise<{ results: StatisticResult[] }> {
-    const user = this.getCurrentUser();
+    const user = await this.getCurrentUser();
     const body: Statistic[] = Object.entries(statistics).map(([statisticName, statisticValue]) => ({
       statisticName,
       statisticValue,

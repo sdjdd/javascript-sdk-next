@@ -8,6 +8,5 @@ export default [
       format: 'cjs',
     },
     plugins: [ts()],
-    external: ['../../auth/dist', '../../core/dist'],
   },
 ];
