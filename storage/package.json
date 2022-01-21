@@ -1,8 +1,6 @@
 {
-  "main": "./dist/index.js",
-  "browser": {
-    "./dist/data-iterator/node.js": "./dist/data-iterator/browser.js"
-  },
+  "main": "./dist/node.js",
+  "browser": "./dist/browser.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf ./dist",

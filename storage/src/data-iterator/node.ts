@@ -1,5 +1,6 @@
 import { Readable } from 'stream';
 
+import { registerDataIteratorFactory } from '.';
 import { DataIterator } from './base';
 
 class BufferIterator extends DataIterator<Buffer> {
@@ -61,7 +62,7 @@ class StreamIterator extends DataIterator<Readable> {
   }
 }
 
-export function makeDataIterator(
+function makeDataIterator(
   data: any,
   chunkSize: number,
   threshold: number
@@ -73,3 +74,5 @@ export function makeDataIterator(
     return new StreamIterator(data, chunkSize);
   }
 }
+
+registerDataIteratorFactory(makeDataIterator);

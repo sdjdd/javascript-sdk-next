@@ -1,3 +1,4 @@
+import { registerDataIteratorFactory } from '.';
 import { DataIterator } from './base';
 
 class BlobIterator extends DataIterator<Blob> {
@@ -17,7 +18,7 @@ class BlobIterator extends DataIterator<Blob> {
   }
 }
 
-export function makeDataIterator(
+function makeDataIterator(
   data: any,
   chunkSize: number,
   threshold: number
@@ -26,3 +27,5 @@ export function makeDataIterator(
     return new BlobIterator(data, chunkSize);
   }
 }
+
+registerDataIteratorFactory(makeDataIterator);

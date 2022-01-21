@@ -3,7 +3,7 @@ import type { FileTokens } from '../../storage';
 import type { Provider } from '..';
 
 import { SDKRuntime } from '../../runtime';
-import { makeDataIterator } from '../../data-iterator';
+import { tryToCreateDataIterator } from '../../data-iterator';
 import { CHUNK_SIZE, ShardUploader } from './shard-uploader';
 
 export const SHARD_THRESHOLD = 1024 * 1024 * 64;
@@ -15,7 +15,7 @@ export class Qiniu implements Provider {
     tokens: FileTokens,
     options?: HTTPRequestOptions & { header: Record<string, string> }
   ): Promise<void> {
-    const dataIterator = makeDataIterator(data, CHUNK_SIZE, SHARD_THRESHOLD);
+    const dataIterator = tryToCreateDataIterator(data, CHUNK_SIZE, SHARD_THRESHOLD);
     if (dataIterator) {
       return new ShardUploader(tokens, dataIterator).upload(name, options);
     }
