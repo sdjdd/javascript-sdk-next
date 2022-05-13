@@ -253,6 +253,8 @@ export function LCDecode(app: App, data: any): any {
       case 'Object':
         return LCObject.fromJSON(app, data);
       case 'File':
+        // FIXME: File 类型使用 id 而非 objectId, 这里临时修复一下, 根本解决需要重构
+        data.objectId ??= data.id;
         return LCObject.fromJSON(app, data, '_File');
       case 'Date':
         return new Date(data.iso);
