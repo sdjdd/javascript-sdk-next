@@ -10,7 +10,7 @@ export class S3 implements Provider {
     tokens: FileTokens,
     options?: HTTPRequestOptions & { header: Record<string, string> }
   ): Promise<void> {
-    await SDKRuntime.http.request(
+    const { status } = await SDKRuntime.http.request(
       {
         method: 'PUT',
         url: tokens.upload_url,
@@ -23,5 +23,9 @@ export class S3 implements Provider {
       },
       options
     );
+    if (status >= 400) {
+      // TODO: error detail
+      throw new Error('Failed to upload');
+    }
   }
 }

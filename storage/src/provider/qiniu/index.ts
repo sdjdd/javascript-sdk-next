@@ -19,7 +19,7 @@ export class Qiniu implements Provider {
     if (dataIterator) {
       return new ShardUploader(tokens, dataIterator).upload(name, options);
     }
-    await SDKRuntime.http.upload(
+    const { status, body } = await SDKRuntime.http.upload(
       {
         method: 'POST',
         url: tokens.upload_url,
@@ -29,5 +29,8 @@ export class Qiniu implements Provider {
       },
       options
     );
+    if (status >= 400) {
+      throw new Error(body.error);
+    }
   }
 }

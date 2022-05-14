@@ -42,7 +42,7 @@ export class ShardUploader {
       options
     );
     if (status >= 400) {
-      throw new Error(JSON.stringify(body));
+      throw new Error(body.error);
     }
     return body;
   }
