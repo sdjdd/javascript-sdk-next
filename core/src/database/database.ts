@@ -96,11 +96,14 @@ export class Database {
       body,
     }));
 
-    const results = (await this.app.request({
-      method: 'POST',
-      path: '/1.1/batch',
-      body: { requests },
-    })) as { error?: { code: number; error: string } }[];
+    const results = (await this.app.request(
+      {
+        method: 'POST',
+        path: '/1.1/batch',
+        body: { requests },
+      },
+      options
+    )) as { error?: { code: number; error: string } }[];
 
     const errorResults = results.filter((r) => r.error);
     if (errorResults.length) {
